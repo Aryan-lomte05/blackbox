@@ -98,9 +98,20 @@ def test_session_record_only():
     assert s.trace.run.outcome is None  # no checker registered for 'app': no invented verdict
 
 
+
 def test_wrapped_agent_gets_content_based_links():
-    """Wrap mode sees calls, not memory: links are inferred from content (an earlier
-    step's output appearing in a later request)."""
+    """Wrap mode sees calls, not memory: a step is linked to an earlier one whose output it carries."""
+    def relay_agent(question: str) -> str:
+        w = get_weather("Pune")
+        r = client.chat.completions.create(model="m", messages=[{"role": "user", "content": f"City {w['city']} RAIN=x"}])
+        return r.choices[0].message.content
+
+    tr = blackbox.run(relay_agent, "q")
+    llm = tr.steps[1]
+    assert llm.parents == [0] and llm.meta.get("parents_inferred") == "content"
+
+
+def test_transformed_values_are_not_falsely_linked():
+    """weather_agent rewrites {'rain': False} as 'RAIN=False': nothing is carried verbatim, so no link."""
     tr = blackbox.run(weather_agent, "Will it rain?", family="weather", expected="FORECAST:False", check=check)
-    llm2 = tr.steps[2]  # its prompt carries the tool's result (RAIN=False)
-    assert 1 in llm2.parents and llm2.meta.get("parents_inferred") == "content"
+    assert 1 not in tr.steps[2].parents

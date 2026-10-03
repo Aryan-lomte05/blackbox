@@ -111,7 +111,21 @@ def _facts_of(step: Step) -> list[str]:
     elif step.kind in ("tool", "retrieval"):
         res = out.get("result", out.get("docs"))
         facts.append(res if isinstance(res, str) else json.dumps(res, ensure_ascii=False, default=str))
+        facts += _leaves(res)
     return [f for f in facts if f and len(f) >= _MIN_FACT and f not in ("null", "[]", "{}", '""')]
+
+
+def _leaves(value, depth: int = 0) -> list[str]:
+    """Distinctive leaf values of a dict/list result (strings and numbers; never booleans or
+    None, which would link everything to everything)."""
+    if depth > 3 or isinstance(value, bool) or value is None:
+        return []
+    if isinstance(value, dict):
+        return [x for v in value.values() for x in _leaves(v, depth + 1)]
+    if isinstance(value, list):
+        return [x for v in value[:20] for x in _leaves(v, depth + 1)]
+    text = str(value)
+    return [text] if len(text) >= 4 else []
 
 
 def infer_parents(request: dict, earlier: list[Step]) -> list[int]:
