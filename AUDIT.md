@@ -5,6 +5,38 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ---
 
+## Radhesh · `radhesh/tools-agents`
+
+### 1. Tools, checkers, QA + Math agents, mistakes F1–F6, farm (checklist rows 1–6)
+- **What:**
+  - `agents/tools/`: registry (ported from 26117, approval gate removed),
+    `calculator` (parses the expression, no `eval`), `python_exec`
+    (subprocess, 5 s timeout), BM25 `search` built per task over the
+    question's own 10 paragraphs.
+  - `agents/checkers.py`: QA = SQuAD-normalised F1 ≥ 0.6, Math = exact number.
+  - `agents/qa.py` (7–9 steps) and `agents/math_agent.py` (6–15 steps), both
+    using only `ctx.*`. `agents/builtin.py` registers them; `get_agent` now
+    loads it on a miss, so the API and CLI can replay our runs.
+  - `faults/catalog.py`: F1–F6 as `make_change(trace, fault_type, step_idx, rng)`.
+  - `data/download.py`, `data/tasks/`, `data/splits.py` (sha1 of the task id),
+    `data/farm.py` (clean run → forks → labels → shard → health check).
+- **Verified:** 92 new tests (`test_tools`, `test_checkers`, `test_agents`,
+  `test_faults`, `test_farm`), 102 in total passing. Every tool is called
+  through the registry and through `ctx`. Both agents replay with 0 model
+  calls. 10 sampled changes per mistake type appear in the forked step. A
+  crashed run or crashed fork is counted and never labelled.
+- **Real runs:** a 30-task trial per family on `agent-local` (qwen2.5:3b)
+  gave 135 runs with 0 crashes. Clean pass rate: 13/30 Math, 12/30 QA.
+  Pass→fail rate: F1 71%, F2 83%, F3 67%, F5 67%, F6 44–52%, F4 14% (since
+  strengthened: the distractor now takes the right paragraph's id).
+- **Changed outside my folders:** `.gitignore` `data/` → `/data/`. Unanchored,
+  it ignored the code folder `blackbox/data/` as well.
+- **Not yet verified:** Groq and OpenRouter runs (no keys in `.env` on my
+  machine yet). The `@pytest.mark.live` test per agent is not written.
+- **Open with Aryan:** a shard is one `Trace` JSON per line, gzip. Save-point
+  blobs stay in the producing machine's `data/blobs/`, so a merged DB has the
+  `state_hash_after` values without the blobs behind them.
+
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
 ### 11. First live verification (real model, local Ollama) · `aryan/live-tests`

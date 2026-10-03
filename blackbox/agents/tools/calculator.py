@@ -45,8 +45,8 @@ def _eval(node: ast.AST) -> float:
 
 
 def clean_expression(expression: str) -> str:
-    """Forgive what small models write: `$1,200 x 3 = ` -> `1200 * 3`."""
-    expr = str(expression).strip().rstrip("=").strip()
+    """Forgive what small models write: `$1,200 x 3 = 3600` -> `1200 * 3`."""
+    expr = str(expression).split("=", 1)[0].strip()  # the calculator computes; a stated result is ignored
     expr = expr.replace("$", "").replace("×", "*").replace("÷", "/").replace("^", "**")
     expr = expr.replace(" x ", " * ").replace(" X ", " * ")
     # thousands separators only: a comma between a digit and exactly 3 digits
