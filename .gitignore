@@ -3,7 +3,7 @@
 .env.*
 !.env.example
 # data + artifacts
-data/
+/data/
 *.db
 *.db-journal
 *.npy
