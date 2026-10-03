@@ -1,61 +1,43 @@
 @import "tailwindcss";
+@import "@fontsource/geist-sans";
+@import "@fontsource/jetbrains-mono";
+@import "./styles/tokens.css";
 
 @layer base {
-  :root {
-    --font-heading: 'Plus Jakarta Sans', -apple-system, sans-serif;
-    --font-body: 'Inter', -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-
   body {
-    font-family: var(--font-body);
-    background-color: #08090a;
-    color: #e4e4e7;
+    font-family: var(--font-sans);
+    background-color: var(--bg);
+    color: var(--text);
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, .font-heading {
-    font-family: var(--font-heading);
-    letter-spacing: -0.02em;
-  }
-
   code, pre, .font-mono {
     font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Ambient glow & glassmorphism utilities */
-.glow-rose {
-  box-shadow: 0 0 50px -10px rgba(244, 63, 94, 0.25);
+/* Flight recorder panel highlight */
+.panel {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-.glow-emerald {
-  box-shadow: 0 0 50px -10px rgba(16, 185, 129, 0.25);
+.panel-raised {
+  background-color: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 50px -10px rgba(6, 182, 212, 0.25);
-}
-
-.glass-card {
-  background: rgba(18, 19, 23, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-card-hover:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(24, 25, 30, 0.8);
-}
-
-/* Fluid scrollbars */
+/* Minimalist data scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -64,9 +46,39 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--line-strong);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--faint);
 }
+
+@keyframes rec-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+
+.animate-rec-pulse {
+  animation: rec-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-dash-flow {
+  stroke-dasharray: 6 6;
+  animation: dash-flow 1.2s linear infinite;
+}
+

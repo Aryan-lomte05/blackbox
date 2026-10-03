@@ -7,9 +7,10 @@ import { Search, Settings, Radio } from 'lucide-react';
 interface HeaderProps {
   title?: string;
   subtitle?: string;
+  onOpenPalette?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = () => {
+export const Header: React.FC<HeaderProps> = ({ onOpenPalette }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -21,6 +22,10 @@ export const Header: React.FC<HeaderProps> = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (onOpenPalette) {
+      onOpenPalette();
+      return;
+    }
     if (searchQuery.trim()) {
       navigate(`/runs?search=${encodeURIComponent(searchQuery.trim())}`);
     }
@@ -29,23 +34,26 @@ export const Header: React.FC<HeaderProps> = () => {
   const isOnline = !isError && status !== null;
 
   return (
-    <header className="h-14 border-b border-white/[0.06] bg-[#090a0c]/90 backdrop-blur-xl sticky top-0 z-20 px-6 flex items-center justify-between select-none">
-      {/* Search Input Bar matching reference */}
-      <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
+    <header className="h-14 border-b border-[var(--line)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-20 px-6 flex items-center justify-between select-none">
+      {/* Search Input Bar */}
+      <div
+        onClick={onOpenPalette}
+        className="relative flex-1 max-w-md cursor-pointer group"
+      >
         <div className="relative flex items-center">
-          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-[var(--faint)] absolute left-3 pointer-events-none group-hover:text-[var(--text)] transition-colors" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search runs, tasks, or anything..."
-            className="w-full bg-[#111215] text-xs text-zinc-200 placeholder:text-zinc-500 pl-8 pr-12 py-1.5 rounded-lg border border-white/[0.07] focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all font-sans"
+            readOnly
+            onClick={onOpenPalette}
+            placeholder="Search runs, screens, cases... (⌘K)"
+            className="w-full bg-[var(--raised)] text-xs text-[var(--text)] placeholder:text-[var(--faint)] pl-8 pr-12 py-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] hover:border-[var(--line-strong)] cursor-pointer focus:outline-none transition-colors font-sans"
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-500 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06] pointer-events-none">
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[var(--faint)] bg-[var(--panel)] px-1.5 py-0.5 rounded border border-[var(--line)] pointer-events-none">
             ⌘K
           </kbd>
         </div>
-      </form>
+      </div>
 
       {/* Right Controls */}
       <div className="flex items-center gap-3.5 text-xs">

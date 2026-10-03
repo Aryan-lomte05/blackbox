@@ -1,63 +1,73 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { MonoLabel } from './MonoLabel';
 
-interface KPIProps {
+export interface KPIProps {
   label: string;
   value: string | number | undefined | null;
-  secondary?: string;
+  context?: string;
+  secondary?: string; // backwards compatibility
+  unit?: string;
   trend?: 'up' | 'down' | 'neutral';
   icon?: React.ReactNode;
   highlight?: boolean;
+  variant?: 'default' | 'guilty' | 'ok' | 'trail' | 'accent';
+  className?: string;
 }
 
 export const KPI: React.FC<KPIProps> = ({
   label,
   value,
+  context,
   secondary,
+  unit,
   trend,
   icon,
   highlight = false,
+  variant = 'default',
+  className = '',
 }) => {
   const displayValue = value === undefined || value === null ? '—' : value;
+  const detailText = context || secondary;
+
+  let valueColor = 'text-[var(--text-strong)]';
+  if (variant === 'guilty' || highlight) valueColor = 'text-[var(--guilty)]';
+  else if (variant === 'ok') valueColor = 'text-[var(--ok)]';
+  else if (variant === 'trail') valueColor = 'text-[var(--trail)]';
+  else if (variant === 'accent') valueColor = 'text-[var(--accent)]';
+
+  let detailColor = 'text-[var(--muted)]';
+  if (trend === 'up') detailColor = 'text-[var(--ok)]';
+  else if (trend === 'down') detailColor = 'text-[var(--guilty)]';
 
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.15 }}
-      className={`p-5 rounded-2xl border transition-all relative overflow-hidden ${
-        highlight
-          ? 'bg-gradient-to-b from-rose-950/30 via-zinc-900/60 to-zinc-950 border-rose-500/30 shadow-lg shadow-rose-950/30'
-          : 'bg-zinc-900/40 hover:bg-zinc-900/70 border-white/[0.07] hover:border-white/[0.12] backdrop-blur-xl'
-      }`}
+    <div
+      className={`panel p-4 flex flex-col justify-between select-none ${
+        highlight ? 'border-[var(--guilty)]/30 bg-[var(--guilty-bg)]/20' : ''
+      } ${className}`}
     >
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="text-[11px] font-sans font-semibold uppercase tracking-wider text-zinc-400">
-          {label}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <MonoLabel label={label} />
+        {icon && <div className="text-[var(--faint)] shrink-0">{icon}</div>}
+      </div>
+
+      <div className="flex items-baseline gap-1.5 my-1">
+        <span
+          className={`font-mono text-2xl lg:text-3xl font-semibold tracking-tight tabular-nums ${valueColor}`}
+        >
+          {displayValue}
         </span>
-        {icon && (
-          <div className={`p-1.5 rounded-lg ${highlight ? 'bg-rose-500/10 text-rose-400' : 'bg-white/[0.04] text-zinc-400'}`}>
-            {icon}
-          </div>
+        {unit && (
+          <span className="font-mono text-xs text-[var(--muted)]">
+            {unit}
+          </span>
         )}
       </div>
 
-      <div className="flex items-baseline gap-2.5">
-        <span className="text-3xl font-heading font-extrabold text-white tracking-tight">
-          {displayValue}
-        </span>
-      </div>
-
-      {secondary && (
-        <div className={`mt-2 text-xs font-sans font-medium flex items-center gap-1.5 ${
-          trend === 'up'
-            ? 'text-emerald-400'
-            : trend === 'down'
-            ? 'text-rose-400'
-            : 'text-zinc-400'
-        }`}>
-          <span>{secondary}</span>
+      {detailText && (
+        <div className={`mt-1 text-xs font-sans truncate ${detailColor}`}>
+          {detailText}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };

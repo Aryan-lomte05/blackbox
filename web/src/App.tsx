@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { Sidebar } from './components/common/Sidebar';
 import { Header } from './components/common/Header';
+import { CommandPalette } from './components/common/CommandPalette';
 
 import { OverviewScreen } from './screens/OverviewScreen';
 import { RunsScreen } from './screens/RunsScreen';
@@ -24,19 +25,22 @@ import { InvestigateScreen } from './screens/InvestigateScreen';
 import { CausalScreen } from './screens/CausalScreen';
 import { CrashTestScreen } from './screens/CrashTestScreen';
 import { SimilarScreen } from './screens/SimilarScreen';
+import { ComponentsDevScreen } from './screens/ComponentsDevScreen';
 
 export const App: React.FC = () => {
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#08090a] text-zinc-100 flex">
-          {/* Left fixed sidebar */}
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex">
+          {/* Left fixed 232px sidebar */}
           <Sidebar />
 
-          {/* Main content area */}
-          <div className="flex-1 ml-56 min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1 bg-[#08090a]">
+          {/* Main content area offset by 232px */}
+          <div className="flex-1 ml-[232px] min-h-screen flex flex-col">
+            <Header onOpenPalette={() => setPaletteOpen(true)} />
+            <main className="flex-1 bg-[var(--bg)] px-6 py-6 max-w-[1280px] w-full mx-auto">
               <Routes>
                 <Route path="/" element={<OverviewScreen />} />
                 <Route path="/runs" element={<RunsScreen />} />
@@ -60,11 +64,20 @@ export const App: React.FC = () => {
                 <Route path="/crash-test" element={<CrashTestScreen />} />
                 <Route path="/similar" element={<SimilarScreen />} />
 
+                {/* Signature Components Dev Showcase */}
+                <Route path="/dev/components" element={<ComponentsDevScreen />} />
+
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
           </div>
+
+          {/* Global ⌘K Command Palette */}
+          <CommandPalette
+            isOpen={paletteOpen}
+            onClose={() => setPaletteOpen(false)}
+          />
         </div>
       </BrowserRouter>
     </QueryClientProvider>

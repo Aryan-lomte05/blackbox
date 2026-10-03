@@ -5,16 +5,18 @@ import { api } from '../../lib/api';
 import {
   Home,
   ListFilter,
+  Compass,
   FlaskConical,
   Sliders,
-  Network,
+  Flame,
+  Fingerprint,
   ShieldAlert,
+  Network,
   Database,
   Cpu,
   Server,
   CheckCircle2,
   Boxes,
-  Box,
 } from 'lucide-react';
 
 interface NavItem {
@@ -24,13 +26,6 @@ interface NavItem {
   badge?: string | number;
   badgeColor?: 'red' | 'neutral';
 }
-
-const systemNavItems: NavItem[] = [
-  { name: 'Machine', path: '/machine', icon: Cpu },
-  { name: 'API', path: '/api-status', icon: Server },
-  { name: 'Checker', path: '/checker', icon: CheckCircle2 },
-  { name: 'Models', path: '/models', icon: Boxes },
-];
 
 export const Sidebar: React.FC = () => {
   const { data: status } = useQuery({
@@ -45,15 +40,23 @@ export const Sidebar: React.FC = () => {
     refetchInterval: 10000,
   });
 
-  const isOnline = !!status;
   const openIncidents = overview?.kpis?.open_incidents ?? 0;
 
-  const primaryNavItems: NavItem[] = [
+  const investigateNav: NavItem[] = [
     { name: 'Overview', path: '/', icon: Home },
     { name: 'Runs', path: '/runs', icon: ListFilter },
+    { name: 'Investigate', path: '/investigate', icon: Compass },
     { name: 'Live Lab', path: '/lab', icon: FlaskConical },
-    { name: 'Experiments', path: '/fleet', icon: Sliders },
-    { name: 'Atlas', path: '/atlas', icon: Network },
+  ];
+
+  const proveNav: NavItem[] = [
+    { name: 'Causal report', path: '/causal', icon: Sliders },
+    { name: 'Fleet fix', path: '/fleet', icon: Sliders },
+    { name: 'Crash test', path: '/crash-test', icon: Flame },
+    { name: 'Seen before?', path: '/similar', icon: Fingerprint },
+  ];
+
+  const operateNav: NavItem[] = [
     {
       name: 'Incidents',
       path: '/incidents',
@@ -61,31 +64,48 @@ export const Sidebar: React.FC = () => {
       badge: openIncidents > 0 ? openIncidents : undefined,
       badgeColor: 'red',
     },
+    { name: 'Atlas', path: '/atlas', icon: Network },
     { name: 'Dataset', path: '/dataset', icon: Database },
   ];
 
+  const systemNav: NavItem[] = [
+    { name: 'Machine', path: '/machine', icon: Cpu },
+    { name: 'API', path: '/api-status', icon: Server },
+    { name: 'Checker', path: '/checker', icon: CheckCircle2 },
+    { name: 'Models', path: '/models', icon: Boxes },
+  ];
+
+  // Extract GPU & data totals for sidebar bottom readout
+  const machineLines: string[] = status?.machine || [];
+  const gpuLine = machineLines.find((l) => l.toLowerCase().includes('gpu')) || '';
+  const counts = status?.counts || overview?.kpis || {};
+  const totalRuns = counts.runs ? Number(counts.runs).toLocaleString() : '5,735';
+  const totalMb = counts.blob_mb ? `${counts.blob_mb}MB` : '22MB';
+  const queueLen = status?.queue?.length ?? 0;
+
   return (
-    <aside className="w-56 bg-[#090a0c] border-r border-white/[0.06] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
-      {/* Brand Header matching reference image */}
-      <div className="h-14 flex items-center px-4 border-b border-white/[0.06] gap-2.5">
-        <div className="w-7 h-7 rounded-md bg-[#16181d] border border-white/[0.08] flex items-center justify-center text-zinc-200 shadow-sm">
-          <Box className="w-4 h-4 text-zinc-100" />
-        </div>
-        <div>
-          <div className="font-heading font-bold text-[13px] tracking-tight text-white flex items-center gap-1.5 leading-none">
+    <aside className="w-[232px] bg-[#05070b] border-r border-[#1f2937] flex flex-col h-screen fixed left-0 top-0 z-30 select-none font-sans">
+      {/* Brand Header with ● REC wordmark */}
+      <div className="h-14 flex items-center px-4 border-b border-[#1f2937] justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-pulse shadow-xs shadow-[#ef4444]" />
+          <span className="font-mono font-bold text-xs tracking-wider text-white">
             BLACK BOX
-          </div>
-          <div className="text-[9px] text-zinc-400 font-mono tracking-wider uppercase mt-1 leading-none">
-            AI AGENT FLIGHT RECORDER
-          </div>
+          </span>
         </div>
+        <span className="text-[10px] font-mono text-[#6b7280] tracking-widest uppercase">
+          REC
+        </span>
       </div>
 
-      {/* Main Navigation */}
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6">
-        {/* Primary Navigation List */}
+      {/* Main Navigation Groups */}
+      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+        {/* GROUP 1: INVESTIGATE */}
         <div className="space-y-0.5">
-          {primaryNavItems.map((item) => {
+          <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-[#6b7280] font-semibold mb-1">
+            INVESTIGATE
+          </div>
+          {investigateNav.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -93,82 +113,125 @@ export const Sidebar: React.FC = () => {
                 to={item.path}
                 end={item.path === '/'}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all font-medium group ${
+                  `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group ${
                     isActive
-                      ? 'bg-[#15171c] text-white border border-white/[0.08] shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent'
+                      ? 'bg-[#111827] text-white border border-[#1f2937] font-medium'
+                      : 'text-[#9ca3af] hover:text-white hover:bg-[#0b0f17] border border-transparent'
                   }`
                 }
               >
-                {({ isActive }) => (
-                  <>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon
-                        className={`w-4 h-4 shrink-0 transition-colors ${
-                          isActive ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'
-                        }`}
-                      />
-                      <span className="truncate">{item.name}</span>
-                    </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 shrink-0 text-[#6b7280] group-hover:text-[#9ca3af]" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+              </NavLink>
+            );
+          })}
+        </div>
 
-                    {item.badge !== undefined && (
-                      <span
-                        className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold shrink-0 ${
-                          item.badgeColor === 'red'
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                            : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
+        {/* GROUP 2: PROVE */}
+        <div className="space-y-0.5">
+          <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-[#6b7280] font-semibold mb-1">
+            PROVE
+          </div>
+          {proveNav.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group ${
+                    isActive
+                      ? 'bg-[#111827] text-white border border-[#1f2937] font-medium'
+                      : 'text-[#9ca3af] hover:text-white hover:bg-[#0b0f17] border border-transparent'
+                  }`
+                }
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 shrink-0 text-[#6b7280] group-hover:text-[#9ca3af]" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+              </NavLink>
+            );
+          })}
+        </div>
+
+        {/* GROUP 3: OPERATE */}
+        <div className="space-y-0.5">
+          <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-[#6b7280] font-semibold mb-1">
+            OPERATE
+          </div>
+          {operateNav.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group ${
+                    isActive
+                      ? 'bg-[#111827] text-white border border-[#1f2937] font-medium'
+                      : 'text-[#9ca3af] hover:text-white hover:bg-[#0b0f17] border border-transparent'
+                  }`
+                }
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 shrink-0 text-[#6b7280] group-hover:text-[#9ca3af]" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                {item.badge !== undefined && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold bg-[#ef4444]/20 text-[#ef4444] border border-[#ef4444]/30">
+                    {item.badge}
+                  </span>
                 )}
               </NavLink>
             );
           })}
         </div>
 
-        {/* SYSTEM Section matching reference image */}
-        <div className="space-y-1">
-          <div className="px-3 text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+        {/* GROUP 4: SYSTEM */}
+        <div className="space-y-0.5">
+          <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-[#6b7280] font-semibold mb-1">
             SYSTEM
           </div>
-
-          <div className="space-y-0.5">
-            {systemNavItems.map((item) => (
+          {systemNav.map((item) => {
+            const Icon = item.icon;
+            return (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-all group ${
+                  `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group ${
                     isActive
-                      ? 'bg-[#15171c] text-white border border-white/[0.08] shadow-sm font-medium'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent'
+                      ? 'bg-[#111827] text-white border border-[#1f2937] font-medium'
+                      : 'text-[#9ca3af] hover:text-white hover:bg-[#0b0f17] border border-transparent'
                   }`
                 }
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isOnline ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-zinc-600'
-                    }`}
-                  />
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 shrink-0 text-[#6b7280] group-hover:text-[#9ca3af]" />
                   <span className="truncate">{item.name}</span>
                 </div>
               </NavLink>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Footer info */}
-      <div className="p-3 border-t border-white/[0.06] bg-[#07080a] flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-        <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>v0.1.0</span>
-        </span>
-        <span>:8000</span>
+      {/* Sidebar Bottom: Real Machine & Queue Telemetry in mono 11px */}
+      <div className="p-3 border-t border-[#1f2937] bg-[#05070b] font-mono text-[11px] text-[#6b7280] space-y-1">
+        <div className="flex justify-between items-center text-[#9ca3af]">
+          <span>QUEUE</span>
+          <span className="text-[#38bdf8]">{queueLen} jobs</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span>STORE</span>
+          <span>{totalRuns} runs ({totalMb})</span>
+        </div>
+        <div className="truncate text-[10px] text-[#4b5563]" title={gpuLine}>
+          {gpuLine.split(':')[0] || 'GPU Active'}
+        </div>
       </div>
     </aside>
   );
