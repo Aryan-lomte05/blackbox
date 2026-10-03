@@ -37,6 +37,16 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   blobs stay in the producing machine's `data/blobs/`, so a merged DB has the
   `state_hash_after` values without the blobs behind them.
 
+### Aryan's review of Radhesh's agents + farm (PR into `dev`)
+- Approved: QA/Math agents use only `ctx`; F1–F6 are mechanical edits (no
+  model); splits use sha1 (stable across machines; `hash()` is salted per
+  process). `get_agent` lazily loading the built-in agents is right.
+- **Changed while merging (Aryan):** one shard format for the team.
+  `farm.write_shard` now delegates to `data/shards.write_traces`, so
+  save-points travel with the runs (Radhesh's "open with Aryan" item).
+  `merge` still reads the early bare-Trace shards. Test:
+  `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
+
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
 ### 11. First live verification (real model, local Ollama) · `aryan/live-tests`

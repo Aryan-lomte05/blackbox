@@ -17,20 +17,19 @@ data/shards/<machine>_<time>.jsonl.gz, with one Trace per line.
 from __future__ import annotations
 
 import argparse
-import gzip
 import random
 import sys
 import threading
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
 from pathlib import Path
 
 import blackbox.agents.builtin  # noqa: F401 - registers agents and checkers
-from blackbox.agents.base import Task, get_agent, machine_name, run_task
+from blackbox.agents.base import Task, get_agent, run_task
 from blackbox.core.hashing import fingerprint
 from blackbox.core.schema import FaultSpec, Label, Trace
 from blackbox.core.store import DEFAULT_DIR, Store
+from blackbox.data.shards import read_traces, write_traces
 from blackbox.data.splits import split_for
 from blackbox.data.tasks import load_tasks
 from blackbox.faults.catalog import TRAIN_FAULTS, make_change
@@ -96,21 +95,14 @@ def farm_task(task: Task, model_id: str, *, store: Store | None, n_forks: int,
     return traces
 
 
-def write_shard(traces: list[Trace], shard_dir: Path = SHARD_DIR) -> Path:
-    shard_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    path = shard_dir / f"{machine_name()}_{stamp}.jsonl.gz"
-    tmp = path.with_suffix(".tmp")
-    with gzip.open(tmp, "wt", encoding="utf-8") as f:
-        for trace in traces:
-            f.write(trace.model_dump_json() + "\n")
-    tmp.replace(path)
-    return path
+def write_shard(traces: list[Trace], shard_dir: Path = SHARD_DIR, *, store: Store | None = None) -> Path:
+    """One shard format for the whole team (blackbox.data.shards). With `store`,
+    the save-points travel with the runs so a merged DB can show them."""
+    return write_traces(traces, shard_dir, store=store)
 
 
 def read_shard(path: Path) -> list[Trace]:
-    with gzip.open(path, "rt", encoding="utf-8") as f:
-        return [Trace.model_validate_json(line) for line in f if line.strip()]
+    return read_traces(path)
 
 
 def health(traces: list[Trace]) -> dict:
@@ -217,12 +209,12 @@ def main(argv: list[str] | None = None) -> int:
         traces = run_farm(tasks, args.model, store=store, n_forks=args.forks,
                           fault_types=tuple(f.strip() for f in args.faults.split(",") if f.strip()),
                           workers=args.workers, seed=args.seed)
+        if not traces:
+            print("no runs produced")
+            return 1
+        shard = write_shard(traces, store=store)  # save-points travel with the runs
     finally:
         store.close()
-    if not traces:
-        print("no runs produced")
-        return 1
-    shard = write_shard(traces)
     print()
     print(format_health(health(traces)))
     print(f"\nshard: {shard}")
