@@ -1,0 +1,81 @@
+{
+  "suspects": [
+    4,
+    12,
+    0
+  ],
+  "model": "gnn@0e314b80",
+  "policy": "model top 2 + first decision",
+  "scores": [
+    {
+      "idx": 4,
+      "p": 0.9839,
+      "rank": 1
+    },
+    {
+      "idx": 12,
+      "p": 0.0124,
+      "rank": 2
+    },
+    {
+      "idx": 2,
+      "p": 0.0017,
+      "rank": 3
+    },
+    {
+      "idx": 0,
+      "p": 0.0009,
+      "rank": 4
+    },
+    {
+      "idx": 6,
+      "p": 0.0008,
+      "rank": 5
+    },
+    {
+      "idx": 1,
+      "p": 0.0002,
+      "rank": 6
+    },
+    {
+      "idx": 3,
+      "p": 0.0,
+      "rank": 7
+    },
+    {
+      "idx": 5,
+      "p": 0.0,
+      "rank": 8
+    },
+    {
+      "idx": 8,
+      "p": 0.0,
+      "rank": 9
+    },
+    {
+      "idx": 10,
+      "p": 0.0,
+      "rank": 10
+    },
+    {
+      "idx": 7,
+      "p": 0.0,
+      "rank": 11
+    },
+    {
+      "idx": 11,
+      "p": 0.0,
+      "rank": 12
+    },
+    {
+      "idx": 9,
+      "p": 0.0,
+      "rank": 13
+    }
+  ],
+  "evidence": [],
+  "source": "gnn",
+  "monitor": [],
+  "known_guilty_step": 4,
+  "guilty_in_top3": true
+}

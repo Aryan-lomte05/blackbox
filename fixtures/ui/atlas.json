@@ -1,0 +1,305 @@
+{
+  "total_failures": 439,
+  "patterns": [
+    {
+      "family": "Shop",
+      "mistake": "F3",
+      "mistake_name": "tool returned nothing",
+      "step_kind": "tool",
+      "agent_node": "call",
+      "count": 72,
+      "examples": [
+        "5f2a6a1d74754630",
+        "038d25801a4a44a8",
+        "30244a9370c540bc"
+      ],
+      "share": 0.164,
+      "title": "Shop: tool returned nothing at a tool step (call)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "check",
+      "count": 69,
+      "examples": [
+        "8a87daa0c76b44c4",
+        "9c92dafab784446e",
+        "8becd032cc2a4d8e"
+      ],
+      "share": 0.157,
+      "title": "Math: wrong fact at a llm step (check)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "step",
+      "count": 45,
+      "examples": [
+        "76a94ffe874a42a6",
+        "4a152301e4f54e25",
+        "9977926fa3ff4765"
+      ],
+      "share": 0.103,
+      "title": "Math: wrong fact at a llm step (step)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F2",
+      "mistake_name": "wrong tool result",
+      "step_kind": "tool",
+      "agent_node": "calculate",
+      "count": 34,
+      "examples": [
+        "16066beb6e54435e",
+        "b3c0cf8624ef40eb",
+        "c21809a193734b82"
+      ],
+      "share": 0.077,
+      "title": "Math: wrong tool result at a tool step (calculate)"
+    },
+    {
+      "family": "QA",
+      "mistake": "F4",
+      "mistake_name": "misleading paragraph",
+      "step_kind": "retrieval",
+      "agent_node": "search",
+      "count": 32,
+      "examples": [
+        "3670cc00c85e40e5",
+        "ec0f52414c0d487e",
+        "c13b5bb7fe3b4dd7"
+      ],
+      "share": 0.073,
+      "title": "QA: misleading paragraph at a retrieval step (search)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F1",
+      "mistake_name": "wrong tool argument",
+      "step_kind": "tool",
+      "agent_node": "calculate",
+      "count": 30,
+      "examples": [
+        "2db4df81cdeb43db",
+        "e7db2907d84d43b0",
+        "437903aa5d44484b"
+      ],
+      "share": 0.068,
+      "title": "Math: wrong tool argument at a tool step (calculate)"
+    },
+    {
+      "family": "Shop",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "act",
+      "count": 20,
+      "examples": [
+        "04de044886aa4b5f",
+        "6298101daad04b22",
+        "5a6145e0b72f4334"
+      ],
+      "share": 0.046,
+      "title": "Shop: wrong fact at a llm step (act)"
+    },
+    {
+      "family": "QA",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "read",
+      "count": 19,
+      "examples": [
+        "57c4fbcfcc3040ff",
+        "ad966a98dd394605",
+        "eb491e6455d042d7"
+      ],
+      "share": 0.043,
+      "title": "QA: wrong fact at a llm step (read)"
+    },
+    {
+      "family": "QA",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "answer",
+      "count": 19,
+      "examples": [
+        "9c824cb6822543ae",
+        "8c0b789a0a524cdf",
+        "14c97f75181b4882"
+      ],
+      "share": 0.043,
+      "title": "QA: wrong fact at a llm step (answer)"
+    },
+    {
+      "family": "Shop",
+      "mistake": "F1",
+      "mistake_name": "wrong tool argument",
+      "step_kind": "tool",
+      "agent_node": "call",
+      "count": 16,
+      "examples": [
+        "68014d207b9a4f92",
+        "aa3fed71692e4cb9",
+        "0d1003c9d2764c24"
+      ],
+      "share": 0.036,
+      "title": "Shop: wrong tool argument at a tool step (call)"
+    },
+    {
+      "family": "Math",
+      "mistake": "real failure",
+      "mistake_name": "failure nobody planted",
+      "step_kind": "llm",
+      "agent_node": "plan",
+      "count": 15,
+      "examples": [
+        "49d3a5056d604605",
+        "ec93dd8d7a874746",
+        "82ea1317aa574144"
+      ],
+      "share": 0.034,
+      "title": "Math: failure nobody planted at a llm step (plan)"
+    },
+    {
+      "family": "Math",
+      "mistake": "real failure",
+      "mistake_name": "failure nobody planted",
+      "step_kind": "llm",
+      "agent_node": "step",
+      "count": 13,
+      "examples": [
+        "854e402262f34313",
+        "0e7d6f67df884221",
+        "e138710405fa4889"
+      ],
+      "share": 0.03,
+      "title": "Math: failure nobody planted at a llm step (step)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F3",
+      "mistake_name": "tool returned nothing",
+      "step_kind": "tool",
+      "agent_node": "calculate",
+      "count": 12,
+      "examples": [
+        "9b5303b9b9ae43b4",
+        "df7d80ef23db45a4",
+        "37452fc329e1498f"
+      ],
+      "share": 0.027,
+      "title": "Math: tool returned nothing at a tool step (calculate)"
+    },
+    {
+      "family": "Math",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "plan",
+      "count": 11,
+      "examples": [
+        "a8c3869c2e424542",
+        "21c756dac02a4c07",
+        "d60e476552e14c11"
+      ],
+      "share": 0.025,
+      "title": "Math: wrong fact at a llm step (plan)"
+    },
+    {
+      "family": "Shop",
+      "mistake": "real failure",
+      "mistake_name": "failure nobody planted",
+      "step_kind": "llm",
+      "agent_node": "plan",
+      "count": 8,
+      "examples": [
+        "3f543aefd8524175",
+        "513d9a3b03cb45f3",
+        "5f4627564f7c4f9c"
+      ],
+      "share": 0.018,
+      "title": "Shop: failure nobody planted at a llm step (plan)"
+    },
+    {
+      "family": "QA",
+      "mistake": "F5",
+      "mistake_name": "missing paragraph",
+      "step_kind": "retrieval",
+      "agent_node": "search",
+      "count": 6,
+      "examples": [
+        "3fb6a3807f6f4a07",
+        "098a1226afa94401",
+        "75af94b7dcd747d3"
+      ],
+      "share": 0.014,
+      "title": "QA: missing paragraph at a retrieval step (search)"
+    },
+    {
+      "family": "QA",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "plan",
+      "count": 6,
+      "examples": [
+        "26f65be2073c4d05",
+        "2da3cec9222b4c04",
+        "cad1325279354d7c"
+      ],
+      "share": 0.014,
+      "title": "QA: wrong fact at a llm step (plan)"
+    },
+    {
+      "family": "Math",
+      "mistake": "real failure",
+      "mistake_name": "failure nobody planted",
+      "step_kind": "tool",
+      "agent_node": "calculate",
+      "count": 5,
+      "examples": [
+        "7efcbdeaf5294e70",
+        "3f2e9672b13c47ba",
+        "377599a373564ead"
+      ],
+      "share": 0.011,
+      "title": "Math: failure nobody planted at a tool step (calculate)"
+    },
+    {
+      "family": "Shop",
+      "mistake": "F6",
+      "mistake_name": "wrong fact",
+      "step_kind": "llm",
+      "agent_node": "plan",
+      "count": 4,
+      "examples": [
+        "b1098a14ee384827",
+        "da5d4407879e449c",
+        "9a385f78e7e74f5f"
+      ],
+      "share": 0.009,
+      "title": "Shop: wrong fact at a llm step (plan)"
+    },
+    {
+      "family": "Shop",
+      "mistake": "real failure",
+      "mistake_name": "failure nobody planted",
+      "step_kind": "llm",
+      "agent_node": "act",
+      "count": 3,
+      "examples": [
+        "57910f99f68845fd",
+        "fec979c7d832400b",
+        "e01be5bd164e4f76"
+      ],
+      "share": 0.007,
+      "title": "Shop: failure nobody planted at a llm step (act)"
+    }
+  ]
+}

@@ -1,0 +1,583 @@
+{
+  "kpis": {
+    "runs": 3829,
+    "steps": 37452,
+    "labelled_failures": 439,
+    "save_point_dedup": 0.804,
+    "open_incidents": 8,
+    "critical_incidents": 5
+  },
+  "model": {
+    "name": "gnn@0e314b80",
+    "variant": "with_real_failures",
+    "results": {
+      "test_known": {
+        "n": 30,
+        "top1": 0.5667,
+        "top1_ci95": [
+          0.3667,
+          0.7333
+        ],
+        "top3": 0.9
+      },
+      "test_new_tasks": {
+        "n": 123,
+        "top1": 0.5935,
+        "top1_ci95": [
+          0.5041,
+          0.6829
+        ],
+        "top3": 0.7236
+      },
+      "test_natural": {
+        "n": 15,
+        "top1": 0.0,
+        "top1_ci95": [
+          0.0,
+          0.0
+        ],
+        "top3": 0.2667
+      }
+    },
+    "policy": {
+      "val": {
+        "n": 34,
+        "top1": 0.5882,
+        "top1_ci95": [
+          0.4118,
+          0.7647
+        ],
+        "top3": 0.8529,
+        "top3_ci95": [
+          0.7353,
+          0.9706
+        ],
+        "pm1": 0.6176,
+        "mrr": 0.7398
+      },
+      "test_known": {
+        "n": 30,
+        "top1": 0.5667,
+        "top1_ci95": [
+          0.3667,
+          0.7333
+        ],
+        "top3": 0.8333,
+        "top3_ci95": [
+          0.7,
+          0.9667
+        ],
+        "pm1": 0.6333,
+        "mrr": 0.7248
+      },
+      "test_new_tasks": {
+        "n": 123,
+        "top1": 0.5935,
+        "top1_ci95": [
+          0.5041,
+          0.6829
+        ],
+        "top3": 0.6992,
+        "top3_ci95": [
+          0.6098,
+          0.7724
+        ],
+        "pm1": 0.6911,
+        "mrr": 0.6861
+      },
+      "test_natural": {
+        "n": 15,
+        "top1": 0.0,
+        "top1_ci95": [
+          0.0,
+          0.0
+        ],
+        "top3": 0.6667,
+        "top3_ci95": [
+          0.4,
+          0.8667
+        ],
+        "pm1": 0.5333,
+        "mrr": 0.2706
+      }
+    }
+  },
+  "recent_runs": [
+    {
+      "run_id": "d834e87d4aa048c6",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:46:17.837604+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "52b26f290d3f4f1d",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:45:48.862117+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "c05c2d592f814560",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:45:47.936857+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "868d4793ffc14307",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:45:47.229939+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "d4c81c0a616745a2",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:45:18.891073+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "684e382ca6354ef6",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:45:11.128452+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "f1b0638bf1544237",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:44:20.773897+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "f4fb123e69d4488a",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:44:20.685214+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "79d8a83a24da4533",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:42:56.702457+00:00",
+      "parent_run_id": "57c4fbcfcc3040ff"
+    },
+    {
+      "run_id": "57c4fbcfcc3040ff",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 4,
+      "label_source": "injected",
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:41:58.444190+00:00",
+      "parent_run_id": "d2e5ccc7134549bb"
+    },
+    {
+      "run_id": "d2e5ccc7134549bb",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:41:37.839252+00:00",
+      "parent_run_id": null
+    },
+    {
+      "run_id": "11cc537fa1a241b5",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-e1d62148",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:34:19.336255+00:00",
+      "parent_run_id": "9c824cb6822543ae"
+    }
+  ],
+  "recent_failures": [
+    {
+      "run_id": "57c4fbcfcc3040ff",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-4d4f4653",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 4,
+      "label_source": "injected",
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:41:58.444190+00:00",
+      "parent_run_id": "d2e5ccc7134549bb"
+    },
+    {
+      "run_id": "9c824cb6822543ae",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-e1d62148",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 5,
+      "label_source": "injected",
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:20:01.495553+00:00",
+      "parent_run_id": "2676edddcb2b4187"
+    },
+    {
+      "run_id": "8c0b789a0a524cdf",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "lab-qa-7f38856f",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 5,
+      "label_source": "injected",
+      "steps": 7,
+      "split": null,
+      "created_at": "2026-10-03T18:18:40.570999+00:00",
+      "parent_run_id": "311314777b304f4f"
+    },
+    {
+      "run_id": "8a87daa0c76b44c4",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "lab-math-80a8a40a",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 6,
+      "label_source": "injected",
+      "steps": 8,
+      "split": null,
+      "created_at": "2026-10-03T18:11:37.095751+00:00",
+      "parent_run_id": "62d4edd6384c460d"
+    },
+    {
+      "run_id": "57910f99f68845fd",
+      "family": "ops",
+      "family_label": "Shop",
+      "task_id": "ops-0199",
+      "agent": "shop_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": 5,
+      "label_source": "verified",
+      "steps": 11,
+      "split": "test_new_tasks",
+      "created_at": "2026-10-03T13:41:48.739150+00:00",
+      "parent_run_id": null
+    },
+    {
+      "run_id": "68014d207b9a4f92",
+      "family": "ops",
+      "family_label": "Shop",
+      "task_id": "ops-0197",
+      "agent": "shop_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F1",
+      "guilty_step": 6,
+      "label_source": "injected",
+      "steps": 11,
+      "split": "test_new_tasks",
+      "created_at": "2026-10-03T13:41:47.877460+00:00",
+      "parent_run_id": "acad3e7ed4a74fb7"
+    },
+    {
+      "run_id": "5f2a6a1d74754630",
+      "family": "ops",
+      "family_label": "Shop",
+      "task_id": "ops-0198",
+      "agent": "shop_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F3",
+      "guilty_step": 4,
+      "label_source": "injected",
+      "steps": 8,
+      "split": "test_new_tasks",
+      "created_at": "2026-10-03T13:41:45.324015+00:00",
+      "parent_run_id": "413b76428f664257"
+    },
+    {
+      "run_id": "04de044886aa4b5f",
+      "family": "ops",
+      "family_label": "Shop",
+      "task_id": "ops-0198",
+      "agent": "shop_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 3,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "test_new_tasks",
+      "created_at": "2026-10-03T13:41:42.586596+00:00",
+      "parent_run_id": "413b76428f664257"
+    }
+  ],
+  "incidents": [
+    {
+      "incident_id": "471e147062",
+      "severity": "high",
+      "title": "qa_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T18:46:20+00:00",
+      "run_id": "57c4fbcfcc3040ff",
+      "needs_approval": false,
+      "repeats": 1
+    },
+    {
+      "incident_id": "6fedaec8ee",
+      "severity": "high",
+      "title": "qa_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T18:19:27+00:00",
+      "run_id": "8c0b789a0a524cdf",
+      "needs_approval": false,
+      "repeats": 1
+    },
+    {
+      "incident_id": "1ba44f85e6",
+      "severity": "high",
+      "title": "math_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T18:13:16+00:00",
+      "run_id": "8a87daa0c76b44c4",
+      "needs_approval": false,
+      "repeats": 1
+    },
+    {
+      "incident_id": "e06d42e78e",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T16:53:02+00:00",
+      "run_id": "5f2a6a1d74754630",
+      "needs_approval": true,
+      "repeats": 1
+    },
+    {
+      "incident_id": "7d6afb05f6",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T16:52:54+00:00",
+      "run_id": "5f2a6a1d74754630",
+      "needs_approval": true,
+      "repeats": 1
+    },
+    {
+      "incident_id": "c11dd95f22",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T16:52:34+00:00",
+      "run_id": "5f2a6a1d74754630",
+      "needs_approval": true,
+      "repeats": 1
+    },
+    {
+      "incident_id": "dc37906744",
+      "severity": "critical",
+      "title": "trading_bot gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T16:49:45+00:00",
+      "run_id": "2364a4b417464709",
+      "needs_approval": true,
+      "repeats": 1
+    },
+    {
+      "incident_id": "9c7ae74aa2",
+      "severity": "critical",
+      "title": "trading_bot gave a wrong result",
+      "status": "open",
+      "created_at": "2026-10-03T16:47:40+00:00",
+      "run_id": "a010225302714e62",
+      "needs_approval": true,
+      "repeats": 1
+    }
+  ],
+  "queue": [
+    {
+      "name": "Farm QA (150 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_qa_aryan.log",
+      "note": "399 runs, 79 labelled failures, 0 crashes"
+    },
+    {
+      "name": "Farm Math (300 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_math_aryan.log",
+      "note": "864 runs, 200 labelled failures, 0 crashes"
+    },
+    {
+      "name": "Farm Shop (100 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_ops_aryan.log",
+      "note": "unseen task type test set (test_new_tasks)"
+    },
+    {
+      "name": "Label natural failures by experiment (40 runs, repair model qwen2.5:14b)",
+      "state": "running",
+      "log": "data/logs/label_natural_aryan.log",
+      "note": "resumed with agent-strong (free OpenRouter) as the repair model, so the local 7B stays loaded and demos stay fast; unbuffered log"
+    },
+    {
+      "name": "GNN cross-validation (5 variants x 5 folds, train+val only)",
+      "state": "done",
+      "log": "data/logs/gnn_cv.log",
+      "note": "chose graph features without message passing; final Top-1 0.607 / Top-3 0.929 on test_known"
+    },
+    {
+      "name": "Train the chosen GNN variant (5 seeds) and evaluate every test set once",
+      "state": "done",
+      "note": "Shop (never trained) Top-1 0.626 [0.53, 0.71], n=115"
+    },
+    {
+      "name": "Regenerate F8 runs made before the recorder fix (PR #15)",
+      "state": "queued",
+      "note": "or drop them from training"
+    },
+    {
+      "name": "Merge teammates' shards into this DB (Radhesh ~600 runs)",
+      "state": "queued",
+      "note": "waiting for shards on Drive"
+    },
+    {
+      "name": "Attach Black Box to an open-source agent we did not write (smolagents)",
+      "state": "done",
+      "note": "smolagents: replay 0 calls; fork flips the answer re-running 2/6 steps (PR #26)"
+    },
+    {
+      "name": "End-to-end check of every /docs use case",
+      "state": "done",
+      "note": "58/58 passed (scripts/e2e_docs.py)"
+    },
+    {
+      "name": "Guardian: incidents for operators (email / WhatsApp / outbox, approval)",
+      "state": "done",
+      "note": "PRs #27, #28; money-safety bug found with the trader bot and fixed"
+    },
+    {
+      "name": "Live Twilio / SMTP delivery test",
+      "state": "queued",
+      "note": "needs credentials in .env"
+    },
+    {
+      "name": "Re-run eval on all test sets incl. real failures",
+      "state": "queued",
+      "note": "after the labeller finishes"
+    }
+  ]
+}

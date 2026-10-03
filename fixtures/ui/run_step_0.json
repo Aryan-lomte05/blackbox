@@ -1,0 +1,69 @@
+{
+  "step": {
+    "run_id": "37452fc329e1498f",
+    "idx": 0,
+    "kind": "llm",
+    "name": "agent-local-7b",
+    "node": "plan",
+    "request": {
+      "model_id": "agent-local-7b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You plan how to solve a math word problem. List the calculations needed, in order, one short line each: what is being found and from which numbers in the problem. Do not compute the results. At most 5 lines. The last line must find what the question asks."
+        },
+        {
+          "role": "user",
+          "content": "Problem: The glee club ordered 20 pizzas and ate 70% of them. The football team ordered twice as many pizzas and ate 80% of them. How many pizzas are left?"
+        }
+      ],
+      "tools": [],
+      "params": {
+        "max_tokens": 160
+      }
+    },
+    "output": {
+      "text": "1. Calculate how many pizzas the glee club ate: \\(20 \\times 0.70\\)\n2. Calculate how many pizzas the football team ordered: \\(20 \\times 2\\)\n3. Calculate how many pizzas the football team ate: \\((20 \\times 2) \\times 0.80\\)\n4. Calculate total pizzas eaten by both teams: \\((20 \\times 0.70) + ((20 \\times 2) \\times 0.80)\\)\n5. Calculate how many pizzas are left: \\(20 + (20 \\times 2) - \\text{total pizzas eaten}\\)",
+      "tool_calls": [],
+      "finish_reason": "stop"
+    },
+    "error": null,
+    "reads": [
+      "question"
+    ],
+    "writes": [
+      "plan"
+    ],
+    "parents": [],
+    "input_hash": "f0598433e369aeb358dc71486d053a5cf305995b1d72c502b2b7729896aea5e7",
+    "state_hash_after": "f750bd803f2bd6890de28108186163ae58abc6da82a5a46410b82d9fd22122ad",
+    "state_diff": {
+      "plan": {
+        "before": null,
+        "after": "1. Calculate how many pizzas the glee club ate: \\(20 \\times 0.70\\) 2. Calculate how many pizzas the football team ordered: \\(20 \\times 2\\) 3. Calculate how many pizzas the football team ate: \\((20 \\times 2) \\times 0.80\\) 4. Calculate total pizzas eaten by both teams: \\((20 \\times 0.70) + ((20 \\times 2) \\times 0.80)\\) 5. Calculate how many pizzas are left: \\(20 + (20 \\times 2) - \\text{total pizzas eaten}\\)"
+      }
+    },
+    "latency_ms": 0.0,
+    "tokens_in": null,
+    "tokens_out": null,
+    "cached": true,
+    "monitor": null,
+    "meta": {
+      "provider": "ollama",
+      "model_tag": "qwen2.5:7b",
+      "reused_from": [
+        "a94b964728bd42f8",
+        0
+      ],
+      "saved_ms": 4086.71,
+      "saved_tokens": 257
+    }
+  },
+  "state_after": {
+    "__node__": "step",
+    "plan": "1. Calculate how many pizzas the glee club ate: \\(20 \\times 0.70\\) 2. Calculate how many pizzas the football team ordered: \\(20 \\times 2\\) 3. Calculate how many pizzas the football team ate: \\((20 \\times 2) \\times 0.80\\) 4. Calculate total pizzas eaten by both teams: \\((20 \\times 0.70) + ((20 \\times 2) \\times 0.80)\\) 5. Calculate how many pizzas are left: \\(20 + (20 \\times 2) - \\text{total pizzas eaten}\\)",
+    "question": "The glee club ordered 20 pizzas and ate 70% of them. The football team ordered twice as many pizzas and ate 80% of them. How many pizzas are left?",
+    "results": [],
+    "turns": 0
+  }
+}

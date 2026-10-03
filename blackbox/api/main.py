@@ -522,6 +522,8 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
         ),
         openapi_tags=[
             {"name": "Investigate", "description": "The whole investigation of one failed run in one call."},
+            {"name": "UI", "description": "Shaped for the dashboard: overview, React Flow run graph, failure atlas, "
+                                          "case-file report, exported regression test."},
             {"name": "Dataset", "description": "Everything recorded: tasks, test sets, planted mistakes, health."},
             {"name": "Guardian", "description": "For people running agents unattended: incidents explained in plain "
                                                 "language, sent by email / WhatsApp with a link to the incident page."},
@@ -534,7 +536,8 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
+        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
+                       "http://127.0.0.1:3000").split(","),
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -562,6 +565,9 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
         except Exception as exc:  # noqa: BLE001 - the API works without demo examples
             print(f"showcase examples unavailable: {type(exc).__name__}: {exc}")
     build_routes(app, db, load, jobs, run_jobs, cases)
+    from blackbox.api import ui
+
+    ui.register(app, db, load, diagnose)
 
     return app
 

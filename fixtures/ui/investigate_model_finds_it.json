@@ -1,0 +1,303 @@
+{
+  "story": [
+    "1. Math run 37452fc329e1498f failed: answered 9, expected 14.",
+    "2. We planted F3 (tool returned nothing) at step 4, so the true guilty step is 4.",
+    "3. The diagnosis model named steps [4, 12, 0] as the top suspects (gnn). The true guilty step is ranked first.",
+    "4. Verify re-ran the run with one suspect repaired at a time and PROVED step 4 is the cause. That matches the known guilty step.",
+    "5. Those experiments re-ran 20 steps in total and re-used 34 from the recording.",
+    "6. Fixed run 2bbf825e27a442e8 answers 14 (first difference at aligned step 4; outcome flipped: True)."
+  ],
+  "case": {
+    "run_id": "37452fc329e1498f",
+    "family": "Math",
+    "agent": "math_agent@v1",
+    "model": "agent-local-7b",
+    "task": "The glee club ordered 20 pizzas and ate 70% of them. The football team ordered twice as many pizzas and ate 80% of them. How many pizzas are left?",
+    "answer": "9",
+    "expected": "14",
+    "outcome": "FAIL",
+    "planted_mistake": {
+      "type": "F3",
+      "name": "tool returned nothing",
+      "step": 4,
+      "note": "F3: result -> nothing"
+    },
+    "known_guilty_step": 4,
+    "known_from": "injected",
+    "test_set": "test_known",
+    "why_this_case": "Math failure: model's #1 suspect is the guilty step"
+  },
+  "diagnosis": {
+    "source": "gnn",
+    "model": "gnn@0e314b80",
+    "top3": [
+      4,
+      12,
+      0
+    ],
+    "scores": [
+      {
+        "idx": 4,
+        "p": 0.9839,
+        "rank": 1
+      },
+      {
+        "idx": 12,
+        "p": 0.0124,
+        "rank": 2
+      },
+      {
+        "idx": 2,
+        "p": 0.0017,
+        "rank": 3
+      },
+      {
+        "idx": 0,
+        "p": 0.0009,
+        "rank": 4
+      },
+      {
+        "idx": 6,
+        "p": 0.0008,
+        "rank": 5
+      }
+    ],
+    "known_guilty_in_top3": true,
+    "known_guilty_is_first": true
+  },
+  "verification": {
+    "verified_cause": 4,
+    "matches_known_guilty_step": true,
+    "suspects_tested": [
+      {
+        "suspect": 4,
+        "verdict": "verified",
+        "cause_step": 4,
+        "causal_effect": 1.0,
+        "attempts": [
+          {
+            "repair": "twin",
+            "at_step": 4,
+            "passed": "1/1",
+            "re_ran": [
+              9
+            ],
+            "re_used": [
+              4
+            ]
+          },
+          {
+            "repair": "rerun",
+            "at_step": 4,
+            "passed": "1/1",
+            "re_ran": [
+              9
+            ],
+            "re_used": [
+              4
+            ]
+          }
+        ]
+      },
+      {
+        "suspect": 12,
+        "verdict": "not the cause",
+        "cause_step": null,
+        "causal_effect": 0.0,
+        "attempts": [
+          {
+            "repair": "rerun",
+            "at_step": 12,
+            "passed": "0/1",
+            "re_ran": [
+              1
+            ],
+            "re_used": [
+              13
+            ]
+          }
+        ]
+      },
+      {
+        "suspect": 0,
+        "verdict": "not the cause",
+        "cause_step": null,
+        "causal_effect": 0.0,
+        "attempts": [
+          {
+            "repair": "rerun",
+            "at_step": 0,
+            "passed": "0/1",
+            "re_ran": [
+              1
+            ],
+            "re_used": [
+              13
+            ]
+          }
+        ]
+      }
+    ],
+    "steps_re_run_total": 20,
+    "steps_re_used_total": 34
+  },
+  "comparison": {
+    "fixed_run_id": "2bbf825e27a442e8",
+    "fixed_answer": "14",
+    "first_difference_at": 4,
+    "pairs_changed": 10,
+    "outcome_flipped": true
+  },
+  "repair": null,
+  "steps": [
+    {
+      "idx": 0,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "plan",
+      "used": [],
+      "output": "1. Calculate how many pizzas the glee club ate: \\(20 \\times 0.70\\) 2. Calculate how many pizzas the football team ordered: \\(20 \\times 2\\) 3. Calculate how many pizzas the football team ate: \\((20 \\times 2) \\times 0.80\\…"
+    },
+    {
+      "idx": 1,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0
+      ],
+      "output": "CALC: 20 * 0.70"
+    },
+    {
+      "idx": 2,
+      "kind": "tool",
+      "name": "calculator",
+      "node": "calculate",
+      "used": [
+        1
+      ],
+      "output": "{\"result\": 14}"
+    },
+    {
+      "idx": 3,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0,
+        1,
+        2
+      ],
+      "output": "CALC: (20 * 2) * 0.80"
+    },
+    {
+      "idx": 4,
+      "kind": "tool",
+      "name": "calculator",
+      "node": "calculate",
+      "used": [
+        3
+      ],
+      "output": "{\"result\": null}"
+    },
+    {
+      "idx": 5,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0,
+        3,
+        4
+      ],
+      "output": "CALC: (20 * 2) * 0.80"
+    },
+    {
+      "idx": 6,
+      "kind": "tool",
+      "name": "calculator",
+      "node": "calculate",
+      "used": [
+        5
+      ],
+      "output": "{\"result\": 32}"
+    },
+    {
+      "idx": 7,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0,
+        5,
+        6
+      ],
+      "output": "CALC: (20 * 2) * 0.80"
+    },
+    {
+      "idx": 8,
+      "kind": "tool",
+      "name": "calculator",
+      "node": "calculate",
+      "used": [
+        7
+      ],
+      "output": "{\"result\": 32}"
+    },
+    {
+      "idx": 9,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0,
+        7,
+        8
+      ],
+      "output": "CALC: (20 * 2) * 0.80"
+    },
+    {
+      "idx": 10,
+      "kind": "tool",
+      "name": "calculator",
+      "node": "calculate",
+      "used": [
+        9
+      ],
+      "output": "{\"result\": 32}"
+    },
+    {
+      "idx": 11,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "step",
+      "used": [
+        0,
+        9,
+        10
+      ],
+      "output": "CALC: (20 * 2) * 0.80"
+    },
+    {
+      "idx": 12,
+      "kind": "llm",
+      "name": "agent-local-7b",
+      "node": "check",
+      "used": [
+        10
+      ],
+      "output": "FINAL: 9"
+    },
+    {
+      "idx": 13,
+      "kind": "final",
+      "name": "final",
+      "node": "answer",
+      "used": [
+        12
+      ],
+      "output": "\"9\""
+    }
+  ],
+  "seconds": 26.6
+}
