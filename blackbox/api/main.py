@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from blackbox.agents.base import Task, get_agent, run_task
 from blackbox.api.jobs import Job, JobManager
@@ -41,6 +41,8 @@ class ForkRequest(BaseModel):
 
 
 class LiveRunRequest(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     agent: str  # registered agent ref, e.g. "qa_agent@v1"
     task_family: str
     task_id: str

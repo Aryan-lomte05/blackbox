@@ -43,10 +43,21 @@ def _twin_change(trace: Trace, twin: Trace, idx: int) -> Change | None:
     return None
 
 
+def answer_steps(trace: Trace) -> set[int]:
+    """Steps whose output the final answer is built from directly."""
+    finals = [s for s in trace.steps if s.kind == "final"]
+    if not finals:
+        return set()
+    direct = set(finals[-1].parents)
+    return direct or {finals[-1].idx - 1}
+
+
 def _strategies(trace: Trace, idx: int, twin: Trace | None, strong_model: str) -> list[tuple[str, int, Change | None, bool]]:
     """(name, step to fork at, change, deterministic?)"""
     out = []
-    if twin is not None and (ch := _twin_change(trace, twin, idx)) is not None:
+    # Pasting a passing run's output into a step that writes the answer always "fixes"
+    # the run: it copies the answer and proves nothing. Twins are evidence only upstream.
+    if twin is not None and idx not in answer_steps(trace) and (ch := _twin_change(trace, twin, idx)) is not None:
         out.append(("twin", idx, ch, True))
     target = decision_step(trace.steps, idx)
     if trace.steps[target].kind == "llm" and trace.steps[target].request.get("model_id") != strong_model:
@@ -63,8 +74,10 @@ def verify(
     strong_model: str = "agent-strong",
     repeats: int = 3,
     on_event: Event | None = None,
-    stop_at_first: bool = True,
+    stop_at_first: bool = False,
 ) -> dict[str, Any]:
+    """Root cause = the EARLIEST verified step (SYSTEM.md §6.2): later steps that a
+    repair also flips are downstream symptoms. stop_at_first trades that for speed."""
     if trace.run.outcome is None or trace.run.outcome.success:
         raise ValueError("verify needs a finished, failed run")
     emit = on_event or (lambda e: None)
@@ -100,7 +113,7 @@ def verify(
         results.append(per)
         emit({"type": "verdict", **{k: per[k] for k in ("step", "cause_step", "verdict", "causal_effect", "flaky")}})
         if per["verified"]:
-            verified = per["cause_step"]
+            verified = per["cause_step"] if verified is None else min(verified, per["cause_step"])
             if stop_at_first:
                 break
     return {"run_id": trace.run.run_id, "verified_step": verified, "suspects": results,
@@ -111,9 +124,9 @@ def label_from_verification(trace: Trace, report: dict, store: Store | None = No
     """Turn a verification into a test label for a natural failure (Radhesh's test_natural)."""
     if report["verified_step"] is None:
         return None
+    cause = next(s for s in report["suspects"] if s.get("cause_step") == report["verified_step"])
     label = Label(root_cause_step=report["verified_step"], source="verified",
-                  notes=f"causal effect {next(s['causal_effect'] for s in report['suspects'] if s['verified'])}; "
-                        f"suspect {next(s['step'] for s in report['suspects'] if s['verified'])}")
+                  notes=f"causal effect {cause['causal_effect']}; suspect {cause['step']}")
     trace.run.label = label
     if store is not None:
         store.save_trace(trace)
