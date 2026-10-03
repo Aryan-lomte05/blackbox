@@ -20,12 +20,12 @@ _SYSTEM = (
 )
 
 
-def ask(state: str) -> dict:
+def ask(state: str, model_id: str | None = None) -> dict:
     from blackbox.recorder import providers
 
-    model_id = os.environ.get("BLACKBOX_MONITOR_LLM_MODEL", "monitor-llm")
-    if model_id not in providers.registry():
-        model_id = "agent-small" if "agent-small" in providers.registry() else model_id
+    # If caller didn't specify, try agent-local (Ollama, always available), fall through to monitor-llm (Groq)
+    if model_id is None:
+        model_id = os.environ.get("BLACKBOX_MONITOR_LLM_MODEL", "agent-local")
 
     messages = [{"role": "system", "content": _SYSTEM}, {"role": "user", "content": state}]
 

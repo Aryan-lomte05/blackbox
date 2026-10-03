@@ -35,35 +35,56 @@ def ask(state: str) -> dict:
     answers = res.get("answers", res)
     out: dict = {"tier": "laya", "latency_ms": latency_ms}
 
-    # Consistent
-    ans_c = answers.get("consistent", {})
-    prob_c = float(ans_c.get("noul", ans_c.get("prob", 0.5)))
-    conf_c = float(ans_c.get("confidence", ans_c.get("answer_confidence", 0.5)))
-    out["consistent"] = {"prob": prob_c, "noul": prob_c, "confidence": conf_c}
+    # Consistent — omit field if Laya didn't return it, never fabricate 0.5
+    ans_c = answers.get("consistent")
+    if ans_c is not None:
+        prob_c = ans_c.get("noul") if ans_c.get("noul") is not None else ans_c.get("prob")
+        conf_c = ans_c.get("confidence") if ans_c.get("confidence") is not None else ans_c.get("answer_confidence")
+        entry: dict = {}
+        if prob_c is not None:
+            entry["prob"] = float(prob_c)
+        if conf_c is not None:
+            entry["confidence"] = float(conf_c)
+        if entry:
+            out["consistent"] = entry
 
     # On track
-    ans_o = answers.get("on_track", {})
-    prob_o = float(ans_o.get("noul", ans_o.get("prob", 0.5)))
-    conf_o = float(ans_o.get("confidence", ans_o.get("answer_confidence", 0.5)))
-    out["on_track"] = {"prob": prob_o, "noul": prob_o, "confidence": conf_o}
+    ans_o = answers.get("on_track")
+    if ans_o is not None:
+        prob_o = ans_o.get("noul") if ans_o.get("noul") is not None else ans_o.get("prob")
+        conf_o = ans_o.get("confidence") if ans_o.get("confidence") is not None else ans_o.get("answer_confidence")
+        entry = {}
+        if prob_o is not None:
+            entry["prob"] = float(prob_o)
+        if conf_o is not None:
+            entry["confidence"] = float(conf_o)
+        if entry:
+            out["on_track"] = entry
 
     # Mistake type
-    ans_m = answers.get("mistake_type", {})
-    m_probs = ans_m.get("probabilities", ans_m.get("probs", {}))
-    out["mistake_type"] = {str(k): float(v) for k, v in m_probs.items()}
-    out["mistake_type_confidence"] = float(ans_m.get("confidence", 0.5))
+    ans_m = answers.get("mistake_type")
+    if ans_m is not None:
+        m_probs = ans_m.get("probabilities") or ans_m.get("probs") or {}
+        if m_probs:
+            out["mistake_type"] = {str(k): float(v) for k, v in m_probs.items()}
+        conf_m = ans_m.get("confidence")
+        if conf_m is not None:
+            out["mistake_type_confidence"] = float(conf_m)
 
     # Severity
-    ans_s = answers.get("severity", {})
-    s_probs = ans_s.get("probabilities", ans_s.get("probs", {}))
-    legend = ans_s.get("legend", {})
-    # Map index-based keys ("0", "1", ...) to criterion labels if legend present
-    sev_map: dict[str, float] = {}
-    for k, v in s_probs.items():
-        label = legend.get(str(k), k)
-        sev_map[str(label)] = float(v)
-    out["severity"] = sev_map if sev_map else {str(k): float(v) for k, v in s_probs.items()}
-    out["severity_confidence"] = float(ans_s.get("confidence", 0.5))
+    ans_s = answers.get("severity")
+    if ans_s is not None:
+        s_probs = ans_s.get("probabilities") or ans_s.get("probs") or {}
+        legend = ans_s.get("legend", {})
+        sev_map: dict[str, float] = {}
+        for k, v in s_probs.items():
+            label = legend.get(str(k), k)
+            sev_map[str(label)] = float(v)
+        if sev_map:
+            out["severity"] = sev_map
+        conf_s = ans_s.get("confidence")
+        if conf_s is not None:
+            out["severity_confidence"] = float(conf_s)
 
     return out
 

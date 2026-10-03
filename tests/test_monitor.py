@@ -219,7 +219,27 @@ def test_autopilot_integration():
 # ── live (requires `pip install laya`, GPU/MPS) ────────────────────────────────
 
 @pytest.mark.live
+def test_laya_live_questions():
+    """Verifies question construction doesn't crash — directly catches option_order bugs.
+    Run this first before the full inference test (fast, no model weights needed).
+    """
+    from blackbox.monitor.questions import _build_laya_questions
+    qs = _build_laya_questions()
+    assert set(qs.keys()) == {"consistent", "on_track", "mistake_type", "severity"}
+    # Each question must be a dict with at least "type" and "instructions"
+    for name, q in qs.items():
+        assert "type" in q, f"{name}: missing 'type'"
+        assert "instructions" in q, f"{name}: missing 'instructions'"
+    # choice must have criteria
+    assert "criteria" in qs["mistake_type"], "mistake_type: missing 'criteria'"
+    # score must have criteria
+    assert "criteria" in qs["severity"], "severity: missing 'criteria'"
+    print(f"\nQuestions OK: {list(qs.keys())}")
+
+
+@pytest.mark.live
 def test_laya_live():
+    """Full laya_adapter.ask() with real model weights. Requires MPS/CPU inference."""
     from blackbox.monitor.adapters import laya_adapter
 
     state = build_state(
@@ -228,6 +248,44 @@ def test_laya_live():
         [],
     )
     r = laya_adapter.ask(state)
+    # Must have the required keys — not fabricated 0.5
+    assert "on_track" in r, "on_track missing from Laya response"
+    assert "consistent" in r, "consistent missing from Laya response"
+    assert "prob" in r["on_track"], "on_track.prob missing"
     assert 0.0 <= r["on_track"]["prob"] <= 1.0
     assert r["tier"] == "laya"
-    print(f"\nLaya live: {r}")
+    assert r["latency_ms"] > 0
+    print(f"\nLaya live result: {r}")
+
+
+@pytest.mark.live
+def test_check_step_live_no_mocks():
+    """Runs the FULL cascade end-to-end with ZERO mocks.
+    This is the test that would have caught the option_order crash immediately.
+    Requires: laya installed + model weights cached. Ollama optional (used as LLM fallback).
+    """
+    run  = _run({"question": "What year did World War II end?"})
+    step = _step(
+        idx=1,
+        kind="llm",
+        output={"text": "World War II ended in 1945 with the surrender of Germany and Japan."},
+    )
+    # No patches — real Laya, real cascade
+    result = check_step(step, run, [])
+
+    # Must return something (Laya should be available)
+    assert result is not None, (
+        "check_step returned None — check stderr for tier_errors. "
+        "Run with -s to see the [monitor] log line."
+    )
+    assert result["tier"] in ("laya", "jev", "llm"), f"unexpected tier: {result['tier']}"
+    assert "alarm" in result
+    assert isinstance(result["alarm"], bool)
+    # on_track must be a real measured value, not absent
+    assert "on_track" in result, "on_track missing — Laya may have partially failed"
+    assert "prob" in result["on_track"]
+    print(f"\nLive check_step result: tier={result['tier']}, "
+          f"on_track={result['on_track'].get('prob'):.3f}, alarm={result['alarm']}, "
+          f"latency={result['latency_ms']:.0f}ms")
+    if "tier_errors" in result:
+        print(f"  tier_errors: {result['tier_errors']}")

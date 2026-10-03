@@ -67,6 +67,8 @@ def check_step(step: Step, run: Run, prior: list[Step]) -> dict | None:
 
 
 def _cascade(state: str) -> dict | None:
+    tier_errors: dict[str, str] = {}
+
     # ── Tier 1: Laya ──────────────────────────────────────────────────────────
     laya_result = None
     try:
@@ -75,8 +77,9 @@ def _cascade(state: str) -> dict | None:
         laya_result = laya_adapter.ask(state)
         if laya_adapter.overall_confidence(laya_result) >= ESCALATE_THRESHOLD:
             return laya_result
-    except Exception:  # noqa: BLE001, S110
-        pass
+        # Low confidence — escalate but keep result as fallback
+    except Exception as exc:  # noqa: BLE001
+        tier_errors["laya"] = f"{type(exc).__name__}: {exc}"
 
     # ── Tier 2: Jev (only if key is set) ─────────────────────────────────────
     try:
@@ -86,16 +89,35 @@ def _cascade(state: str) -> dict | None:
             jev_result = jev_adapter.ask(state)
             if jev_adapter.overall_confidence(jev_result) >= ESCALATE_THRESHOLD:
                 return jev_result
-            laya_result = jev_result  # use Jev result if LLM also fails
-    except Exception:  # noqa: BLE001, S110
-        pass
+            laya_result = jev_result  # keep as best-so-far even if low-confidence
+        else:
+            tier_errors["jev"] = "TYPESAFE_API_KEY not set"
+    except Exception as exc:  # noqa: BLE001
+        tier_errors["jev"] = f"{type(exc).__name__}: {exc}"
 
-    # ── Tier 3: LLM fallback ──────────────────────────────────────────────────
-    try:
-        from blackbox.monitor.adapters import llm_adapter
+    # ── Tier 3: LLM fallback (Ollama first, then Groq) ────────────────────────
+    # Ollama is always available locally; Groq needs keys.
+    for llm_model in ("agent-local", "monitor-llm"):
+        try:
+            from blackbox.monitor.adapters import llm_adapter
 
-        return llm_adapter.ask(state)
-    except Exception:  # noqa: BLE001, S110
-        pass
+            result = llm_adapter.ask(state, model_id=llm_model)
+            if tier_errors:
+                import sys
+                print(
+                    f"[monitor] tier_errors={tier_errors}; answered by llm/{llm_model}",
+                    file=sys.stderr,
+                )
+            return result
+        except Exception as exc:  # noqa: BLE001
+            tier_errors[f"llm/{llm_model}"] = f"{type(exc).__name__}: {exc}"
 
-    return laya_result  # best we have (possibly None)
+    # All tiers failed
+    import sys
+    print(f"[monitor] all tiers failed: {tier_errors}", file=sys.stderr)
+
+    if laya_result is not None:
+        laya_result["tier_errors"] = tier_errors
+        return laya_result  # best we have (low-confidence Laya)
+
+    return None

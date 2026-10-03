@@ -52,7 +52,8 @@ def _build_laya_questions() -> dict[str, dict]:
             "type": "choice",
             "instructions": "What kind of mistake, if any, does this step contain?",
             "criteria": dict(QUESTION_TEXT["mistake_type"][2]),
-            "option_order": "shuffle",  # reduce position bias (Laya documentation)
+            # option_order intentionally omitted: "shuffle" (string) crashes laya 0.3.24.
+            # Valid value is a list permutation of range(n_options); use default ordering.
         },
         "severity": {
             "type": "score",
