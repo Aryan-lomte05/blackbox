@@ -97,7 +97,7 @@ class Run(BaseModel):
     outcome: Outcome | None = None
     label: Label | None = None
     split: str | None = None
-    status: Literal["running", "done", "crashed"] = "running"
+    status: Literal["running", "done", "crashed", "rewound"] = "running"  # rewound = autopilot took over
     error: str | None = None  # crash traceback: a recorder/agent bug, never a task failure
     stats: dict = Field(default_factory=dict)
     created_at: str = Field(default_factory=utc_now)

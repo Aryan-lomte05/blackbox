@@ -26,7 +26,7 @@ from typing import Any, Callable, ClassVar
 
 from blackbox.core.schema import Change, Outcome, Run, Trace
 from blackbox.core.store import Store
-from blackbox.recorder.context import Monitor, ReplayPlan, RunContext, StepListener, current
+from blackbox.recorder.context import AutopilotRewind, Monitor, ReplayPlan, RunContext, StepListener, current
 
 MAX_NODE_VISITS = 60
 
@@ -112,6 +112,7 @@ def run_task(
     fork_step_idx: int | None = None,
     patch: Change | None = None,
     split: str | None = None,
+    autopilot=None,
 ) -> Trace:
     """Run (or replay/fork) one task and return its trace. Saved if a store is given.
 
@@ -136,7 +137,7 @@ def run_task(
     ctx = RunContext(
         run, agent.init_state(task), store=store,
         tool_caller=agent.tool_caller(task), retriever=agent.retriever(task),
-        plan=plan, monitor=monitor, on_step=on_step,
+        plan=plan, monitor=monitor, on_step=on_step, autopilot=autopilot,
     )
     token = current.set(ctx)
     try:
@@ -160,17 +161,50 @@ def run_task(
         checker = get_checker(task.family)
         run.outcome = checker(answer, task.expected) if checker else None
         run.status = "done"
+    except AutopilotRewind as rewind:
+        current.reset(token)
+        token = None
+        return _take_over(agent, task, model_id, ctx, run, rewind, store=store, monitor=monitor,
+                          on_step=on_step, split=split, autopilot=autopilot)
     except Exception:  # noqa: BLE001 - recorded loudly as a crash, see docstring
         ctx.close(monitor_timeout=5.0)
         run.status = "crashed"
         run.error = traceback.format_exc()
     finally:
-        current.reset(token)
+        if token is not None:
+            current.reset(token)
     run.stats = {**ctx.stats(), **run.stats}
     trace = Trace(run=run, steps=ctx.steps)
     if store is not None:
         store.save_trace(trace)
     return trace
+
+
+def _take_over(agent, task, model_id, ctx, run, rewind: AutopilotRewind, *, store, monitor, on_step, split,
+               autopilot) -> Trace:
+    """Autopilot (USP X1): the run is stopped before it can answer. Its steps so
+    far are kept as a 'rewound' run, and a fork from the flagged decision takes
+    over, re-using everything before it from the recording."""
+    ctx.close(monitor_timeout=5.0)
+    flagged = ctx.steps[rewind.step_idx]
+    flagged.monitor = rewind.answers if rewind.answers is not None else flagged.monitor
+    run.status = "rewound"
+    run.stats = {**ctx.stats(), "autopilot": {"flagged_step": rewind.step_idx, "rewound_to": rewind.target_idx}}
+    partial = Trace(run=run, steps=ctx.steps)
+    if store is not None:
+        store.save_trace(partial)
+    child = run_task(
+        agent, task, model_id, store=store, monitor=monitor, on_step=on_step, split=split,
+        plan=ReplayPlan(parent=partial, fork_idx=rewind.target_idx, change=rewind.change),
+        parent_run_id=run.run_id, fork_step_idx=rewind.target_idx, patch=rewind.change, autopilot=autopilot,
+    )
+    child.run.stats.setdefault("autopilot_rescue", {
+        "from_run": run.run_id, "flagged_step": rewind.step_idx, "rewound_to": rewind.target_idx,
+        "change": rewind.change.model_dump(mode="json") if rewind.change else None,
+    })
+    if store is not None:
+        store.save_trace(child)
+    return child
 
 
 def task_from_run(run: Run) -> Task:

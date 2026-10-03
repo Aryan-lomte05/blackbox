@@ -44,6 +44,21 @@ class ToolError(Exception):
     """A tool/retrieval call failed. Recorded on the step, then raised to the agent."""
 
 
+class AutopilotRewind(BaseException):
+    """Raised by the recorder when the autopilot decides to rewind mid-run.
+
+    BaseException on purpose: an agent's own `except Exception:` must not be
+    able to swallow it and carry on towards a wrong answer.
+    """
+
+    def __init__(self, step_idx: int, target_idx: int, change: Change | None, answers: dict | None):
+        super().__init__(f"autopilot: step {step_idx} flagged, rewinding to step {target_idx}")
+        self.step_idx = step_idx
+        self.target_idx = target_idx
+        self.change = change
+        self.answers = answers
+
+
 class ReplayDivergence(Exception):
     """A replayed step asked something different from the recording.
 
@@ -132,8 +147,10 @@ class RunContext:
         plan: ReplayPlan | None = None,
         monitor: Monitor | None = None,
         on_step: list[StepListener] | None = None,
+        autopilot=None,
     ):
         self.run = run
+        self.autopilot = autopilot
         self.store = store
         self.tool_caller = tool_caller
         self.retriever = retriever
@@ -336,6 +353,10 @@ class RunContext:
                 listener(step)
             except Exception:  # noqa: BLE001 - observers must never change what they observe
                 traceback.print_exc()
+        if self.autopilot is not None and not step.cached and step.kind != "final":
+            decision = self.autopilot.inspect(step, self.run, self.steps)
+            if decision is not None:
+                raise decision
 
     def _safe_monitor(self, step: Step, prior: list[Step]) -> dict | None:
         try:
