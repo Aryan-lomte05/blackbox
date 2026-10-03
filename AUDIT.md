@@ -176,6 +176,24 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
+### 21. Live Lab, Aditya's checker merged, Verify scope fix, quota-proof providers · `aryan/lab-ui-platform`
+- **Reviewed and merged PR #23 (Aditya's step checker)** after his fixes: 227 tests + his 3 live tests pass
+  here; check_step now returns real answers. Calibration notes in the review (LLM tier answered 1.0 for
+  a guilty and a normal step).
+- **Live Lab** (`blackbox lab "<question>"`, `POST /api/lab` streaming `stage` + `step` events): type any
+  question → right agent (QA via live Wikipedia paragraphs, Math, Shop) → clean answer → plant a mistake
+  live (tries others if the agent recovers) → broken answer → live checker → diagnose → verify → (repair)
+  → compare → Guardian incident → scorecard. 14 stages.
+  - Math run: planted F6 at step 6 broke 47 → 46, re-running 1 of 8 steps; diagnosis ranked step 6 first.
+  - QA run (Inception): **Laya raised its alarm on exactly the planted step** (consistent 0.12).
+- **Verify bug found in the Lab, fixed:** the rerun strategy re-executed every step after the suspect,
+  which regenerated a later planted mistake and blamed an innocent earlier step. Every strategy now
+  repairs only its suspect and re-uses unaffected steps. Regression test fails on the old code.
+- **OpenRouter free quota ran out** (all 12 keys: "free-models-per-day"); the client used to retry for many
+  minutes. Now: exhausted keys are skipped, a 45 s deadline, and `fallback:` per model in models.yaml
+  (agent-strong → local 14B, judge-large → local 7B); results record which model really answered.
+  Adding $10 credit on OpenRouter unlocks 1,000 requests/day.
+
 ### 20. Real failures: the model does not transfer (honest), and a suspect policy that covers both · `aryan/natural-eval`
 - **Real-failure test set:** failures nobody planted, cause proven by Verify (earliest step whose repair
   flips the run; the Who&When "decisive step" definition), on tasks never used to train or choose the
