@@ -100,3 +100,13 @@ def test_live_run_streams_steps_then_verify_job(client):
     vevents = _events(http, f"/api/jobs/{job['job_id']}/events")
     assert {"attempt", "result", "verdict", "done"} <= {e["type"] for e in vevents}
     assert http.get(f"/api/jobs/{job['job_id']}").json()["finished"] is True
+
+
+def test_cases_lists_only_cases_the_investigate_route_accepts(client):
+    http, _ = client
+    cases = http.get("/api/cases").json()["cases"]
+    from typing import get_args
+
+    from blackbox.api.main import CaseName
+
+    assert set(cases) <= set(get_args(CaseName))
