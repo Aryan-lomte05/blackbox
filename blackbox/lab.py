@@ -72,7 +72,9 @@ def _answer(trace: Trace) -> Any:
 
 def run_lab(question: str = "", *, family: str | None = None, mistake: str = "auto", repair: bool = False,
             model: str = "agent-local-7b", store: Store | None = None, emit: Emit | None = None,
-            seed: int | None = None) -> dict:
+            seed: int | None = None, notify: bool = False) -> dict:
+    """notify=True sends stage 13's incident through every configured Guardian channel (email, WhatsApp,
+    Slack, ...); by default it is only written to the outbox, so practice runs do not page anyone."""
     import blackbox.agents.builtin  # noqa: F401 - registers our agents and checkers
     from blackbox.agents.base import Task, get_agent, get_checker, run_task
     from blackbox.faults.catalog import allowed_steps, make_change
@@ -263,13 +265,17 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
 
     # 13 incident
     try:
-        from blackbox.guardian.channels import Outbox
+        from blackbox.guardian.channels import Outbox, default_channels
         from blackbox.guardian.service import Guardian
 
-        inc = Guardian(owner="Lab", channels=[Outbox()], store=store, investigate=False, dedupe_minutes=0).handle(broken)
+        channels = default_channels() if notify else [Outbox()]
+        inc = Guardian(owner="Lab", channels=channels, store=store, investigate=False, dedupe_minutes=0).handle(broken)
         if inc is not None:
-            stage(13, "Incident", f"[{inc.severity}] {inc.title}. Email + WhatsApp text written to data/outbox/{inc.incident_id}/.",
-                  incident_id=inc.incident_id, link=inc.link)
+            sent = [n["channel"] for n in inc.notifications if n["status"] == "sent" and n["channel"] != "outbox"]
+            where = (f"Sent to {', '.join(sent)}" if sent else "Written to the outbox only") + \
+                f" (copy in data/outbox/{inc.incident_id}/)."
+            stage(13, "Incident", f"[{inc.severity}] {inc.title}. {where}",
+                  incident_id=inc.incident_id, link=inc.link, notified=sent)
             card["incident"] = inc.incident_id
     except Exception as exc:  # noqa: BLE001
         stage(13, "Incident", f"Guardian unavailable: {type(exc).__name__}")
@@ -291,6 +297,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--mistake", default="auto", choices=["auto", *MISTAKE_ORDER])
     p.add_argument("--repair", action="store_true")
     p.add_argument("--model", default="agent-local-7b")
+    p.add_argument("--notify", action="store_true", help="send the incident to the configured channels (email, WhatsApp, Slack)")
     args = p.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
@@ -305,7 +312,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"        #{s['idx']:<2} {s['kind']:9} {s['name']:16} {s['output'][:90]}", flush=True)
 
     try:
-        run_lab(args.question, family=args.family, mistake=args.mistake, repair=args.repair, model=args.model, emit=show)
+        run_lab(args.question, family=args.family, mistake=args.mistake, repair=args.repair, model=args.model, emit=show,
+                notify=args.notify)
     except (RuntimeError, ValueError) as exc:
         print(f"\nLab stopped: {exc}")
         return 1
