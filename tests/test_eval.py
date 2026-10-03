@@ -56,6 +56,9 @@ def _no_local_models(monkeypatch):
         monkeypatch.setattr(gnn, "available", lambda *a, **k: False)
     except ImportError:
         pass
+    import sys
+
+    monkeypatch.setitem(sys.modules, "blackbox.diagnosis.predict", None)  # the ranker too: import fails
 
 def test_score_on_known_rankings():
     m = score([[2, 5, 1], [0, 1, 2], [4, 3], []], [2, 2, 9, 1])
