@@ -7,6 +7,21 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder`
 
+### 6. Live streams and jobs (Aryan #13; feeds Advay's Live run + Experiment screens)
+- `POST /api/runs` starts a live run in the background (`autopilot: true`
+  needs `blackbox.monitor.check.check_step`); `GET /api/runs/{id}/events`
+  streams `start | step | done | error` as Server-Sent Events. `POST
+  /api/runs/{id}/verify` and `POST /api/runs/{id}/repair` return a `job_id`;
+  `GET /api/jobs/{id}/events` streams `attempt | result | verdict` /
+  `proposing | rejected | candidate`, then `done`. `GET /api/jobs/{id}` gives
+  the status and result. Late subscribers get the full history first.
+- `GET /api/runs/{id}/diagnosis` uses `blackbox.diagnosis.predict.diagnose`
+  (Aditya) when present; until then it returns an **explicitly labelled
+  fallback** order (`source: "fallback: ..."`), never a fake score.
+- **Verified:** `tests/test_api.py::test_live_run_streams_steps_then_verify_job`:
+  5 step events then done; the failed outcome is reported; the verify job
+  streams attempt/result/verdict/done.
+
 ### 5. Verify, Autopilot, GenAI Repair (U13, U14, U16, X1)
 - **Verify** (`replay/verify.py`): per suspect, tries "twin" (the matching
   step from a passing run of the same task), "stronger" (re-ask the model

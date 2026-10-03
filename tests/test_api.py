@@ -44,3 +44,30 @@ def test_runs_steps_fork_compare(client):
     cmp = http.get(f"/api/compare?a={rid}&b={forked['run_id']}").json()
     assert cmp["outcome"]["flipped"] is True
     assert cmp["pairs"][cmp["first_divergence"]]["a"] == 1  # diverges exactly at the forked step
+
+
+def _events(http, url):
+    import json
+
+    with http.stream("GET", url) as r:
+        body = "".join(r.iter_text())
+    return [json.loads(line[6:]) for line in body.splitlines() if line.startswith("data: ")]
+
+
+def test_live_run_streams_steps_then_verify_job(client):
+    http, store = client
+    started = http.post("/api/runs", json={"agent": "toy_agent@v1", "task_family": "toy", "task_id": "t-fr",
+                                            "task_input": {"country": "france", "other": "x"},
+                                            "expected": "Tokyo", "model_id": "fake-model"}).json()
+    events = _events(http, f"/api/runs/{started['run_id']}/events")
+    types = [e["type"] for e in events]
+    assert types[0] == "start" and types.count("step") == 5 and types[-1] == "done"
+    assert events[-1]["result"]["outcome"]["success"] is False  # expected Tokyo, agent says Paris
+
+    diag = http.get(f"/api/runs/{started['run_id']}/diagnosis").json()
+    assert diag["source"].startswith("fallback") and diag["suspects"]
+
+    job = http.post(f"/api/runs/{started['run_id']}/verify", json={"suspects": [1], "repeats": 1}).json()
+    vevents = _events(http, f"/api/jobs/{job['job_id']}/events")
+    assert {"attempt", "result", "verdict", "done"} <= {e["type"] for e in vevents}
+    assert http.get(f"/api/jobs/{job['job_id']}").json()["finished"] is True
