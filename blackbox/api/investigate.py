@@ -130,7 +130,9 @@ def case_file(trace: Trace, store: Store, diagnose, *, repeats: int = 1, repair:
     story.append(f"3. The diagnosis model named steps {suspects} as the top suspects ({diagnosis['source']}).{hit}")
     if cause is not None:
         match = "" if known is None else (" That matches the known guilty step." if cause == known
-                                          else f" The known guilty step was {known}: this one is a later point where the run can also be saved.")
+                                          else (f" The known guilty step was {known}; step {cause} is an earlier decision whose repair also saves the run."
+                                                if cause < known else
+                                                f" The known guilty step was {known}; step {cause} is a later point where the run can also be saved."))
         story.append(f"4. Verify re-ran the run with one suspect repaired at a time and PROVED step {cause} is the cause.{match}")
     else:
         story.append("4. Verify repaired each suspect in turn; none of them alone fixed the run. Honest result: the cause is "
