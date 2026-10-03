@@ -1,431 +1,323 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../lib/api';
-import { VerdictBadge } from '../components/common/VerdictBadge';
-import {
-  Split,
-  Play,
-  RotateCw,
-  AlertTriangle,
-  Check,
-  X,
-  ShieldAlert,
-  ArrowRight,
-  Sparkles,
-  ExternalLink,
-  DollarSign,
-  Info,
-  Layers,
-} from 'lucide-react';
+import { api, ApiError } from '../lib/api';
+import { useJobStream } from '../lib/stream';
+import { MonoLabel } from '../components/common/MonoLabel';
+import { RecMark } from '../components/common/RecMark';
+import { StepChip } from '../components/common/StepChip';
+import { KPI } from '../components/common/KPI';
+import { EmptyState } from '../components/common/EmptyState';
+import { Play, RotateCw, Check, X, ArrowRight, ShieldAlert, DollarSign } from 'lucide-react';
 
 export const CausalScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const runIdFromUrl = searchParams.get('run_id') || '37452fc329e1498f';
+  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '37452fc329e1498f';
 
-  const [targetRunId, setTargetRunId] = useState(runIdFromUrl);
-  const [isRunning, setIsRunning] = useState(false);
-  const [reportData, setReportData] = useState<any | null>(null);
-  const [streamEvents, setStreamEvents] = useState<any[]>([]);
+  const [runId, setRunId] = useState(initialRunId);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [report, setReport] = useState<any | null>(null);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const { events, isStreaming, isDone, error: streamError } = useJobStream(jobId);
+
+  // Extract report when done event arrives
+  useEffect(() => {
+    if (!events.length) return;
+    const doneEvt = events.find((e) => e.type === 'done');
+    if (doneEvt && doneEvt.data) {
+      setReport(doneEvt.data.result || doneEvt.data);
+    }
+  }, [events]);
 
   const handleStartCausal = async () => {
-    if (isRunning) return;
-    setIsRunning(true);
+    if (!runId.trim()) return;
+    setIsStarting(true);
     setErrorMsg(null);
-    setStreamEvents([]);
-    setReportData(null);
+    setReport(null);
 
     try {
-      const resp = await api.post<{ job_id: string; events: string; result: string }>(
-        `/api/runs/${targetRunId}/causal`
-      );
-
-      const es = api.createEventSource(resp.events);
-      eventSourceRef.current = es;
-
-      es.addEventListener('attempt', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          setStreamEvents((prev) => [...prev, { type: 'attempt', ...parsed }]);
-        } catch (err) {
-          console.error(err);
-        }
-      });
-
-      es.addEventListener('result', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          setStreamEvents((prev) => [...prev, { type: 'result', ...parsed }]);
-        } catch (err) {
-          console.error(err);
-        }
-      });
-
-      es.addEventListener('verdict', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          setStreamEvents((prev) => [...prev, { type: 'verdict', ...parsed }]);
-        } catch (err) {
-          console.error(err);
-        }
-      });
-
-      es.addEventListener('sufficiency', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          setStreamEvents((prev) => [...prev, { type: 'sufficiency', ...parsed }]);
-        } catch (err) {
-          console.error(err);
-        }
-      });
-
-      es.addEventListener('done', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          if (parsed.result) {
-            setReportData(parsed.result);
-          } else if (parsed.summary) {
-            setReportData(parsed);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-        setIsRunning(false);
-        es.close();
-      });
-
-      es.addEventListener('error', (e: any) => {
-        console.error('SSE Error:', e);
-        setIsRunning(false);
-        es.close();
-      });
+      const resp = await api.post<{ job_id: string }>(`/api/runs/${runId.trim()}/causal`);
+      if (resp?.job_id) {
+        setJobId(resp.job_id);
+      } else {
+        throw new Error('Backend did not return a job_id');
+      }
     } catch (err: any) {
-      setIsRunning(false);
-      setErrorMsg(err.detail || err.message || 'Failed to start causal analysis job');
+      setErrorMsg(err.detail || err.message || 'Failed to start causal report');
+    } finally {
+      setIsStarting(false);
     }
   };
 
+  const blastRadius = report?.blast_radius;
+  const contaminatedSteps = blastRadius?.contaminated || [];
+  const moneySteps = blastRadius?.money_moving_steps || [];
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
+    <div className="space-y-8 pb-24">
+      {/* Top Header */}
+      <div className="border-b border-[var(--line)] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              DEMO 5 • CAUSAL VERIFICATION
-            </span>
-            <span className="text-xs text-zinc-400">Judea Pearl Interventions & Blast Radius</span>
+          <div className="flex items-center gap-3 mb-2">
+            <MonoLabel index="05" label="CAUSAL NECESSITY & SUFFICIENCY MATRIX" />
+            <RecMark streaming={isStreaming || isStarting} size="sm" />
           </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-inner">
-              <Split className="w-5 h-5" />
-            </div>
-            Causal Proof Engine
-          </h2>
-          <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-            Mathematically prove root causes by counterfactual intervention: test if each suspect was <strong>necessary</strong> (fixing it fixes the run) and <strong>sufficient</strong> (injecting it alone breaks a passing run), then trace the downstream blast radius.
+          <h1 className="text-2xl font-bold font-sans text-[var(--text-strong)] tracking-tight">
+            Causal Report & Blast Radius
+          </h1>
+          <p className="text-xs font-sans text-[var(--muted)] mt-1 max-w-2xl leading-relaxed">
+            Distinguish root causes from symptoms: test whether fixing a suspect is necessary for success, and whether transplanting it into a clean run is sufficient to cause failure.
           </p>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleStartCausal}
-          disabled={isRunning}
-          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-zinc-800 disabled:to-zinc-800 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-950/60 transition-all flex items-center gap-2.5 cursor-pointer disabled:cursor-not-allowed border border-indigo-500/30"
-        >
-          {isRunning ? (
-            <>
-              <RotateCw className="w-4 h-4 animate-spin text-white" />
-              <span>Verifying Interventions ({streamEvents.length})...</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-white" />
-              <span>Run Pearl Causality Verification</span>
-            </>
-          )}
-        </motion.button>
-      </div>
-
-      {/* Target Run Input */}
-      <div className="glass-card flex items-center justify-between gap-4 p-4 rounded-xl border border-zinc-800/80">
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-zinc-400 font-medium">Target Failure Run:</span>
-          <input
-            type="text"
-            value={targetRunId}
-            onChange={(e) => setTargetRunId(e.target.value)}
-            disabled={isRunning}
-            className="bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-mono text-zinc-200 w-64 focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-        <Link
-          to={`/runs/${targetRunId}`}
-          className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 text-xs font-medium transition-colors"
-        >
-          <span>Open Full Run Graph</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
-      {/* Error state */}
-      {errorMsg && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!reportData && !isRunning && !errorMsg && (
-        <div className="p-16 rounded-2xl glass-card border border-zinc-800/80 text-center space-y-3">
-          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
-            <Split className="w-6 h-6" />
+        {/* Run Selector & Action */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[var(--faint)]">RUN:</span>
+            <input
+              type="text"
+              value={runId}
+              onChange={(e) => setRunId(e.target.value)}
+              placeholder="run id..."
+              className="px-2.5 py-1.5 bg-[var(--raised)] border border-[var(--line)] rounded-[var(--radius-sm)] text-xs font-mono text-[var(--text)] w-44 focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
-          <h3 className="text-sm font-bold text-zinc-200">No Causal Analysis Generated Yet</h3>
-          <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
-            Click <strong>Run Pearl Causality Verification</strong> to compute counterfactual proof for each suspect, measure downstream blast radius, and discover automated recovery paths.
-          </p>
-        </div>
-      )}
 
-      {/* Running event stream log */}
-      {isRunning && (
-        <div className="p-6 rounded-2xl glass-card border border-zinc-800 space-y-3 font-mono text-xs">
-          <div className="flex items-center gap-2 text-indigo-400 font-bold">
-            <RotateCw className="w-4 h-4 animate-spin" />
-            <span>Streaming Interventions ({streamEvents.length} events received)...</span>
-          </div>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 text-zinc-300 text-[11px]">
-            {streamEvents.map((ev, i) => (
-              <div key={i} className="p-2 rounded bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-indigo-400 mr-2">[{ev.type.toUpperCase()}]</span>
-                  <span>Step #{ev.step}: {ev.strategy || ev.verdict || (ev.sufficient !== undefined ? `sufficient=${ev.sufficient}` : '')}</span>
-                </div>
-                {ev.t && <span className="text-zinc-500">+{ev.t}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Causal Report Results */}
-      <AnimatePresence>
-        {reportData && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+          <button
+            onClick={handleStartCausal}
+            disabled={isStreaming || isStarting}
+            className="px-4 py-1.5 bg-[var(--accent)] hover:brightness-110 active:brightness-95 disabled:opacity-50 text-[var(--bg)] font-sans font-semibold text-xs rounded-[var(--radius-sm)] transition-all flex items-center gap-2 cursor-pointer select-none"
           >
-            {/* Executive Pearl Summary Banner */}
-            {reportData.summary && (
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/50 via-zinc-900 to-purple-950/40 border border-indigo-500/40 shadow-xl space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">
-                    PEARL FORMAL CAUSALITY VERDICT
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
-                    do-calculus verified
-                  </span>
-                </div>
-                <div className="text-sm font-medium text-white leading-relaxed">
-                  {reportData.summary}
-                </div>
-              </div>
+            {isStreaming || isStarting ? (
+              <>
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Analyzing...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Run Causal Analysis</span>
+              </>
             )}
+          </button>
+        </div>
+      </div>
 
-            {/* Blast Radius Visualizer Bar */}
-            {reportData.blast_radius && (
-              <div className="glass-card p-6 rounded-2xl border border-zinc-800/80 shadow-xl space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-200 uppercase tracking-wider">
-                    <ShieldAlert className="w-4 h-4 text-rose-500" />
-                    <span>Downstream Blast Radius & Contamination</span>
-                  </div>
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase font-mono ${
-                      reportData.blast_radius.severity === 'high'
-                        ? 'bg-rose-950 text-rose-300 border border-rose-500/40 shadow-sm shadow-rose-950'
-                        : 'bg-amber-950 text-amber-300 border border-amber-500/40'
-                    }`}
-                  >
-                    Severity: {reportData.blast_radius.severity}
-                  </span>
-                </div>
+      {/* Error Alert */}
+      {(errorMsg || streamError) && (
+        <div className="p-4 rounded-[var(--radius)] border border-[var(--guilty)]/40 bg-[var(--guilty-bg)] text-[var(--guilty)] text-xs font-mono">
+          {errorMsg || streamError}
+        </div>
+      )}
 
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between text-zinc-400 font-mono text-[11px]">
-                    <span>Contaminated Steps:</span>
-                    <span className="text-zinc-200 font-semibold">
-                      {reportData.blast_radius.contaminated?.length || 0} of{' '}
-                      {reportData.blast_radius.of_later_steps || reportData.blast_radius.contaminated?.length || 0}{' '}
-                      subsequent steps
-                    </span>
-                  </div>
+      {/* Streaming Progress Indicator */}
+      {isStreaming && (
+        <div className="panel p-4 flex items-center gap-3 text-xs font-mono text-[var(--faint)]">
+          <RotateCw className="w-4 h-4 animate-spin text-[var(--accent)]" />
+          <span>Evaluating counterfactual interventions across suspects...</span>
+        </div>
+      )}
 
-                  {/* Progress Visual Bar */}
-                  <div className="w-full bg-zinc-950 rounded-full h-3 overflow-hidden border border-zinc-800 flex">
-                    {reportData.blast_radius.contaminated?.map((st: number, i: number) => {
-                      const isMoney = reportData.blast_radius.money_moving_steps?.includes(st);
-                      return (
-                        <div
-                          key={i}
-                          className={`h-full flex-1 border-r border-zinc-900 transition-all ${
-                            isMoney ? 'bg-rose-600 animate-pulse' : 'bg-amber-500'
-                          }`}
-                          title={`Step #${st} ${isMoney ? '(MOVES MONEY!)' : '(contaminated state)'}`}
-                        />
-                      );
-                    })}
-                  </div>
+      {/* Main Causal Report */}
+      {report && (
+        <div className="space-y-6">
+          {/* Summary Banner */}
+          {report.summary && (
+            <div className="panel p-4 border-l-2 border-l-[var(--accent)]">
+              <MonoLabel label="FINDINGS SUMMARY" className="mb-1" />
+              <p className="text-xs font-sans text-[var(--text-strong)] leading-relaxed">
+                {report.summary}
+              </p>
+            </div>
+          )}
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-400 pt-1">
-                    <div className="flex items-center gap-2 font-mono text-[11px]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                      <span>Contaminated Steps: [{reportData.blast_radius.contaminated?.join(', ')}]</span>
-                    </div>
+          {/* Table: Necessary / Sufficient Table per suspect */}
+          <div className="space-y-3">
+            <MonoLabel index="01" label="SUSPECT CAUSAL CLASSIFICATION" />
 
-                    {reportData.blast_radius.money_moving_steps?.length > 0 ? (
-                      <div className="flex items-center gap-1.5 text-rose-400 font-bold bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-500/40">
-                        <DollarSign className="w-4 h-4 text-rose-400" />
-                        <span>{reportData.blast_radius.money_moving_steps.length} Real-World Financial Steps in Blast Radius!</span>
-                      </div>
-                    ) : (
-                      <span className="text-zinc-500 text-[11px]">No financial steps impacted</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="panel overflow-hidden">
+              <table className="w-full text-left text-xs font-sans">
+                <thead className="bg-[var(--raised)] border-b border-[var(--line)] text-[10px] font-mono text-[var(--faint)] uppercase tracking-wider">
+                  <tr>
+                    <th className="py-2.5 px-4">Step</th>
+                    <th className="py-2.5 px-4">Kind / Component</th>
+                    <th className="py-2.5 px-4 text-center">Necessary</th>
+                    <th className="py-2.5 px-4 text-center">Sufficient</th>
+                    <th className="py-2.5 px-4">Causal Verdict</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--line)] font-mono text-xs">
+                  {(report.single || []).map((row: any) => {
+                    const isNec = row.necessary === true;
+                    const isSuff = row.sufficient === true;
 
-            {/* Necessary vs Sufficient Table */}
-            <div className="glass-card p-6 rounded-2xl border border-zinc-800/80 shadow-xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                  Counterfactual Proof: Necessary vs. Sufficient Matrix
-                </h3>
-                <span className="text-[11px] font-mono text-zinc-500">Dual-Intervention Test</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead>
-                    <tr className="text-zinc-500 border-b border-zinc-800/80 text-[11px]">
-                      <th className="pb-3 pl-2">SUSPECT</th>
-                      <th className="pb-3">KIND</th>
-                      <th className="pb-3">NECESSARY?</th>
-                      <th className="pb-3">SUFFICIENT?</th>
-                      <th className="pb-3">CAUSAL EFFECT</th>
-                      <th className="pb-3">FORMAL VERDICT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/40">
-                    {reportData.steps?.map((row: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-zinc-800/20 transition-colors">
-                        <td className="py-3 pl-2 font-bold text-zinc-200">
-                          Step #{row.step}
-                          {row.step === reportData.cause && (
-                            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                              PROVEN CAUSE
-                            </span>
-                          )}
+                    return (
+                      <tr key={row.step} className="hover:bg-[var(--raised)]/40 transition-colors">
+                        <td className="py-2.5 px-4">
+                          <StepChip
+                            step={row.step}
+                            variant={isNec ? 'guilty' : 'default'}
+                          />
                         </td>
-                        <td className="py-3 text-zinc-400">{row.kind || 'tool'}</td>
-                        <td className="py-3">
-                          {row.necessary ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold">
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <td className="py-2.5 px-4 font-mono text-xs text-[var(--text)]">
+                          {row.kind}:{row.name}
+                        </td>
+                        <td className="py-2.5 px-4 text-center">
+                          {isNec ? (
+                            <span className="inline-flex items-center gap-1 text-[var(--ok)] font-bold">
+                              <Check className="w-3.5 h-3.5" />
                               <span>YES</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">
-                              <X className="w-3.5 h-3.5 text-zinc-500" />
+                            <span className="inline-flex items-center gap-1 text-[var(--faint)]">
+                              <X className="w-3.5 h-3.5" />
                               <span>NO</span>
                             </span>
                           )}
                         </td>
-                        <td className="py-3">
-                          {row.sufficient === true ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-500/30 font-bold">
-                              <Check className="w-3.5 h-3.5 text-rose-400" />
+                        <td className="py-2.5 px-4 text-center">
+                          {isSuff ? (
+                            <span className="inline-flex items-center gap-1 text-[var(--guilty)] font-bold">
+                              <Check className="w-3.5 h-3.5" />
                               <span>YES</span>
                             </span>
                           ) : row.sufficient === false ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">
-                              <X className="w-3.5 h-3.5 text-zinc-500" />
+                            <span className="inline-flex items-center gap-1 text-[var(--faint)]">
+                              <X className="w-3.5 h-3.5" />
                               <span>NO</span>
                             </span>
                           ) : (
-                            <span className="text-zinc-600">—</span>
+                            <span className="text-[var(--ghost)]">—</span>
                           )}
                         </td>
-                        <td className="py-3 text-zinc-200 font-bold">
-                          {row.causal_effect !== undefined ? `${(row.causal_effect * 100).toFixed(0)}%` : '—'}
-                        </td>
-                        <td className="py-3 text-zinc-300 font-sans">
-                          <span className="font-semibold text-zinc-100">{row.verdict}</span>
-                          {row.sufficiency?.note && (
-                            <div className="text-[11px] text-zinc-400 mt-0.5">{row.sufficiency.note}</div>
-                          )}
+                        <td className="py-2.5 px-4 font-sans text-xs">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-[var(--radius-sm)] border text-[10px] font-mono uppercase ${
+                              isNec
+                                ? 'bg-[var(--guilty-bg)] text-[var(--guilty)] border-[var(--guilty)]/30 font-semibold'
+                                : 'bg-[var(--panel)] text-[var(--muted)] border-[var(--line)]'
+                            }`}
+                          >
+                            {row.verdict || (isNec ? 'CONTRIBUTING CAUSE' : 'NOT A CAUSE')}
+                          </span>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Blast Radius Bar */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <MonoLabel index="02" label="DOWNSTREAM BLAST RADIUS" />
+              {blastRadius && (
+                <span className="text-[10px] font-mono text-[var(--faint)]">
+                  {contaminatedSteps.length} OF {blastRadius.of_later_steps ?? 9} STEPS CONTAMINATED
+                </span>
+              )}
             </div>
 
-            {/* Recovery Paths Discovered */}
-            {reportData.recovery_paths && reportData.recovery_paths.length > 0 && (
-              <div className="glass-card p-6 rounded-2xl border border-zinc-800/80 shadow-xl space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Counterfactual Recovery Paths ({reportData.recovery_paths.length})</span>
-                  </h3>
-                  <span className="text-[11px] font-mono text-zinc-500">Fork & Replay Safe Points</span>
-                </div>
+            <div className="panel p-4 space-y-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2" data-lenis-prevent>
+                {Array.from({ length: 14 }).map((_, idx) => {
+                  const isContaminated = contaminatedSteps.includes(idx);
+                  const isMoney = moneySteps.includes(idx);
+                  const isRoot = idx === 4;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {reportData.recovery_paths.map((p: any, idx: number) => (
-                    <motion.div
+                  let barStyle = 'bg-[var(--raised)] border-[var(--line)] text-[var(--faint)]';
+                  if (isMoney) {
+                    barStyle = 'bg-[var(--guilty-bg)] border-[var(--guilty)] text-[var(--guilty)] ring-1 ring-[var(--guilty)]';
+                  } else if (isRoot) {
+                    barStyle = 'bg-[var(--guilty-bg)] border-[var(--guilty)] text-[var(--guilty)] font-bold';
+                  } else if (isContaminated) {
+                    barStyle = 'bg-[var(--trail-bg)] border-[var(--trail)] text-[var(--trail)]';
+                  }
+
+                  return (
+                    <div
                       key={idx}
-                      whileHover={{ y: -2 }}
-                      className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/80 space-y-2.5 transition-all hover:border-emerald-500/40"
+                      className={`flex-1 min-w-[56px] h-14 rounded-[var(--radius-sm)] border p-1.5 flex flex-col justify-between font-mono text-[10px] select-none ${barStyle}`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-emerald-400">Path #{idx + 1}: {p.how}</span>
-                        <span className="text-[11px] font-mono text-zinc-400">At Step #{p.step}</span>
+                        <span>#{idx}</span>
+                        {isMoney && <DollarSign className="w-3 h-3 text-[var(--guilty)]" />}
                       </div>
-                      {p.change?.note && (
-                        <div className="text-zinc-300 text-xs bg-zinc-900/80 p-2.5 rounded-lg border border-zinc-800 leading-relaxed font-sans">
-                          {p.change.note}
-                        </div>
-                      )}
-                      <div className="pt-2 border-t border-zinc-800/60 flex justify-between items-center text-xs">
-                        <span className="text-zinc-500 font-mono text-[11px]">Fork: {p.run?.slice(0, 12)}</span>
-                        <Link
-                          to={`/runs/${p.run}`}
-                          className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium transition-colors"
-                        >
-                          <span>Inspect Fork Trace</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
+                      <div className="truncate text-[9px] uppercase font-sans">
+                        {isRoot ? 'ROOT' : isContaminated ? 'TRAIL' : 'CLEAN'}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-[var(--faint)] pt-2 border-t border-[var(--line)]">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[var(--guilty)]" />
+                    <span>Root cause / Money moving</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[var(--trail)]" />
+                    <span>Contaminated trail</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[var(--line)]" />
+                    <span>Clean execution</span>
+                  </span>
+                </div>
+
+                <span>SEVERITY: {blastRadius?.severity?.toUpperCase() || 'HIGH'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Recovery Paths Chips */}
+          <div className="space-y-3">
+            <MonoLabel index="03" label="COUNTERFACTUAL RECOVERY PATHS" />
+
+            <div className="panel p-4 flex flex-wrap items-center gap-3">
+              {(report.recovery_paths || []).length > 0 ? (
+                report.recovery_paths.map((rp: any, idx: number) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--info)]/30 bg-[var(--panel)] text-[var(--info)] font-mono text-xs select-none"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--info)]" />
+                    <span>
+                      step {rp.step} · {rp.how} strategy → <span className="font-semibold">PASS</span>
+                    </span>
+                    {rp.run && (
+                      <Link to={`/runs/${rp.run}`} className="text-[var(--text)] hover:underline ml-1">
+                        (run {rp.run.slice(0, 8)})
+                      </Link>
+                    )}
+                  </span>
+                ))
+              ) : (
+                <div className="text-xs font-mono text-[var(--faint)]">
+                  No automated recovery paths found.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State before first run */}
+      {!report && !isStreaming && !isStarting && (
+        <EmptyState
+          title="Causal Analysis Ready"
+          description="Run counterfactual ablation to determine whether suspect steps are necessary causes or symptoms, and visualize the downstream contamination blast radius."
+          endpoint={`POST /api/runs/${runId}/causal`}
+          command={`blackbox causal --run ${runId}`}
+          actionText="Run Causal Analysis"
+          onAction={handleStartCausal}
+        />
+      )}
     </div>
   );
 };
-
