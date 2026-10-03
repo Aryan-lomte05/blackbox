@@ -11,7 +11,7 @@ planted mistake (blackbox.faults) at a step chosen evenly across positions.
     py -3 -m blackbox.data.farm --family math --n 200 --offset 200 --model agent-local --workers 2
 
 Every run goes to the local store (data/blackbox.db) and to one shard file,
-data/shards/<machine>_<time>.jsonl.gz, with one Trace per line.
+data/shards/<machine>_<time>.jsonl.gz (format: blackbox.data.shards).
 """
 
 from __future__ import annotations
@@ -40,29 +40,29 @@ SHARD_DIR = DEFAULT_DIR / "shards"
 
 
 def pick_faults(trace: Trace, fault_types: tuple[str, ...], n: int, rng: random.Random) -> list[tuple[str, int]]:
-    """Up to n (fault type, step) pairs on distinct steps.
+    """Up to n distinct (fault type, step) pairs.
 
-    Each pick draws a step kind (model / tool / search) evenly, then a step of
-    that kind evenly, then one of the mistakes that fit it. Kinds are
-    interleaved through a run, so planted steps stay spread over positions
-    (the ranker must not learn "blame the last steps"), and model steps, which
-    outnumber the others, do not crowd out the tool and search mistakes.
+    Each pick draws a step kind (model / tool / search) evenly, then one of
+    the (mistake, step) pairs of that kind evenly. Kinds are interleaved
+    through a run, so planted steps stay spread over positions (the ranker
+    must not learn "blame the last steps").
+
+    Pairs, not steps, are what must be distinct: a passing run often has a
+    single tool or search step, and requiring distinct steps let it take one
+    tool mistake at most, so two thirds of all planted runs came out as F6.
+    The same step with a different mistake is a different run.
     """
-    by_step: dict[int, list[str]] = defaultdict(list)
+    by_kind: dict[str, list[tuple[str, int]]] = defaultdict(list)
     for step in trace.steps:
         for ft in fault_types:
             if make_change(trace, ft, step.idx, random.Random(0)) is not None:
-                by_step[step.idx].append(ft)
-    by_kind: dict[str, list[int]] = defaultdict(list)
-    for idx in sorted(by_step):
-        by_kind[trace.steps[idx].kind].append(idx)
+                by_kind[step.kind].append((ft, step.idx))
     picks: list[tuple[str, int]] = []
     while len(picks) < n and by_kind:
         kind = rng.choice(sorted(by_kind))
-        idx = by_kind[kind].pop(rng.randrange(len(by_kind[kind])))
+        picks.append(by_kind[kind].pop(rng.randrange(len(by_kind[kind]))))
         if not by_kind[kind]:
             del by_kind[kind]
-        picks.append((rng.choice(by_step[idx]), idx))
     return picks
 
 

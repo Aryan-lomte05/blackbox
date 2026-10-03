@@ -39,7 +39,7 @@ def test_farm_task_labels_failed_forks_and_keeps_recovered_ones(store):
     traces = farm_task(math_task(), "fake-math", store=store, n_forks=3, fault_types=TRAIN_FAULTS, seed=0)
     clean, forks = traces[0], traces[1:]
     assert clean.run.outcome.success and clean.run.fault is None and clean.run.label is None
-    assert len(forks) == 3 and len({f.run.fault.step_idx for f in forks}) == 3
+    assert len(forks) == 3 and len({(f.run.fault.type, f.run.fault.step_idx) for f in forks}) == 3
     for f in forks:
         assert f.run.status == "done", f.run.error
         assert f.run.parent_run_id == clean.run.run_id and f.run.split == clean.run.split
@@ -94,6 +94,30 @@ def test_planted_steps_are_spread_over_positions():
     assert max(seen.values()) < 2.5 * min(seen.values())  # spread out, not piled on one step
     kinds = Counter(clean.steps[i].kind for i in seen.elements())
     assert 0.35 < kinds["tool"] / 300 < 0.65  # model steps do not crowd out tool mistakes
+
+
+def test_a_run_with_one_tool_step_still_gets_half_tool_mistakes():
+    def one_calc(messages, tools, params):
+        system, user = messages[0]["content"], messages[-1]["content"]
+        if system.startswith("You plan how"):
+            return _reply("find the eggs left after eating and baking")
+        if system.startswith("You solve"):
+            return _reply("CALC: 16 - 3 - 4" if "(none yet)" in user else "DONE")
+        return _reply("FINAL: 9")
+
+    providers.register_fake("fake-math", one_calc)
+    task = math_task()
+    task.expected = "9"
+    clean = farm_task(task, "fake-math", store=None, n_forks=0, fault_types=TRAIN_FAULTS, seed=0)[0]
+    assert clean.run.outcome.success and sum(s.kind == "tool" for s in clean.steps) == 1
+    types = Counter()
+    for seed in range(300):
+        picks = pick_faults(clean, TRAIN_FAULTS, 3, random.Random(seed))
+        assert len(set(picks)) == 3  # distinct (mistake, step) pairs; the one tool step may repeat
+        types.update(ft for ft, _ in picks)
+    # distinct steps would cap this run at one tool mistake in three (F6 >= 67%)
+    assert 0.40 < types["F6"] / 900 < 0.60
+    assert all(types[ft] > 100 for ft in ("F1", "F2", "F3"))
 
 
 def test_run_farm_shard_roundtrip_and_health(store, tmp_path):
