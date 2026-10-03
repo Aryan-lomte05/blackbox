@@ -1,9 +1,9 @@
 {
   "kpis": {
-    "runs": 3829,
-    "steps": 37452,
-    "labelled_failures": 439,
-    "save_point_dedup": 0.804,
+    "runs": 5633,
+    "steps": 55882,
+    "labelled_failures": 858,
+    "save_point_dedup": 0.8,
     "open_incidents": 8,
     "critical_incidents": 5
   },
@@ -12,421 +12,431 @@
     "variant": "with_real_failures",
     "results": {
       "test_known": {
-        "n": 30,
-        "top1": 0.5667,
+        "n": 28,
+        "top1": 0.6071,
         "top1_ci95": [
-          0.3667,
-          0.7333
+          0.4286,
+          0.7857
         ],
-        "top3": 0.9
+        "top3": 0.9286
       },
       "test_new_tasks": {
-        "n": 123,
-        "top1": 0.5935,
+        "n": 112,
+        "top1": 0.6518,
         "top1_ci95": [
-          0.5041,
-          0.6829
+          0.5625,
+          0.7321
         ],
-        "top3": 0.7236
+        "top3": 0.7679
       },
       "test_natural": {
-        "n": 15,
+        "n": 17,
         "top1": 0.0,
         "top1_ci95": [
           0.0,
           0.0
         ],
-        "top3": 0.2667
+        "top3": 0.2353
       }
     },
     "policy": {
       "val": {
-        "n": 34,
-        "top1": 0.5882,
+        "n": 33,
+        "top1": 0.6061,
         "top1_ci95": [
-          0.4118,
-          0.7647
+          0.4242,
+          0.7576
         ],
-        "top3": 0.8529,
+        "top3": 0.8485,
         "top3_ci95": [
-          0.7353,
-          0.9706
+          0.7265,
+          0.9697
         ],
-        "pm1": 0.6176,
-        "mrr": 0.7398
+        "pm1": 0.6364,
+        "mrr": 0.7521
       },
       "test_known": {
-        "n": 30,
-        "top1": 0.5667,
+        "n": 28,
+        "top1": 0.6071,
         "top1_ci95": [
-          0.3667,
-          0.7333
+          0.4286,
+          0.7857
         ],
-        "top3": 0.8333,
+        "top3": 0.8571,
         "top3_ci95": [
-          0.7,
-          0.9667
+          0.7143,
+          0.9643
         ],
-        "pm1": 0.6333,
-        "mrr": 0.7248
+        "pm1": 0.6786,
+        "mrr": 0.7611
       },
       "test_new_tasks": {
-        "n": 123,
-        "top1": 0.5935,
+        "n": 112,
+        "top1": 0.6518,
         "top1_ci95": [
-          0.5041,
-          0.6829
+          0.5625,
+          0.7321
         ],
-        "top3": 0.6992,
+        "top3": 0.6964,
         "top3_ci95": [
-          0.6098,
-          0.7724
+          0.6158,
+          0.7768
         ],
-        "pm1": 0.6911,
-        "mrr": 0.6861
+        "pm1": 0.6875,
+        "mrr": 0.7263
       },
       "test_natural": {
-        "n": 15,
+        "n": 17,
         "top1": 0.0,
         "top1_ci95": [
           0.0,
           0.0
         ],
-        "top3": 0.6667,
+        "top3": 0.6471,
         "top3_ci95": [
-          0.4,
-          0.8667
+          0.4118,
+          0.8824
         ],
-        "pm1": 0.5333,
-        "mrr": 0.2706
+        "pm1": 0.5294,
+        "mrr": 0.2681
       }
     }
   },
   "recent_runs": [
     {
-      "run_id": "d834e87d4aa048c6",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
-      "agent": "qa_agent@v1",
+      "run_id": "80fdb89e4ad64204",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:11:13.022488+00:00",
+      "parent_run_id": "37452fc329e1498f"
+    },
+    {
+      "run_id": "0718e426897a4214",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:10:53.807154+00:00",
+      "parent_run_id": "37452fc329e1498f"
+    },
+    {
+      "run_id": "8b60746dbf08457e",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
       "model": "agent-local-7b",
       "outcome": "pass",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:46:17.837604+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:10:53.765420+00:00",
+      "parent_run_id": "37452fc329e1498f"
     },
     {
-      "run_id": "52b26f290d3f4f1d",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
-      "agent": "qa_agent@v1",
+      "run_id": "0dca0e0bfc6844f4",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
       "model": "agent-local-7b",
       "outcome": "pass",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:45:48.862117+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:10:53.695264+00:00",
+      "parent_run_id": "37452fc329e1498f"
     },
     {
-      "run_id": "c05c2d592f814560",
+      "run_id": "56ccf9cecb8d4571",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:45:47.936857+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
-    },
-    {
-      "run_id": "868d4793ffc14307",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:45:47.229939+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:50:49.215382+00:00",
+      "parent_run_id": "c9070754abd5414a"
     },
     {
-      "run_id": "d4c81c0a616745a2",
+      "run_id": "5b5ddb7815c04aeb",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:45:18.891073+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
-    },
-    {
-      "run_id": "684e382ca6354ef6",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:45:11.128452+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:50:44.737550+00:00",
+      "parent_run_id": "c9070754abd5414a"
     },
     {
-      "run_id": "f1b0638bf1544237",
+      "run_id": "a272fbc1571944c9",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "pass",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:44:20.773897+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:50:00.691306+00:00",
+      "parent_run_id": "c9070754abd5414a"
     },
     {
-      "run_id": "f4fb123e69d4488a",
+      "run_id": "d7ffdaac6bc04e4c",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:44:20.685214+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:50:00.632015+00:00",
+      "parent_run_id": "c9070754abd5414a"
     },
     {
-      "run_id": "79d8a83a24da4533",
+      "run_id": "72710ae60852487f",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:42:56.702457+00:00",
-      "parent_run_id": "57c4fbcfcc3040ff"
-    },
-    {
-      "run_id": "57c4fbcfcc3040ff",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
-      "planted": "F6",
-      "guilty_step": 4,
-      "label_source": "injected",
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:41:58.444190+00:00",
-      "parent_run_id": "d2e5ccc7134549bb"
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:45:26.460456+00:00",
+      "parent_run_id": "158ee641b5d548c2"
     },
     {
-      "run_id": "d2e5ccc7134549bb",
+      "run_id": "cd20be1981ca4431",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "pass",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:41:37.839252+00:00",
-      "parent_run_id": null
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:44:37.997547+00:00",
+      "parent_run_id": "97829374efd64a80"
     },
     {
-      "run_id": "11cc537fa1a241b5",
+      "run_id": "8348a5efc1914122",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-e1d62148",
+      "task_id": "qa-5a821c95554299676cceb219",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
-      "outcome": "pass",
+      "outcome": "fail",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:34:19.336255+00:00",
-      "parent_run_id": "9c824cb6822543ae"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:44:13.566278+00:00",
+      "parent_run_id": "6b95675274044c29"
+    },
+    {
+      "run_id": "fcd56b6bace54664",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5aba768c55429901930fa7e0",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:43:25.943449+00:00",
+      "parent_run_id": "ae3a3076b9c141a7"
     }
   ],
   "recent_failures": [
     {
-      "run_id": "57c4fbcfcc3040ff",
+      "run_id": "53f0d78b38154249",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-4d4f4653",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": "F6",
-      "guilty_step": 4,
+      "guilty_step": 7,
       "label_source": "injected",
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:41:58.444190+00:00",
-      "parent_run_id": "d2e5ccc7134549bb"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:18:11.380505+00:00",
+      "parent_run_id": "97829374efd64a80"
     },
     {
-      "run_id": "9c824cb6822543ae",
+      "run_id": "eda7e5bead634228",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-e1d62148",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": "F6",
-      "guilty_step": 5,
+      "guilty_step": 2,
       "label_source": "injected",
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:20:01.495553+00:00",
-      "parent_run_id": "2676edddcb2b4187"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:17:38.249016+00:00",
+      "parent_run_id": "97829374efd64a80"
     },
     {
-      "run_id": "8c0b789a0a524cdf",
+      "run_id": "35c316d208bc457c",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "lab-qa-7f38856f",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": "F6",
-      "guilty_step": 5,
+      "guilty_step": 7,
       "label_source": "injected",
-      "steps": 7,
-      "split": null,
-      "created_at": "2026-10-03T18:18:40.570999+00:00",
-      "parent_run_id": "311314777b304f4f"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:17:33.601348+00:00",
+      "parent_run_id": "158ee641b5d548c2"
     },
     {
-      "run_id": "8a87daa0c76b44c4",
-      "family": "math",
-      "family_label": "Math",
-      "task_id": "lab-math-80a8a40a",
-      "agent": "math_agent@v1",
+      "run_id": "68849f3ef15d459e",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
+      "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": "F6",
-      "guilty_step": 6,
+      "guilty_step": 2,
       "label_source": "injected",
-      "steps": 8,
-      "split": null,
-      "created_at": "2026-10-03T18:11:37.095751+00:00",
-      "parent_run_id": "62d4edd6384c460d"
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:17:25.817238+00:00",
+      "parent_run_id": "158ee641b5d548c2"
     },
     {
-      "run_id": "57910f99f68845fd",
-      "family": "ops",
-      "family_label": "Shop",
-      "task_id": "ops-0199",
-      "agent": "shop_agent@v1",
+      "run_id": "c9070754abd5414a",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
+      "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
-      "planted": null,
-      "guilty_step": 5,
-      "label_source": "verified",
-      "steps": 11,
-      "split": "test_new_tasks",
-      "created_at": "2026-10-03T13:41:48.739150+00:00",
-      "parent_run_id": null
-    },
-    {
-      "run_id": "68014d207b9a4f92",
-      "family": "ops",
-      "family_label": "Shop",
-      "task_id": "ops-0197",
-      "agent": "shop_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": "F1",
-      "guilty_step": 6,
-      "label_source": "injected",
-      "steps": 11,
-      "split": "test_new_tasks",
-      "created_at": "2026-10-03T13:41:47.877460+00:00",
-      "parent_run_id": "acad3e7ed4a74fb7"
-    },
-    {
-      "run_id": "5f2a6a1d74754630",
-      "family": "ops",
-      "family_label": "Shop",
-      "task_id": "ops-0198",
-      "agent": "shop_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": "F3",
-      "guilty_step": 4,
-      "label_source": "injected",
-      "steps": 8,
-      "split": "test_new_tasks",
-      "created_at": "2026-10-03T13:41:45.324015+00:00",
-      "parent_run_id": "413b76428f664257"
-    },
-    {
-      "run_id": "04de044886aa4b5f",
-      "family": "ops",
-      "family_label": "Shop",
-      "task_id": "ops-0198",
-      "agent": "shop_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": "F6",
+      "planted": "F4",
       "guilty_step": 3,
       "label_source": "injected",
       "steps": 9,
-      "split": "test_new_tasks",
-      "created_at": "2026-10-03T13:41:42.586596+00:00",
-      "parent_run_id": "413b76428f664257"
+      "split": "train",
+      "created_at": "2026-10-03T20:17:19.236835+00:00",
+      "parent_run_id": "158ee641b5d548c2"
+    },
+    {
+      "run_id": "e4bb12f6d257412e",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5ab926bc554299131ca42285",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 2,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:17:04.012722+00:00",
+      "parent_run_id": "9c9e329b97dc476c"
+    },
+    {
+      "run_id": "a229e593383a477e",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5aba768c55429901930fa7e0",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F5",
+      "guilty_step": 1,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:16:55.474592+00:00",
+      "parent_run_id": "ae3a3076b9c141a7"
+    },
+    {
+      "run_id": "dbb8c886bb0f480b",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5aba768c55429901930fa7e0",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F6",
+      "guilty_step": 7,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T20:16:55.458700+00:00",
+      "parent_run_id": "ae3a3076b9c141a7"
     }
   ],
   "incidents": [
+    {
+      "incident_id": "7df82a2111",
+      "severity": "high",
+      "title": "math_agent gave a wrong result",
+      "status": "rejected",
+      "created_at": "2026-10-03T20:20:16+00:00",
+      "run_id": "37452fc329e1498f",
+      "needs_approval": false,
+      "repeats": 1
+    },
     {
       "incident_id": "471e147062",
       "severity": "high",
@@ -494,16 +504,6 @@
       "status": "open",
       "created_at": "2026-10-03T16:49:45+00:00",
       "run_id": "2364a4b417464709",
-      "needs_approval": true,
-      "repeats": 1
-    },
-    {
-      "incident_id": "9c7ae74aa2",
-      "severity": "critical",
-      "title": "trading_bot gave a wrong result",
-      "status": "open",
-      "created_at": "2026-10-03T16:47:40+00:00",
-      "run_id": "a010225302714e62",
       "needs_approval": true,
       "repeats": 1
     }
@@ -578,6 +578,26 @@
       "name": "Re-run eval on all test sets incl. real failures",
       "state": "queued",
       "note": "after the labeller finishes"
+    },
+    {
+      "name": "Overnight 1: farm Math, balanced tool mistakes (offset 1100-1319)",
+      "state": "done",
+      "note": "F6         302        100       201       1    33.2\r \r shard: data\\shards\\aryan-4060_20261003T193728Z.jsonl.gz\r "
+    },
+    {
+      "name": "Overnight 2: farm QA, balanced search mistakes (offset 2300-2550)",
+      "state": "done",
+      "note": "F6         342        146       196       0    42.7\r \r shard: data\\shards\\aryan-4060_20261003T201811Z.jsonl.gz\r "
+    },
+    {
+      "name": "Overnight 3: checker (Laya) backfill on every recorded step",
+      "state": "done",
+      "note": "[monitor] tier_errors={'laya': 'RuntimeError: Expected all tensors to be on the same device, but got index is on cpu, different from other tensors on cuda:0 (when checking argument in method wrapper_CUDA__index_select)',"
+    },
+    {
+      "name": "Overnight 4: retrain diagnosis model (CV-chosen variant) + evaluate",
+      "state": "running",
+      "note": "log: data/logs/overnight_retrain.log"
     }
   ]
 }

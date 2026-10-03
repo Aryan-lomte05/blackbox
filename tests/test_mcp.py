@@ -79,6 +79,7 @@ def test_read_tools(recorded):
     assert "step 1 of" in call("time_travel", run_id=a.run.run_id, step_idx=1)
     assert "```mermaid" in call("blame_map", run_id=a.run.run_id)
     assert "EXPECT_PASS" in call("export_test", run_id=a.run.run_id)
+    assert call("similar_failures", run_id=a.run.run_id).startswith("Fingerprint FP-")
 
 
 def test_experiment_tools(recorded):

@@ -24,6 +24,23 @@ from blackbox.api.main import create_app  # noqa: E402
 OUT = Path("fixtures/ui")
 
 
+def save_job(name: str, http: TestClient, path: str, body: dict | None = None) -> None:
+    """Start a job, wait for it, save {events, result}: what the UI receives over SSE, then from GET /api/jobs/{id}."""
+    import time
+
+    r = http.post(path, json=body or {})
+    if r.status_code != 200:
+        print(f"SKIP {name}: HTTP {r.status_code} {r.text[:120]}")
+        return
+    job_id = r.json()["job_id"]
+    while not (job := http.get(f"/api/jobs/{job_id}").json()).get("finished"):
+        time.sleep(3)
+    target = OUT / f"{name}_job.json"
+    target.write_text(json.dumps({"start": r.json(), "events": job.get("events"), "result": job.get("result")},
+                                 indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    print(f"wrote {target}  ({path})")
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
@@ -62,6 +79,13 @@ def main() -> int:
     if inc:
         save("incident_detail", f"/api/incidents/{inc[0]['incident_id']}")
     save("investigate_model_finds_it", "/api/investigate/model_finds_it", method="POST")
+    save("similar", f"/api/runs/{failed}/similar")
+    if "--with-jobs" in sys.argv:  # real job results (minutes: they re-run the agent)
+        save_job("causal", http, f"/api/runs/{failed}/causal")
+        save_job("fleet_fix", http, f"/api/runs/{failed}/fleet-fix", {
+            "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about "
+                    "the exact entity asked, search again with a more specific query before answering.",
+            "n_fail": 2, "n_pass": 1})
 
     Path("docs").mkdir(exist_ok=True)
     Path("docs/openapi.json").write_text(json.dumps(app.openapi(), indent=2), encoding="utf-8")
