@@ -28,3 +28,18 @@ def split_for(task_id: str, family: str) -> str:
         return "test_new_tasks"
     b = bucket(task_id)
     return next(name for name, upper in BUCKETS if b < upper)
+
+
+def allows_unseen_mistakes(split: str) -> bool:
+    """Mistakes kept back from training (F7-F10) are never planted on a training
+    task: the ranker would train on other failures of the very question it is
+    later tested on."""
+    return split != "train"
+
+
+def split_for_fork(parent_split: str | None, fault_type: str, unseen: tuple[str, ...]) -> str | None:
+    """A fork keeps its task's split, except a kept-back mistake on a QA or Math
+    task, which is the `test_new_mistakes` set. Shop runs stay `test_new_tasks`."""
+    if fault_type in unseen and parent_split != "test_new_tasks":
+        return "test_new_mistakes"
+    return parent_split
