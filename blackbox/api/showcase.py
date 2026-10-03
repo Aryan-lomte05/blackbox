@@ -43,6 +43,17 @@ def _rank(trace: Trace) -> dict | None:
         return None
 
 
+def _rerunnable(run) -> bool:
+    """A case needs an agent this server can re-run (not a script's own function, e.g. examples/trader_bot.py)."""
+    from blackbox.agents.base import get_agent
+
+    try:
+        get_agent(run.agent)
+        return True
+    except (KeyError, AttributeError, ImportError, ValueError):
+        return False
+
+
 def _labelled(store: Store, family: str | None, splits: tuple[str, ...], limit: int = 40):
     out = []
     for split in splits:
@@ -117,7 +128,7 @@ def build(store: Store, scan: int = 40) -> dict[str, Any]:
             "description": f"The model failed on its own; Verify proved step {r.label.root_cause_step} is the cause ({r.label.notes}).",
             "guilty": r.label.root_cause_step}
     natural = next((r for r in store.list_runs(success=False, has_label=False, limit=3000)
-                    if r.status == "done" and r.fault is None and r.parent_run_id is None), None)
+                    if r.status == "done" and r.fault is None and r.parent_run_id is None and _rerunnable(r)), None)
     if natural:
         runs["real_failure_unlabelled"] = {
             "run_id": natural.run_id, "summary": "Real failure nobody has diagnosed yet (try Verify on it)",

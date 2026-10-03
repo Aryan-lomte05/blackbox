@@ -41,7 +41,8 @@ def fork(
     """
     if not 0 <= step_idx < len(trace.steps):
         raise IndexError(f"run {trace.run.run_id} has {len(trace.steps)} steps; cannot fork at {step_idx}")
-    plan = ReplayPlan(parent=trace, fork_idx=step_idx, change=change, reuse_after_fork=reuse_after_fork)
+    plan = ReplayPlan(parent=trace, fork_idx=step_idx, change=change, reuse_after_fork=reuse_after_fork,
+                      ancestors=_ancestors(trace, store) if reuse_after_fork else [])
     child = run_task(
         get_agent(trace.run.agent), task_from_run(trace.run), trace.run.model_id,
         store=store, plan=plan, monitor=monitor, on_step=on_step,  # save-points written as the fork runs
@@ -52,6 +53,20 @@ def fork(
     if store is not None:
         store.save_trace(child)
     return child
+
+
+def _ancestors(trace: Trace, store: Store | None, depth: int = 4) -> list[Trace]:
+    """The runs this one was forked from (nearest first), whose steps the fork may re-use."""
+    out: list[Trace] = []
+    parent_id = trace.run.parent_run_id
+    while store is not None and parent_id and len(out) < depth:
+        try:
+            parent = store.load_trace(parent_id)
+        except KeyError:
+            break
+        out.append(parent)
+        parent_id = parent.run.parent_run_id
+    return out
 
 
 def _tokens(trace: Trace) -> int:
