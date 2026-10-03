@@ -90,6 +90,16 @@ class Guardian:
             cause_note = "not re-run: this run moves money, so Black Box never re-runs it to prove the cause"
             how.append("Black Box never re-runs a run that moves money. Check the step below, fix its input, "
                        "then approve a retry on the incident page.")
+            if not errors:  # the diagnosis model only reads the recording: safe even when money is involved
+                try:
+                    from blackbox.api.main import diagnose
+
+                    suspects = diagnose(trace).get("suspects") or []
+                    if suspects:
+                        cause = suspects[0]
+                        cause_note = "most likely (diagnosis model); " + cause_note
+                except Exception:  # noqa: BLE001 - falls back to the last step below, with the reason
+                    pass
         elif kind == "failure" and self.investigate and self.store is not None and trace.steps:
             try:
                 from blackbox.api.main import diagnose
