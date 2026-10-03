@@ -32,6 +32,25 @@ def instrument_agent(file_path: str) -> str:
     return plan_for_file(Path(file_path))
 
 
+@tool("import_traces", "Import traces the agent already exports (OpenTelemetry or Langfuse JSON) and diagnose the "
+      "failed ones. No change to the agent's code; imported runs support diagnosis, not replay.", category="developer",
+      properties={"format": {"type": "string", "enum": ["otel", "langfuse"]}, "file_path": {"type": "string"},
+                  "failed": {"type": "boolean", "description": "mark as failed when the export has no verdict"}},
+      required=("format", "file_path"))
+def import_traces(format: str, file_path: str, failed: bool | None = None) -> str:  # noqa: A002 - MCP argument name
+    from blackbox.api.main import diagnose
+    from blackbox.data.importers.external import import_file
+
+    s = store()
+    lines = []
+    for tr in import_file(s, format, file_path, failed=failed):
+        is_failed = tr.run.outcome is not None and not tr.run.outcome.success
+        verdict = "no verdict" if tr.run.outcome is None else ("FAIL" if is_failed else "pass")
+        suspects = f", suspects {diagnose(tr).get('suspects')}" if is_failed else ""
+        lines.append(f"imported {tr.run.run_id} ({tr.run.agent}): {len(tr.steps)} steps, {verdict}{suspects}")
+    return "\n".join(lines) or "No agent steps found in this export."
+
+
 @tool("status", "What Black Box is doing on this machine now: job queue, GPU, data totals, model results.",
       category="developer")
 def status() -> str:

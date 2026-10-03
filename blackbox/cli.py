@@ -176,6 +176,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
 
+    s = sub.add_parser("import", help="import traces your agent already exports (OpenTelemetry, Langfuse)")
+    s.add_argument("rest", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=lambda a: __import__("blackbox.data.importers.external", fromlist=["main"]).main(
+        a.rest + ["--data", str(a.data)]))
+
     s = sub.add_parser("crash-test", help="red team a passing run: plant every known mistake, 1-5 star rating")
     s.add_argument("run_id")
     s.add_argument("--per-fault", type=int, default=1)

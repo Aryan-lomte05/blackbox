@@ -57,7 +57,7 @@ def test_notifications_get_no_reply_and_unknown_methods_an_error():
 # ---- registry --------------------------------------------------------------------------------
 def test_every_tool_has_a_category_a_description_and_an_object_schema():
     tools = registry.all_tools()
-    assert len(tools) >= 27
+    assert len(tools) >= 28
     for t in tools:
         assert t.category in CATEGORIES and len(t.description) > 20
         assert t.input_schema["type"] == "object"
@@ -153,4 +153,4 @@ def test_stdio_transport():
                           timeout=120, check=False, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     replies = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
     assert [r.get("id") for r in replies] == [1, 2, None]  # the notification gets no reply
-    assert len(replies[1]["result"]["tools"]) >= 27 and replies[2]["error"]["code"] == -32700
+    assert len(replies[1]["result"]["tools"]) >= 28 and replies[2]["error"]["code"] == -32700

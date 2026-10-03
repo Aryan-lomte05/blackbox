@@ -1,0 +1,19 @@
+{
+  "id": "lf-trace-5521",
+  "name": "support_agent",
+  "input": "What is the warranty period for the X200 headphones?",
+  "output": "The X200 has a 6 month warranty.",
+  "observations": [
+    {"id": "o1", "type": "GENERATION", "name": "plan", "model": "llama-3.1-8b-instant", "startTime": "2026-10-04T01:00:00Z",
+     "input": [{"role": "user", "content": "What is the warranty period for the X200 headphones?"}],
+     "output": "SEARCH: X200 headphones warranty"},
+    {"id": "o2", "type": "SPAN", "name": "retrieve_docs", "startTime": "2026-10-04T01:00:01Z",
+     "input": "X200 headphones warranty",
+     "output": [{"id": "kb-19", "text": "X100 headphones come with a 6 month warranty."},
+                {"id": "kb-44", "text": "Warranty claims need the original receipt."}]},
+    {"id": "o3", "type": "GENERATION", "name": "answer", "model": "llama-3.1-8b-instant", "startTime": "2026-10-04T01:00:02Z",
+     "input": [{"role": "user", "content": "Answer from: X100 headphones come with a 6 month warranty. Warranty claims need the original receipt."}],
+     "output": "The X200 has a 6 month warranty."},
+    {"id": "o4", "type": "EVENT", "name": "user_feedback_negative", "startTime": "2026-10-04T01:05:00Z"}
+  ]
+}
