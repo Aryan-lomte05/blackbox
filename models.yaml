@@ -32,6 +32,12 @@
   params: {temperature: 0}
   fallback: agent-local-14b  # free daily quota used up -> local 14B (slower, always there)
 
+- id: agent-strong-groq    # hosted verify model: BLACKBOX_VERIFY_MODEL=agent-strong-groq (default verify: agent-local-7b)
+  provider: groq
+  model: llama-3.3-70b-versatile
+  params: {temperature: 0, seed: 7}
+  fallback: agent-local-7b   # Groq rate limit -> the local 7B
+
 - id: judge-large          # LLM-judge baseline, GenAI fixes, incident report, red-team mistakes
   provider: openrouter
   model: nvidia/nemotron-3-super-120b-a12b:free

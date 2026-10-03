@@ -32,7 +32,7 @@ def investigate(run_id: str) -> str:
     from blackbox.api.main import diagnose as diagnose_fn
 
     s = store()
-    out = case_file(s.load_trace(run_id), s, diagnose_fn, repeats=1, strong_model="agent-local-7b")
+    out = case_file(s.load_trace(run_id), s, diagnose_fn, repeats=1)
     return "\n".join(out["story"])
 
 
@@ -51,7 +51,7 @@ def verify(run_id: str) -> str:
         if e.get("type") == "verdict":
             report_progress(f"step {e['step']}: {e['verdict']}")
 
-    rep = verify_run(tr, suspects, store=s, repeats=1, strong_model="agent-local-7b", on_event=on_event)
+    rep = verify_run(tr, suspects, store=s, repeats=1, on_event=on_event)
     head = (f"Proven cause: step {rep['verified_step']}." if rep["verified_step"] is not None
             else "No single suspect's repair fixed the run.")
     return head + "\n" + "\n".join(f"step {x['step']}: {x['verdict']} (causal effect {x['causal_effect']})"

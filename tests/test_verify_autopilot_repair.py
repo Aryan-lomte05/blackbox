@@ -73,7 +73,7 @@ def test_verify_proves_the_model_step_and_labels_it(tmp_path):
     store = Store(tmp_path)
     tr = run_task(CapitalAgent(), TASK, "agent-weak", store=store)
     assert not tr.run.outcome.success
-    report = verify(tr, [1, 0], store=store, repeats=2)
+    report = verify(tr, [1, 0], store=store, repeats=2, strong_model="agent-strong")  # the fake strong model
     s1 = report["suspects"][0]  # every suspect is tested; the earliest verified cause wins
     assert s1["step"] == 1 and s1["verdict"] == "verified" and s1["causal_effect"] == 1.0
     assert report["verified_step"] == 0  # the tool step was a symptom; the model decision is the cause
@@ -171,3 +171,21 @@ def test_verify_repairs_only_the_suspect_not_everything_after_it(tmp_path):
     assert not broken.run.outcome.success
     report = verify(broken, [1], store=store, repeats=1)                    # the search (step 1) is innocent
     assert report["verified_step"] is None, report["suspects"][0]
+
+
+def test_a_step_that_already_ran_on_the_verify_model_is_re_asked_carefully(tmp_path, monkeypatch):
+    """Verify on the same model as the agent: "a stronger model" would be the same model, so the suspect step is
+    re-asked with a double-check instruction instead (BLACKBOX_VERIFY_MODEL picks the model)."""
+    from blackbox.replay.verify import CAREFUL, _strategies, verify_model
+    from tests.test_core_replay import ToyAgent, _task, fake_model
+
+    providers.register_fake("fake-model", fake_model)
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=Store(tmp_path))
+    names = {name: change for name, _, change, _ in _strategies(tr, 3, None, "fake-model")}
+    assert "stronger" not in names and names["careful"].kind == "messages"
+    assert names["careful"].value[-1] == {"role": "system", "content": CAREFUL}
+    assert "stronger" in {n for n, *_ in _strategies(tr, 3, None, "another-model")}
+    monkeypatch.delenv("BLACKBOX_VERIFY_MODEL", raising=False)
+    assert verify_model() == "agent-local-7b"
+    monkeypatch.setenv("BLACKBOX_VERIFY_MODEL", "agent-strong-groq")
+    assert verify_model() == "agent-strong-groq"

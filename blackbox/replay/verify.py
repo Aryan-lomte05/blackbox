@@ -60,10 +60,29 @@ def _strategies(trace: Trace, idx: int, twin: Trace | None, strong_model: str) -
     if twin is not None and idx not in answer_steps(trace) and (ch := _twin_change(trace, twin, idx)) is not None:
         out.append(("twin", idx, ch, True))
     target = decision_step(trace.steps, idx)
-    if trace.steps[target].kind == "llm" and trace.steps[target].request.get("model_id") != strong_model:
-        out.append(("stronger", target, Change(kind="model", value=strong_model), False))
+    if trace.steps[target].kind == "llm":
+        if trace.steps[target].request.get("model_id") != strong_model:
+            out.append(("stronger", target, Change(kind="model", value=strong_model), False))
+        else:
+            # The step already ran on the verify model, so "a stronger model" is the same model. Re-ask it with a
+            # double-check instruction instead: still a different answer at exactly this step, on the same model.
+            messages = [*trace.steps[target].request.get("messages", []), {"role": "system", "content": CAREFUL}]
+            out.append(("careful", target, Change(kind="messages", value=messages, note="re-asked with a double-check"),
+                        False))
     out.append(("rerun", idx, None, False))
     return out
+
+
+CAREFUL = ("Before you answer, double-check your previous step against the information you were given. If something "
+           "does not match the question or the evidence, correct it. Then continue exactly as instructed.")
+
+
+def verify_model() -> str:
+    """The model Verify re-asks a suspect step with: BLACKBOX_VERIFY_MODEL (models.yaml id), default the local 7B.
+    For a hosted model in the morning: BLACKBOX_VERIFY_MODEL=agent-strong-groq."""
+    import os
+
+    return os.environ.get("BLACKBOX_VERIFY_MODEL") or "agent-local-7b"
 
 
 def verify(
@@ -71,7 +90,7 @@ def verify(
     suspects: list[int],
     *,
     store: Store | None = None,
-    strong_model: str = "agent-strong",
+    strong_model: str | None = None,
     repeats: int = 3,
     on_event: Event | None = None,
     stop_at_first: bool = False,
@@ -81,6 +100,7 @@ def verify(
     if trace.run.outcome is None or trace.run.outcome.success:
         raise ValueError("verify needs a finished, failed run")
     emit = on_event or (lambda e: None)
+    strong_model = strong_model or verify_model()
     twin = find_twin(store, trace) if store is not None else None
     results = []
     verified: int | None = None
