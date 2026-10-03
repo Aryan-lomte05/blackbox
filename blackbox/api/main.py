@@ -101,6 +101,7 @@ Cheaper = Literal["agent-local", "agent-local-7b"]
 FaultType = Literal["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"]
 Outcome_ = Literal["pass", "fail"]
 
+RepairModel = Literal["agent-local-7b", "agent-local", "agent-strong"]
 CaseName = Literal["model_finds_it", "model_misses_it", "shop_new_task_type", "math_failure",
                    "real_failure_verified", "real_failure_unlabelled"]
 
@@ -162,6 +163,10 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
     def investigate(case: CaseName = PathParam(..., description="a real failed run picked from the recordings"),
                     repair: bool = Query(False, description="also ask GenAI for fixes and test each (uses the big model; slower)"),
                     repeats: int = Query(1, ge=1, le=3, description="attempts per repair (3 tells bad luck from a real bug)"),
+                    repair_model: RepairModel = Query("agent-local-7b", description=(
+                        "model Verify uses to re-ask a suspect decision: agent-local-7b = qwen2.5:7b on this laptop (fast, "
+                        "default); agent-local = qwen2.5:3b (fastest); agent-strong = Nemotron 120B on free OpenRouter "
+                        "(strongest, slow: network + rate limits)")),
                     run_id: str | None = Query(None, description="optional: investigate this run instead of the case")) -> dict:
         """Returns a case file: `story` (numbered plain-language lines), the case, the diagnosis, every verify
         attempt with steps re-run vs re-used, the comparison with the fixed run, and repairs if asked."""
@@ -173,7 +178,7 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                 raise HTTPException(404, f"no recorded run for case {case!r} on this machine yet")
             run_id = info["run_id"]
         try:
-            out = case_file(load(run_id), db(), diagnose, repeats=repeats, repair=repair)
+            out = case_file(load(run_id), db(), diagnose, repeats=repeats, repair=repair, strong_model=repair_model)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from None
         if run_id == cases.get("runs", {}).get(case, {}).get("run_id"):
