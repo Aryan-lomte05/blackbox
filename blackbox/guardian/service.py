@@ -209,3 +209,23 @@ def list_incidents(root: Path = INCIDENTS) -> list[Incident]:
 def get_incident(incident_id: str, root: Path = INCIDENTS) -> Incident | None:
     f = root / f"{incident_id}.json"
     return Incident.model_validate_json(f.read_text(encoding="utf-8")) if f.exists() else None
+
+
+def decide(incident_id: str, approve: bool, by: str, note: str = "", root: Path = INCIDENTS) -> Incident:
+    """Record the owner's decision on a paused retry. Black Box records it; the owner's agent
+    (or its scheduler) reads `status` before retrying. Nothing money-moving is retried here."""
+    inc = get_incident(incident_id, root)
+    if inc is None:
+        raise KeyError(incident_id)
+    if inc.status != "open":
+        raise ValueError(f"incident {incident_id} is already {inc.status}")
+    inc.status = "approved" if approve else "rejected"
+    inc.decision = {"by": by, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "note": note}
+    (root / f"{inc.incident_id}.json").write_text(inc.model_dump_json(indent=2), encoding="utf-8")
+    return inc
+
+
+def is_retry_approved(incident_id: str, root: Path = INCIDENTS) -> bool:
+    """For the owner's agent: may the paused action be retried?"""
+    inc = get_incident(incident_id, root)
+    return inc is not None and inc.status == "approved"

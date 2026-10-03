@@ -54,6 +54,12 @@ class LiveRunRequest(BaseModel):
     autopilot: bool = False
 
 
+class Decision(BaseModel):
+    approve: bool
+    by: str = "owner"
+    note: str = ""
+
+
 class VerifyRequest(BaseModel):
     suspects: list[int] | None = None  # default: the diagnosis order
     repeats: int = 3
@@ -427,6 +433,20 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
             raise HTTPException(400, "this run passed: no incident")
         return inc.model_dump(mode="json")
 
+    @app.post("/api/incidents/{incident_id}/decision", tags=["Guardian"],
+              summary="G4 · Approve or reject the paused retry (money-moving agents)")
+    def incident_decision(incident_id: str, body: Decision = Body(..., openapi_examples={
+            "approve": {"summary": "Approve: the agent may retry", "value": {"approve": True, "by": "Aryan", "note": "price feed is back"}},
+            "reject": {"summary": "Reject: keep the agent paused", "value": {"approve": False, "by": "Aryan", "note": "investigate first"}}})) -> dict:
+        from blackbox.guardian.service import decide
+
+        try:
+            return decide(incident_id, body.approve, body.by, body.note).model_dump(mode="json")
+        except KeyError:
+            raise HTTPException(404, f"no incident {incident_id}") from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
     @app.get("/incident/{incident_id}", include_in_schema=False)
     def incident_page(incident_id: str):
         """The page the email / WhatsApp link opens: the report, then a link into the run inspector."""
@@ -442,6 +462,15 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
             f'href="{inc.link}"', f'href="/#run-{inc.run_id}"').replace(
             "Open the incident in Black Box →", "Open the full run in the inspector →")
         sent = "".join(f"<li>{n['channel']}: {n['status']} ({n['detail']})</li>" for n in inc.notifications)
+        if inc.needs_approval and inc.status == "open":
+            sent = (f'<div id="decide" style="margin:0 0 14px"><b>Paused retry:</b> '
+                    f'<button onclick="d(true)" style="background:#1f7a4d;color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer">Approve retry</button> '
+                    f'<button onclick="d(false)" style="background:#b42318;color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer">Keep paused</button></div>'
+                    f'<script>async function d(a){{const r=await fetch("/api/incidents/{inc.incident_id}/decision",'
+                    f'{{method:"POST",headers:{{"Content-Type":"application/json"}},body:JSON.stringify({{approve:a,by:"owner"}})}});'
+                    f'document.getElementById("decide").textContent=r.ok?(a?"Approved: the agent may retry.":"Rejected: the agent stays paused."):"Could not record the decision.";}}</script>') + sent
+        elif inc.decision:
+            sent = f"<p><b>Decision:</b> {inc.status} by {inc.decision['by']} at {inc.decision['at']}</p>" + sent
         page = page.replace("</body>", f'<div style="max-width:600px;margin:0 auto 30px;font:13px Segoe UI,Arial,sans-serif;'
                                         f'color:#5b6676"><b>Notifications</b><ul>{sent}</ul></div></body>')
         return HTMLResponse(page)
