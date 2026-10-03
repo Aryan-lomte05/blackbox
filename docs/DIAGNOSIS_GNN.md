@@ -1,5 +1,13 @@
 # Diagnosis GNN: scope
 
+> **Decision (3 Oct, after grouped CV, see AUDIT.md entry 16):** the shipped
+> model is the graph-feature variant *without* learned message passing and
+> without text embeddings. Graph-derived features are worth +16 points Top-1
+> in CV (lower in all 5 folds without them); the message-passing layer added
+> nothing measurable at 224 labelled failures. The GNN path stays in the code
+> (`--variant full`) for when there is more data. Final: test_known Top-1
+> 0.607 [0.43, 0.79] / Top-3 0.929; unseen Shop tasks Top-1 0.626 [0.53, 0.71].
+
 Owner: **Aryan** (requested by the lead). Aditya owns the GBM ranker, the step
 checker, the suspect list (conformal) and the explanations. The GNN is a
 second learned model: its scores are an input to his ranker, and the eval
