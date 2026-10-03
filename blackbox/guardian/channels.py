@@ -6,6 +6,7 @@ can be inspected exactly as it would have been sent.
     Mailgun       MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_FROM, ALERT_EMAIL_TO
     WhatsApp      TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM ("whatsapp:+14155238886"),
                   ALERT_WHATSAPP_TO ("whatsapp:+91XXXXXXXXXX")
+    EmailJS       EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY, ALERT_EMAIL_TO
     Slack         SLACK_WEBHOOK_URL (an incoming webhook)
     Telegram      TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
     Voice call    TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VOICE_FROM, ALERT_PHONE_TO (critical incidents only)
@@ -137,6 +138,25 @@ def _post_json(url: str, payload: dict, headers: dict | None = None) -> tuple[in
         return r.status, r.read()
 
 
+class EmailJSEmail(Channel):
+    """Email through EmailJS (no SMTP server). The template must use {{subject}}, {{to_email}} and
+    {{{html_message}}} (triple braces: raw HTML); see docs/GUARDIAN_SETUP.md."""
+    name = "email-emailjs"
+    required = ("EMAILJS_SERVICE_ID", "EMAILJS_TEMPLATE_ID", "EMAILJS_PUBLIC_KEY", "EMAILJS_PRIVATE_KEY", "ALERT_EMAIL_TO")
+    URL = "https://api.emailjs.com/api/v1.0/email/send"
+
+    def send(self, inc: Incident) -> str:
+        payload = {
+            "service_id": os.environ["EMAILJS_SERVICE_ID"], "template_id": os.environ["EMAILJS_TEMPLATE_ID"],
+            "user_id": os.environ["EMAILJS_PUBLIC_KEY"], "accessToken": os.environ["EMAILJS_PRIVATE_KEY"],
+            "template_params": {"to_email": os.environ["ALERT_EMAIL_TO"], "subject": render.subject(inc),
+                                "html_message": render.html_email(inc), "text_message": render.text_email(inc),
+                                "severity": inc.severity, "link": inc.link},
+        }
+        status, body = _post_json(self.URL, payload)
+        return f"sent to {os.environ['ALERT_EMAIL_TO']} ({status} {body.decode(errors='replace')[:40]})"
+
+
 class SlackWebhook(Channel):
     name = "slack"
     required = ("SLACK_WEBHOOK_URL",)
@@ -189,4 +209,8 @@ def default_channels() -> list[Channel]:
         load_dotenv(override=False)
     except ImportError:
         pass
-    return [Outbox(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(), TelegramBot(), TwilioVoiceCall()]
+    channels: list[Channel] = [Outbox(), EmailJSEmail(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(),
+                               TelegramBot()]
+    if os.environ.get("BLACKBOX_VOICE_CALLS") == "1":  # phone calls are opt-in: an interruption, critical only
+        channels.append(TwilioVoiceCall())
+    return channels
