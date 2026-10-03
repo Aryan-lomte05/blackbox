@@ -1,0 +1,147 @@
+"""SQLite for runs and steps, fingerprint-named files for large values (save-points).
+
+Identical save-points are written once (USP U3).
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import threading
+from pathlib import Path
+from typing import Any
+
+from blackbox.core.hashing import canonical, fingerprint
+from blackbox.core.schema import Run, Step, Trace
+
+DEFAULT_DIR = Path(os.environ.get("BLACKBOX_DATA", "data"))
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS runs (
+    run_id TEXT PRIMARY KEY,
+    task_family TEXT, task_id TEXT, agent TEXT, model_id TEXT,
+    parent_run_id TEXT, split TEXT, status TEXT,
+    success INTEGER, has_label INTEGER, fault_type TEXT,
+    created_at TEXT, body TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS runs_task ON runs(task_id);
+CREATE INDEX IF NOT EXISTS runs_parent ON runs(parent_run_id);
+CREATE TABLE IF NOT EXISTS steps (
+    run_id TEXT NOT NULL, idx INTEGER NOT NULL, body TEXT NOT NULL,
+    PRIMARY KEY (run_id, idx)
+);
+"""
+
+
+class Store:
+    def __init__(self, root: Path | str = DEFAULT_DIR):
+        self.root = Path(root)
+        self.blob_dir = self.root / "blobs"
+        self.blob_dir.mkdir(parents=True, exist_ok=True)
+        self._lock = threading.Lock()
+        self._db = sqlite3.connect(self.root / "blackbox.db", check_same_thread=False)
+        self._db.executescript(_SCHEMA)
+        self._db.commit()
+
+    # ---- blobs -------------------------------------------------------------
+    def put_blob(self, value: Any) -> str:
+        digest = fingerprint(value)
+        path = self._blob_path(digest)
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(canonical(value), encoding="utf-8")
+            os.replace(tmp, path)
+        return digest
+
+    def get_blob(self, digest: str) -> Any:
+        return json.loads(self._blob_path(digest).read_text(encoding="utf-8"))
+
+    def has_blob(self, digest: str) -> bool:
+        return self._blob_path(digest).exists()
+
+    def _blob_path(self, digest: str) -> Path:
+        return self.blob_dir / digest[:2] / f"{digest}.json"
+
+    # ---- runs --------------------------------------------------------------
+    def save_trace(self, trace: Trace) -> None:
+        run = trace.run
+        row = (
+            run.run_id, run.task_family, run.task_id, run.agent, run.model_id,
+            run.parent_run_id, run.split, run.status,
+            None if run.outcome is None else int(run.outcome.success),
+            int(run.label is not None and run.label.root_cause_step is not None),
+            run.fault.type if run.fault else None,
+            run.created_at, run.model_dump_json(),
+        )
+        with self._lock:
+            self._db.execute("INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
+            self._db.execute("DELETE FROM steps WHERE run_id = ?", (run.run_id,))
+            self._db.executemany(
+                "INSERT INTO steps VALUES (?,?,?)",
+                [(run.run_id, s.idx, s.model_dump_json()) for s in trace.steps],
+            )
+            self._db.commit()
+
+    def load_trace(self, run_id: str) -> Trace:
+        with self._lock:
+            row = self._db.execute("SELECT body FROM runs WHERE run_id = ?", (run_id,)).fetchone()
+            if row is None:
+                raise KeyError(f"no run {run_id!r}")
+            steps = self._db.execute(
+                "SELECT body FROM steps WHERE run_id = ? ORDER BY idx", (run_id,)
+            ).fetchall()
+        return Trace(run=Run.model_validate_json(row[0]), steps=[Step.model_validate_json(s[0]) for s in steps])
+
+    def list_runs(
+        self,
+        *,
+        task_family: str | None = None,
+        task_id: str | None = None,
+        success: bool | None = None,
+        split: str | None = None,
+        fault_type: str | None = None,
+        parent_run_id: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Run]:
+        where, args = [], []
+        for col, val in (
+            ("task_family", task_family), ("task_id", task_id), ("split", split),
+            ("fault_type", fault_type), ("parent_run_id", parent_run_id),
+        ):
+            if val is not None:
+                where.append(f"{col} = ?")
+                args.append(val)
+        if success is not None:
+            where.append("success = ?")
+            args.append(int(success))
+        sql = "SELECT body FROM runs"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        with self._lock:
+            rows = self._db.execute(sql, (*args, limit, offset)).fetchall()
+        return [Run.model_validate_json(r[0]) for r in rows]
+
+    def counts(self) -> dict:
+        with self._lock:
+            runs = self._db.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+            steps = self._db.execute("SELECT COUNT(*) FROM steps").fetchone()[0]
+            labelled = self._db.execute("SELECT COUNT(*) FROM runs WHERE has_label = 1").fetchone()[0]
+            checkpoints = self._db.execute(
+                "SELECT COUNT(*) FROM steps WHERE json_extract(body, '$.state_hash_after') IS NOT NULL"
+            ).fetchone()[0]
+        blobs = list(self.blob_dir.rglob("*.json"))
+        return {
+            "runs": runs,
+            "steps": steps,
+            "labelled_failures": labelled,
+            "save_points": checkpoints,
+            "unique_save_points": len(blobs),
+            "blob_mb": round(sum(p.stat().st_size for p in blobs) / 1e6, 2),
+        }
+
+    def close(self) -> None:
+        self._db.close()

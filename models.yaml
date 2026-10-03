@@ -1,0 +1,34 @@
+# models.yaml: the ONLY place a model is named (CLAUDE.md hard rule 1).
+# Code uses the ids. Check that every tag exists:
+#   py -3 -m blackbox.recorder.providers verify
+# Tags change often; if verify says MISSING, fix the tag here, nowhere else.
+
+- id: agent-small          # default brain of the test agents (fast lane)
+  provider: groq
+  model: llama-3.1-8b-instant
+  params: {temperature: 0, seed: 7}
+
+- id: agent-local          # local volume + natural failures (Advay/Radhesh machines)
+  provider: ollama
+  model: qwen2.5:3b
+  params: {temperature: 0, seed: 7}
+
+- id: agent-local-7b       # Aryan's 4060
+  provider: ollama
+  model: qwen2.5:7b
+  params: {temperature: 0, seed: 7}
+
+- id: agent-strong         # repair attempts in Verify / Autopilot
+  provider: groq
+  model: llama-3.3-70b-versatile
+  params: {temperature: 0}
+
+- id: judge-large          # LLM-judge baseline, GenAI fixes, incident report, red-team mistakes
+  provider: groq
+  model: llama-3.3-70b-versatile
+  params: {temperature: 0.2}
+
+- id: overflow             # when Groq is rate-limited
+  provider: openrouter
+  model: meta-llama/llama-3.3-70b-instruct
+  params: {temperature: 0}
