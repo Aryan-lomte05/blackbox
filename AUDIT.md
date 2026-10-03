@@ -24,6 +24,39 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   making redundant calls after the request is handled, so most planted steps
   no longer matter); QA F8 12%, F9 19%, F10 30%.
 
+### 4. Evaluation harness (checklist row 10) · `radhesh/eval`
+- **What:**
+  - `eval/metrics.py`: Top-1, Top-3, within ±1 step, MRR, with a bootstrap
+    95% interval on Top-1. Random is scored as an expectation, not a draw.
+  - `eval/baselines.py`: `last_step`, `first_error`.
+  - `eval/llm_judge.py`: the Who&When paper's two prompts (`all_at_once`,
+    `step_by_step`) on any registry model; answers cached in
+    `data/reports/judge_cache.json`. The judge is told the run failed and is
+    not shown the expected answer or the planted mistake. `step_by_step`
+    skips runs longer than 20 steps (one call per step) and those runs are
+    left out of its `n`, not counted as misses.
+  - `data/importers/who_and_when.py`: 181 of 184 records import as
+    `task_family="external"`, split `test_outside`, label source `imported`
+    (3 skipped: their marked step is not a step of the run).
+  - `eval/report.py`: `py -3 -m blackbox.eval.report` writes
+    `data/reports/latest.json` + `latest.md`: guilty-step table per test set
+    and method, Top-1 per planted mistake, data health per family, model
+    report card (X7), and an `absent` section naming every §7 table it could
+    not compute, with the reason.
+  - Learned methods are picked up when present: `diagnosis.predict.diagnose`
+    (Aditya) and `diagnosis.gnn.rank` (if a model file exists).
+- **Verified:** 20 new tests (`tests/test_eval.py`). The report ran on a
+  snapshot of my store: 1,506 runs, 545 labelled failures (364 planted, 181
+  imported). Random Top-1 comes out at 15.1% on `test_known` (about 1 / 7
+  steps), which is the sanity check on the scoring code.
+- **First baseline numbers (local qwen2.5:3b runs, small n):** `test_known`
+  n=21: random 15.1%, last step 19.1%, first error 0.0%. `test_outside`
+  n=181: random 9.5%, last step 3.9%, first error 11.1%.
+- **Not in the report yet, each listed under `absent`:** our ranker and the
+  GNN (no model on my machine), suspect-list coverage, live warning, Jev vs
+  LLM, verify, repair, report citations, `test_natural` (no verified labels
+  in my store). The LLM-judge rows need `--judge` and the judge model's key.
+
 ### 3. Mistakes F7–F10, kept back from training (checklist row 7) · `radhesh/faults-unseen`
 - **What:** `faults/catalog.py` now has all ten mistakes.
   - F7 wrong tool: the tool the model named is swapped for another of the
@@ -125,6 +158,8 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   blobs stay in the producing machine's `data/blobs/`, so a merged DB has the
   `state_hash_after` values without the blobs behind them.
 
+## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
+
 ### Aryan's review of Radhesh's agents + farm (PR into `dev`)
 - Approved: QA/Math agents use only `ctx`; F1–F6 are mechanical edits (no
   model); splits use sha1 (stable across machines; `hash()` is salted per
@@ -134,6 +169,34 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   save-points travel with the runs (Radhesh's "open with Aryan" item).
   `merge` still reads the early bare-Trace shards. Test:
   `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
+
+### 16. Model chosen by cross-validation; final test results · `aryan/gnn-final`
+- **CV, round 1 (5 grouped folds, 223 labelled failures in train+val, test
+  sets untouched):** no_text 0.511 / 0.771 (top-1 / top-3), small_text
+  0.471 / 0.767, order_edges_only 0.471 / 0.731, no_message_passing
+  0.448 / 0.695, full 0.426 / 0.704. The 384-d text embeddings hurt.
+- **Round 2:** no text + no message passing 0.534 / 0.807 vs no_text
+  0.484 / 0.794 (the same variant moved ~0.03 between runs: GPU
+  nondeterminism). **Learned message passing adds nothing measurable at this
+  data size.**
+- **Round 3 (is the graph worth anything?):** graph-derived features without
+  message passing 0.540 / 0.817 vs **everything graph-based removed 0.375 /
+  0.625, lower in all 5 folds.** The graph matters, as features computed from
+  data-flow links ("facts from nowhere" vs ancestors, the answer depends on
+  it, depth, degree); the message-passing layer on top does not yet.
+- **Chosen:** `no_text_no_message_passing` (the simplest model CV prefers).
+  The GNN variant stays in the code as the upgrade path when data grows.
+- **Final, test sets used once (1,773 runs):**
+  - test_known n=28: **Top-1 0.607 [95% CI 0.43, 0.79]**, Top-3 0.929, vs
+    last model call 0.250, random 0.114. **The Top-1 lead is now outside the
+    CI.**
+  - **test_new_tasks (Shop, never trained) n=115: Top-1 0.626 [0.53, 0.71]**,
+    Top-3 0.739, vs random 0.142, last model call 0.000.
+  - F6 (wrong fact) 0.29 → 0.71 (n=14). F1/F2/F5 still 0 (n=1–3, too few to
+    judge).
+- **Not yet measured:** test_new_mistakes (F7–F10 runs are on Radhesh's
+  machine), test_natural (labeller running), external (Who&When).
+- Previous full-GNN artefacts kept as `data/models/gnn_full_variant.*`.
 
 ### 15. GNN retrained on 1,332 runs: a correction, and the real headline · `aryan/gnn-cv`
 - 190 labelled failures in train. **test_known (n=28): Top-1 0.357 [95% CI
@@ -221,8 +284,6 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   1 of 9 steps (1,576 tokens saved per fix); the fixed answer is "Columbine".
 - Storage on real farm data: 1,974 save-points stored as 518 files (74%
   de-duplicated).
-
-## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
 ### 11. First live verification (real model, local Ollama) · `aryan/live-tests`
 - `tests/test_live_ollama.py` (marked `live`, skipped in CI and when Ollama is

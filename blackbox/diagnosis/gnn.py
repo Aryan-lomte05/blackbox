@@ -43,6 +43,7 @@ class Config:
     dropout: float = 0.2
     use_text: bool = True
     text_dim: int = 64          # projection of the 384-d sentence embeddings
+    graph_features: bool = True  # False zeroes the features computed from data-flow links (ablation)
     edge_types: tuple[int, ...] = (0, 1, 2, 3)  # () = no message passing (an MLP)
     aux_weight: float = 0.3
     lr: float = 2e-3
@@ -113,7 +114,13 @@ def prepare(examples: list[GraphExample], cache: EmbeddingCache) -> list[Prepare
     return out
 
 
-def collate(items: list[Prepared], edge_types: tuple[int, ...], device) -> dict:
+# Columns of graph_data.build()'s feature row that are computed from the data-flow
+# graph: parent/child counts, depth, "the answer depends on it", and the two
+# "facts from nowhere" features (checked against data-flow ancestors).
+GRAPH_FEATURE_COLS = [23, 24, 25, 27, 31, 32]
+
+
+def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_features: bool = True) -> dict:
     n = max(len(p.ex.req_text) for p in items)
     b, f, r = len(items), feature_dim(), max(1, len(edge_types))
     x = np.zeros((b, n, f), np.float32)
@@ -138,6 +145,8 @@ def collate(items: list[Prepared], edge_types: tuple[int, ...], device) -> dict:
         for et, src, dst in p.ex.edges:
             if et in edge_types:
                 adj[i, edge_types.index(et), dst, src] = 1.0
+    if not graph_features:
+        x[:, :, GRAPH_FEATURE_COLS] = 0.0
     deg = adj.sum(-1, keepdims=True)
     adj = np.divide(adj, deg, out=np.zeros_like(adj), where=deg > 0)
     t = lambda a, dt=torch.float32: torch.as_tensor(a, dtype=dt, device=device)  # noqa: E731
@@ -173,7 +182,7 @@ def predict_probs(models: list[RelGNN], items: list[Prepared], cfg: Config, devi
     with torch.no_grad():
         for i in range(0, len(items), 64):
             chunk = items[i:i + 64]
-            batch = collate(chunk, cfg.edge_types, device)
+            batch = collate(chunk, cfg.edge_types, device, cfg.graph_features)
             probs = 0
             for m in models:
                 root, _, _ = m(batch["x"], batch["req"], batch["out"], batch["adj"], batch["mask"])
@@ -202,7 +211,7 @@ def train_one(train: list[Prepared], val: list[Prepared], cfg: Config, seed: int
         order = train[:]
         rng.shuffle(order)
         for i in range(0, len(order), cfg.batch):
-            batch = collate(order[i:i + cfg.batch], cfg.edge_types, device)
+            batch = collate(order[i:i + cfg.batch], cfg.edge_types, device, cfg.graph_features)
             loss = _loss(model, batch, cfg)
             if not loss.requires_grad:  # nothing labelled in this batch
                 continue
@@ -367,6 +376,9 @@ VARIANTS = {
     "no_text": {"use_text": False},
     "no_message_passing": {"edge_types": ()},
     "order_edges_only": {"edge_types": (2, 3)},
+    "no_text_no_message_passing": {"use_text": False, "edge_types": ()},   # does the graph help? (pairs with no_text)
+    "no_text_order_only": {"use_text": False, "edge_types": (2, 3)},       # does data flow help beyond order?
+    "no_graph_at_all": {"use_text": False, "edge_types": (), "graph_features": False},  # is the graph worth anything?
 }
 
 
