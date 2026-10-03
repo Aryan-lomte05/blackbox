@@ -102,6 +102,27 @@ def _export_test(args) -> int:
     return 0
 
 
+def cmd_fleet(args) -> int:
+    import blackbox.agents.builtin  # noqa: F401
+    from blackbox.replay.fleet import fleet_test, format_report, one_fix_for_many, similar_runs
+
+    store = Store(args.data)
+
+    def show(e: dict) -> None:
+        if e.get("type") == "rule":
+            print(f"rule: {e['rule']}")
+        elif e.get("type") == "run":
+            print(f"  {e['n']}/{e['of']} {e['run_id']}: {e['verdict']}", flush=True)
+
+    if args.model and not args.rule:
+        ids = similar_runs(store, store.load_trace(args.run_id), args.fail, args.n_pass)
+        rep = fleet_test(store, ids, model=args.model, on_event=show)
+    else:
+        rep = one_fix_for_many(store, args.run_id, rule=args.rule, n_fail=args.fail, n_pass=args.n_pass, on_event=show)
+    print(format_report(rep))
+    return 0
+
+
 def cmd_demo(args) -> int:
     from blackbox.demo import demo
 
@@ -140,6 +161,14 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("lab", help="Live Lab: type a question, plant a mistake live, watch the investigation")
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
+
+    s = sub.add_parser("fleet", help="one fix for many: test a rule (or a GenAI-written one) on similar failures + passing runs")
+    s.add_argument("run_id")
+    s.add_argument("--rule", default=None, help="the instruction to test; default: GenAI writes one from this failure")
+    s.add_argument("--model", default=None, help="or test a model swap instead (time machine A/B)")
+    s.add_argument("--fail", type=int, default=3)
+    s.add_argument("--pass", dest="n_pass", type=int, default=2)
+    s.set_defaults(fn=cmd_fleet)
 
     s = sub.add_parser("mcp", help="run Black Box as an MCP server on stdio (for Claude Code, Cursor, ...)")
     s.set_defaults(fn=lambda a: __import__("blackbox.mcp_server", fromlist=["main"]).main())
