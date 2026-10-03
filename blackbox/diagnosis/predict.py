@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-MODEL_DIR = Path("models")
+from blackbox.core.store import DEFAULT_DIR
+
+MODEL_DIR = DEFAULT_DIR / "models"  # data/models (gitignored); weights come from the GitHub release
 
 # Guard import: if ranker_A.pkl is not trained yet, raise ImportError
 # so that blackbox.api.main falls back honestly as designed until trained.

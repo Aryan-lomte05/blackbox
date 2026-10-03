@@ -23,6 +23,9 @@ def client(tmp_path, monkeypatch):
         monkeypatch.setattr(gnn, "available", lambda *a, **k: False)
     except ImportError:
         pass
+    import sys
+
+    monkeypatch.setitem(sys.modules, "blackbox.diagnosis.predict", None)  # hide a locally trained ranker
     store = Store(tmp_path)
     good = run_task(ToyAgent(), _task(), "fake-model", store=store)
     bad = fork(good, 1, Change(kind="output", value={"docs": DOCS["japan"]}), store=store)

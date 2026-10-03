@@ -78,28 +78,54 @@ class RepairRequest(BaseModel):
     evidence: str = ""
 
 
-def diagnose(trace: Trace) -> dict:
-    """Aditya's ranker if installed, else the GNN if trained, else an honest, labelled fallback."""
-    try:
-        from blackbox.diagnosis.predict import diagnose as trained  # type: ignore[import-not-found]
-    except ImportError:
-        trained = None
-    if trained is not None:
-        return {**trained(trace), "source": "trained"}
+def _monitor_of(trace: Trace) -> list[dict]:
+    return [{"idx": s.idx, "answers": s.monitor} for s in trace.steps if s.monitor]
+
+
+def _diagnose_graph(trace: Trace) -> dict | None:
     try:
         from blackbox.diagnosis import gnn
 
         if gnn.available():
-            return {**gnn.rank(trace), "source": "gnn",
-                    "monitor": [{"idx": s.idx, "answers": s.monitor} for s in trace.steps if s.monitor]}
+            return {**gnn.rank(trace), "source": "gnn", "monitor": _monitor_of(trace)}
     except ImportError:  # torch not installed: the [ml] extra is optional
         pass
+    return None
+
+
+def _diagnose_ranker(trace: Trace) -> dict | None:
+    try:
+        from blackbox.diagnosis.predict import diagnose as ranker  # Aditya's LightGBM ranker
+    except ImportError:  # not trained here, or lightgbm missing
+        return None
+    return {**ranker(trace), "source": "ranker", "monitor": _monitor_of(trace)}
+
+
+def _diagnose_fallback(trace: Trace) -> dict:
     from blackbox.replay.verify import suspects_by_position
 
     order = suspects_by_position(trace)
-    return {"source": "fallback: errors first, then model calls latest-first (ranker not installed)",
-            "suspects": order[:3], "scores": [], "evidence": [],
-            "monitor": [{"idx": s.idx, "answers": s.monitor} for s in trace.steps if s.monitor]}
+    return {"source": "fallback: errors first, then model calls latest-first (no trained model available)",
+            "suspects": order[:3], "scores": [], "evidence": [], "monitor": _monitor_of(trace)}
+
+
+DIAGNOSERS = {"graph": _diagnose_graph, "ranker": _diagnose_ranker}
+
+
+def diagnose(trace: Trace, which: str | None = None) -> dict:
+    """The diagnosis used everywhere (API, demo, Investigate, Lab, Guardian, Verify's suspects).
+
+    Chosen explicitly, never by whichever model file happens to exist: `which` or $BLACKBOX_DIAGNOSER =
+    "graph" (default: the graph-feature model, best measured, AUDIT.md entries 16/20) or "ranker"
+    (Aditya's LightGBM). If the chosen one is unavailable, the other is tried, then an honest fallback;
+    `source` always names the model that answered."""
+    first = (which or os.environ.get("BLACKBOX_DIAGNOSER", "graph")).lower()
+    order = [first] + [k for k in DIAGNOSERS if k != first] if first in DIAGNOSERS else list(DIAGNOSERS)
+    for name in order:
+        out = DIAGNOSERS[name](trace)
+        if out is not None:
+            return out
+    return _diagnose_fallback(trace)
 
 
 def _sse(job: Job) -> StreamingResponse:
@@ -289,9 +315,11 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         return {"step": step.model_dump(mode="json"), "state_after": state}
 
     @app.get("/api/runs/{run_id}/diagnosis", tags=["Diagnosis"], summary="3 · Diagnose: rank the steps of a failed run")
-    def get_diagnosis(run_id: str = PathParam(..., openapi_examples=failed or None)) -> dict:
+    def get_diagnosis(run_id: str = PathParam(..., openapi_examples=failed or None),
+                      model: Literal["graph", "ranker"] | None = Query(None, description=
+                          "which diagnosis model (default: $BLACKBOX_DIAGNOSER or graph)")) -> dict:
         trace = load(run_id)
-        out = diagnose(trace)
+        out = diagnose(trace, model)
         if trace.run.label is not None and trace.run.label.root_cause_step is not None:
             g = trace.run.label.root_cause_step
             out["known_guilty_step"] = g

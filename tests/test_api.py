@@ -20,6 +20,9 @@ def client(tmp_path, monkeypatch):
         monkeypatch.setattr(gnn, "available", lambda *a, **k: False)
     except ImportError:
         pass
+    import sys
+
+    monkeypatch.setitem(sys.modules, "blackbox.diagnosis.predict", None)  # hide a locally trained ranker
     store = Store(tmp_path)
     from blackbox.api.main import create_app
 

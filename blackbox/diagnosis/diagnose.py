@@ -14,7 +14,9 @@ from blackbox.diagnosis.embeddings import OddnessBank
 from blackbox.diagnosis.explain import shap_sentences
 from blackbox.diagnosis.features import FEATURE_NAMES_STRUCTURAL_ONLY, extract_features
 
-MODEL_DIR = Path("models")
+from blackbox.core.store import DEFAULT_DIR
+
+MODEL_DIR = DEFAULT_DIR / "models"  # data/models (gitignored); weights come from the GitHub release
 
 _model_A: lgb.Booster | None = None
 _bank: OddnessBank | None = None
@@ -27,7 +29,15 @@ def _load():
         model_file = MODEL_DIR / "ranker_A.pkl"
         if not model_file.exists():
             return False
-        _model_A = lgb.Booster(model_file=str(model_file))
+        # ranker.py saves the Booster with pickle; LightGBM's own text format is accepted too.
+        # (Loading it only as text failed on every real machine: "Unknown model format".)
+        try:
+            _model_A = lgb.Booster(model_file=str(model_file))
+        except lgb.basic.LightGBMError:
+            import pickle
+
+            with open(model_file, "rb") as fh:  # our own trained file, from data/models
+                _model_A = pickle.load(fh)
         bank_file = MODEL_DIR / "oddness_bank.pkl"
         if bank_file.exists():
             try:
