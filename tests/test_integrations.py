@@ -96,3 +96,11 @@ def test_session_record_only():
         s.final("done")
     assert [st.kind for st in s.trace.steps] == ["llm", "final"]
     assert s.trace.run.outcome is None  # no checker registered for 'app': no invented verdict
+
+
+def test_wrapped_agent_gets_content_based_links():
+    """Wrap mode sees calls, not memory: links are inferred from content (an earlier
+    step's output appearing in a later request)."""
+    tr = blackbox.run(weather_agent, "Will it rain?", family="weather", expected="FORECAST:False", check=check)
+    llm2 = tr.steps[2]  # its prompt carries the tool's result (RAIN=False)
+    assert 1 in llm2.parents and llm2.meta.get("parents_inferred") == "content"
