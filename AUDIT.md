@@ -7,6 +7,15 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
+### 11. First live verification (real model, local Ollama) · `aryan/live-tests`
+- `tests/test_live_ollama.py` (marked `live`, skipped in CI and when Ollama is
+  down): `models.yaml`'s `agent-local` tag exists; the registry path records
+  **real token counts** from qwen2.5:3b; a wrapped `OpenAI(base_url=ollama)`
+  client records tool → llm → final, and a fork with a changed tool output
+  re-runs the dependent model call, which answers with the new value. 3/3 pass
+  (16 s) on Aryan's 4060.
+- Groq/OpenRouter are still unverified: no keys in `.env` yet.
+
 ### 10. Async agents (X4 completeness) · `aryan/async-wrap`
 - `blackbox.wrap()` now also wraps `AsyncOpenAI` clients (detected
   automatically); `@blackbox.tool` works on `async def` tools; `await
