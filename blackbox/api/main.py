@@ -234,6 +234,16 @@ def create_app(store: Store | None = None) -> FastAPI:
                                                      evidence=body.evidence, on_event=j.emit))
         return {"job_id": job.job_id}
 
+    @app.post("/api/runs/{run_id}/advise")
+    def start_advise(run_id: str, cheaper_model: str = "agent-local") -> dict:
+        from blackbox.replay.advisor import advise
+
+        trace = load(run_id)
+        if trace.run.outcome is None or not trace.run.outcome.success:
+            raise HTTPException(400, "the advisor needs a passing run")
+        job = jobs.start("advise", lambda j: advise(trace, cheaper_model, store=db(), on_event=j.emit))
+        return {"job_id": job.job_id}
+
     @app.get("/api/jobs/{job_id}/events")
     def job_events(job_id: str):
         job = jobs.get(job_id)
