@@ -316,11 +316,22 @@ def evaluate(models, items: list[Prepared], cfg: Config, device) -> dict:
     by_split: dict[str, list[Prepared]] = defaultdict(list)
     for p in items:
         if p.ex.root is not None:
-            by_split[p.ex.split or "none"].append(p)
+            if p.ex.label_source != "verified":  # planted-mistake sets stay planted-only
+                by_split[p.ex.split or "none"].append(p)
             # Real failures (nothing planted, cause proven by experiment) on tasks never used to train
             # or choose the model: reported on their own so planted and real results never mix.
             if p.ex.label_source == "verified" and p.ex.split not in ("train", "val"):
                 by_split["test_natural"].append(p)
+    # U10: suspect-set size covering the true cause 90% of the time, calibrated on `calib` only
+    calib = by_split.get("calib", [])
+    if calib:
+        from blackbox.diagnosis.evidence import calibrate, save_calibration
+
+        cprobs = predict_probs(models, calib, cfg, device)
+        ranks = [_ranks(with_first_decision(pr, p), p.ex.root) for pr, p in zip(cprobs, calib)]
+        info = calibrate(ranks)
+        report["suspect_set_90"] = info
+        save_calibration(info)
     for split in EVAL_SPLITS:
         lab = by_split.get(split, [])
         if not lab:
@@ -329,6 +340,11 @@ def evaluate(models, items: list[Prepared], cfg: Config, device) -> dict:
         report["splits"][split] = score_rankings(lab, probs)
         report.setdefault("policy_model_plus_first_decision", {})[split] = score_rankings(
             lab, [with_first_decision(pr, p) for pr, p in zip(probs, lab)])
+        if report.get("suspect_set_90"):
+            k = report["suspect_set_90"]["k"]
+            hits = [_ranks(with_first_decision(pr, p), p.ex.root) <= k for pr, p in zip(probs, lab)]
+            report.setdefault("suspect_set_90_coverage", {})[split] = {"k": k, "n": len(lab),
+                                                                       "coverage": round(float(np.mean(hits)), 3)}
         report["baselines"][split] = {
             kind: score_rankings(lab, [baseline_probs(p, kind) for p in lab])
             for kind in ("last_model_call", "first_model_call", "fallback_order")
@@ -473,6 +489,9 @@ def _print_report(m: dict) -> None:
               f"   first-model-call {b.get('first_model_call', {}).get('top1', float('nan')):.3f}")
     for split, r in (m.get("policy_model_plus_first_decision") or {}).items():
         print(f"  policy model+first decision  {split:16} top1 {r['top1']:.3f}  top3 {r['top3']:.3f}")
+    if m.get("suspect_set_90"):
+        print(f"90% suspect set: k={m['suspect_set_90']['k']} (calib n={m['suspect_set_90']['n_calib']}); coverage: "
+              + ", ".join(f"{k} {v['coverage']:.2f} (n={v['n']})" for k, v in m.get("suspect_set_90_coverage", {}).items()))
     if m.get("by_fault"):
         print("test_known by mistake type: " + ", ".join(f"{k} {v['top1']:.2f} (n={v['n']})" for k, v in m["by_fault"].items()))
     for name, rep in (m.get("ablations") or {}).items():
@@ -513,9 +532,15 @@ def rank(trace: Trace, path: Path = MODEL_PATH, top_k: int = 3) -> dict:
     # failures of weak models usually start at the opening plan and planted ones rarely do.
     policy = [int(i) for i in np.argsort(-with_first_decision(probs, prepared[0]), kind="stable")
               if prepared[0].ex.candidates[i]]
+    from blackbox.diagnosis.evidence import sentences, suspect_set_size, trail
+
+    cal = suspect_set_size()
+    k90 = cal["k"] if cal else None
+    evidence = [{"idx": i, "sentences": sentences(trace, i), "trail": trail(trace, i)} for i in policy[:top_k]]
     return {"suspects": policy[:top_k], "model": name, "policy": "model top 2 + first decision",
+            "suspect_set_90": ({"steps": policy[:k90], **cal} if cal else None), "evidence_sentences": evidence,
             "scores": [{"idx": i, "p": round(float(probs[i]), 4), "rank": r + 1} for r, i in enumerate(order)],
-            "evidence": []}
+            "evidence": evidence}
 
 
 def main(argv: list[str] | None = None) -> int:
