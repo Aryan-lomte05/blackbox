@@ -1,0 +1,31 @@
+# secrets
+.env
+.env.*
+!.env.example
+# data + artifacts
+data/
+*.db
+*.db-journal
+*.npy
+*.pt
+*.safetensors
+models_cache/
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+# web
+web/node_modules/
+web/dist/
+node_modules/
+# os/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# not published: code from another project, shared with the team separately
+reference/
