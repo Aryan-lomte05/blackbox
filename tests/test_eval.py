@@ -225,6 +225,7 @@ def test_report_with_judge_limits_how_many_runs_it_judges(traces):
     methods = r["guilty_step"]["test_known"]["methods"]
     assert methods["llm_judge_all_at_once"]["n"] == 1 and methods["last_step"]["n"] > 1
     assert "llm_judge" not in r["absent"] and r["judge"]["model_id"] == "fake-judge"
+    assert "LLM judge: model `fake-judge`, on the first 1 labelled runs" in report.to_markdown(r)
     assert not any(k.startswith("llm_judge") for row in r["guilty_step_top1_by_mistake"].values() for k in row)
 
 

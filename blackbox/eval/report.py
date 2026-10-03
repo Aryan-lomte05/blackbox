@@ -268,6 +268,10 @@ def to_markdown(report: dict) -> str:
         f"failures, {d['crashed']} crashed).", "",
         "## Finding the guilty step", "",
     ]
+    if report.get("judge"):
+        j = report["judge"]
+        lines += [f"LLM judge: model `{j['model_id']}`, on the first {j['limit_per_test_set']} labelled runs "
+                  f"of each test set (its `n` is smaller than the other methods').", ""]
     for test_set, block in report["guilty_step"].items():
         lines += [f"### {test_set}: {block['question']} (n = {block['n_labelled']})", "",
                   "| method | n | Top-1 | 95% CI | Top-3 | within ±1 | MRR |", "|---|---|---|---|---|---|---|"]
