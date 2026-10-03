@@ -1,0 +1,59 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+import { Sidebar } from './components/common/Sidebar';
+import { Header } from './components/common/Header';
+
+import { InvestigateScreen } from './screens/InvestigateScreen';
+
+// Stub components for remaining screens while we build them in demo order
+const RunGraphStub = () => <div className="p-8 text-zinc-400 font-mono">Run Graph screen building next...</div>;
+const LiveLabStub = () => <div className="p-8 text-zinc-400 font-mono">Live Lab screen building next...</div>;
+const FleetFixStub = () => <div className="p-8 text-zinc-400 font-mono">Fleet Firewall screen building next...</div>;
+const CausalStub = () => <div className="p-8 text-zinc-400 font-mono">Causal Report screen building next...</div>;
+const CrashTestStub = () => <div className="p-8 text-zinc-400 font-mono">Crash Test screen building next...</div>;
+const SimilarStub = () => <div className="p-8 text-zinc-400 font-mono">Similar Failures screen building next...</div>;
+const IncidentsStub = () => <div className="p-8 text-zinc-400 font-mono">Guardian Incidents screen building next...</div>;
+const OverviewStub = () => <div className="p-8 text-zinc-400 font-mono">Overview screen building next...</div>;
+const AtlasStub = () => <div className="p-8 text-zinc-400 font-mono">Atlas screen building next...</div>;
+const DatasetStub = () => <div className="p-8 text-zinc-400 font-mono">Dataset screen building next...</div>;
+
+export const App: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex">
+          {/* Left fixed sidebar */}
+          <Sidebar />
+
+          {/* Main content area */}
+          <div className="flex-1 ml-64 min-h-screen flex flex-col">
+            <Header
+              title="Black Box AI Flight Recorder"
+              subtitle="Autonomous Causal Diagnosis & Regression Firewall"
+            />
+            <main className="flex-1 bg-zinc-950">
+              <Routes>
+                <Route path="/investigate" element={<InvestigateScreen />} />
+                <Route path="/runs/:id" element={<RunGraphStub />} />
+                <Route path="/runs" element={<Navigate to="/runs/37452fc329e1498f" replace />} />
+                <Route path="/lab" element={<LiveLabStub />} />
+                <Route path="/fleet" element={<FleetFixStub />} />
+                <Route path="/causal" element={<CausalStub />} />
+                <Route path="/crash-test" element={<CrashTestStub />} />
+                <Route path="/similar" element={<SimilarStub />} />
+                <Route path="/incidents" element={<IncidentsStub />} />
+                <Route path="/atlas" element={<AtlasStub />} />
+                <Route path="/dataset" element={<DatasetStub />} />
+                <Route path="/" element={<InvestigateScreen />} />
+              </Routes>
+            </main>
+          </div>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
