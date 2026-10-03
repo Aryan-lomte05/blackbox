@@ -8,6 +8,7 @@ automatically: the incident asks for approval instead.
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -43,19 +44,25 @@ def _step_label(s) -> str:
     return f"{s.kind} {s.name}"
 
 
+def dashboard_url() -> str:
+    """Where incident links point: BLACKBOX_DASHBOARD_URL (.env), else the local server."""
+    return (os.environ.get("BLACKBOX_DASHBOARD_URL") or os.environ.get("BLACKBOX_DASHBOARD")
+            or "http://127.0.0.1:8000").rstrip("/")
+
+
 class Guardian:
-    def __init__(self, owner: str = "", dashboard: str = "http://127.0.0.1:8000", *,
+    def __init__(self, owner: str = "", dashboard: str | None = None, *,
                  money_moving_tools: tuple[str, ...] = (), channels: list[Channel] | None = None,
                  investigate: bool = True, dedupe_minutes: int = 30, store: Store | None = None,
-                 root: Path = INCIDENTS):
+                 root: Path | None = None):
         self.owner = owner
-        self.dashboard = dashboard.rstrip("/")
+        self.channels = channels if channels is not None else default_channels()  # also loads .env
+        self.dashboard = (dashboard or dashboard_url()).rstrip("/")
         self.money_moving = set(money_moving_tools)
-        self.channels = channels if channels is not None else default_channels()
         self.investigate = investigate
         self.dedupe = timedelta(minutes=dedupe_minutes)
         self.store = store
-        self.root = Path(root)
+        self.root = Path(root) if root is not None else INCIDENTS  # resolved per call (tests redirect it)
 
     # ---- storage ----------------------------------------------------------------------
     def _save(self, inc: Incident) -> None:

@@ -108,6 +108,17 @@ Calls are opt-in: set `BLACKBOX_VOICE_CALLS=1` to enable them, and then they are
 
 ---
 
+## Where alerts come from
+| Path | Alerts by default? | Switch |
+|---|---|---|
+| Your own agent: `blackbox.run(agent, q, guardian=blackbox.Guardian(owner=...))` | yes | pass / omit `guardian` |
+| Trader bot demo `examples/trader_bot.py --glitch` | yes | — |
+| API: raise an incident for a run `POST /api/incidents/from-run/{id}` | yes | — |
+| API live run `POST /api/runs` | no | `"notify": true` |
+| Live Lab (stage 13) `POST /api/lab`, `blackbox lab`, MCP `live_lab` | no (outbox only, so practice runs page nobody) | `"notify": true`, `--notify` |
+| Farm, crash test, fleet, verify (thousands of planted failures) | never | — |
+Incident links use `BLACKBOX_DASHBOARD_URL`.
+
 ## Check everything
 ```bash
 blackbox guardian channels

@@ -130,9 +130,11 @@ def cheaper_model(run_id: str, cheaper_model: str = "agent-local") -> str:
 
 @tool("live_lab", "Type any question: an agent answers live, Black Box plants a mistake and investigates it "
       "(14 stages, 1-5 min).", category="experiments",
-      properties={"question": {"type": "string"}, "mistake": {"type": "string", "default": "auto"}},
+      properties={"question": {"type": "string"}, "mistake": {"type": "string", "default": "auto"},
+                  "notify": {"type": "boolean", "default": False,
+                             "description": "send the incident to the configured channels (email, WhatsApp, Slack)"}},
       required=("question",))
-def live_lab(question: str, mistake: str = "auto") -> str:
+def live_lab(question: str, mistake: str = "auto", notify: bool = False) -> str:
     from blackbox.lab import run_lab
 
     lines: list[str] = []
@@ -142,5 +144,5 @@ def live_lab(question: str, mistake: str = "auto") -> str:
             lines.append(f"[{e['n']:>2}/14] {e['title']}: {e['detail']}")
             report_progress(lines[-1])
 
-    run_lab(question, mistake=mistake, store=store(), emit=keep)
+    run_lab(question, mistake=mistake, store=store(), emit=keep, notify=bool(notify))
     return "\n".join(lines)

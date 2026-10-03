@@ -31,7 +31,9 @@ def _load_env() -> None:
 def test_incident(severity: str = "critical", dashboard: str | None = None) -> Incident:
     """A sample incident, plainly labelled as a test, shaped like the trader-bot demo."""
     stamp = datetime.now(timezone.utc).strftime("%H%M%S")
-    base = dashboard or os.environ.get("BLACKBOX_DASHBOARD_URL", "http://localhost:8000")
+    from blackbox.guardian.service import dashboard_url
+
+    base = (dashboard or dashboard_url()).rstrip("/")
     return Incident(
         incident_id=f"test-{stamp}", run_id="test-run", owner=os.environ.get("ALERT_OWNER_NAME", ""),
         kind="failure", severity=severity,  # type: ignore[arg-type]
