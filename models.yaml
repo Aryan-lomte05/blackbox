@@ -18,17 +18,20 @@
   model: qwen2.5:7b
   params: {temperature: 0, seed: 7}
 
+# OpenRouter keys are free-tier: only ":free" models, ~50 requests/day per account.
+# Keep them for the few big-model jobs; bulk run generation goes to local Ollama.
+# Measured 3 Oct: nemotron-3-super 0.4 s, qwen3.8-27b 1.1 s, gemma-4-31b rate-limited upstream.
 - id: agent-strong         # repair attempts in Verify / Autopilot
-  provider: groq
-  model: llama-3.3-70b-versatile
+  provider: openrouter
+  model: nvidia/nemotron-3-super-120b-a12b:free
   params: {temperature: 0}
 
 - id: judge-large          # LLM-judge baseline, GenAI fixes, incident report, red-team mistakes
-  provider: groq
-  model: llama-3.3-70b-versatile
+  provider: openrouter
+  model: nvidia/nemotron-3-super-120b-a12b:free
   params: {temperature: 0.2}
 
-- id: overflow             # when Groq is rate-limited
+- id: overflow             # second free large model when the first is rate-limited
   provider: openrouter
-  model: meta-llama/llama-3.3-70b-instruct
+  model: qwen/qwen3.8-27b:free
   params: {temperature: 0}
