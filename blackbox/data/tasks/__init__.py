@@ -14,4 +14,8 @@ def load_tasks(family: str, n: int | None = None, offset: int = 0) -> list[Task]
         from blackbox.data.tasks import gsm8k
 
         return gsm8k.load(n, offset)
-    raise KeyError(f"no task loader for family {family!r}. Known: math, qa")
+    if family == "ops":
+        from blackbox.data.tasks import ops_tasks
+
+        return ops_tasks.load(n, offset)
+    raise KeyError(f"no task loader for family {family!r}. Known: math, ops, qa")
