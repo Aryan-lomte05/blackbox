@@ -41,7 +41,15 @@ def test_incident(severity: str = "critical", dashboard: str | None = None) -> I
         why="Step 4 read the quantity from the wrong field of the order form (proven by replay).",
         how_to_fix=["Validate the quantity against the order form before place_order.",
                     "Keep the agent paused until you approve the retry."],
-        needs_approval=True, signature=f"guardian-test-{stamp}", link=f"{base}/#/incidents/test-{stamp}",
+        actions_taken=["Paused the agent: it can move money, so it waits for your approval.",
+                       "Re-ran the run with step 4 repaired (the order was simulated, never placed): it passes."],
+        needs_approval=True, signature=f"guardian-test-{stamp}", link=f"{base}/incident/test-{stamp}",
+        evidence={"cause_step": 4, "cause_note": "Repairing only this step makes the run pass (proven by replay).",
+                  "timeline": [{"idx": 2, "label": "tool get_quote(AAPL) -> 182.40", "flag": ""},
+                               {"idx": 3, "label": "llm: plan the order", "flag": ""},
+                               {"idx": 4, "label": "llm: quantity = 100 (form said 10)", "flag": "⚠ cause"},
+                               {"idx": 5, "label": "tool place_order(AAPL, 100) -> filled", "flag": ""},
+                               {"idx": 6, "label": "final: order placed", "flag": ""}]},
     )
 
 
