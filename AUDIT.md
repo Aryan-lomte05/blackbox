@@ -7,6 +7,22 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Radhesh · `radhesh/*` branches
 
+### 6. BlackBox-3K dataset packaging (USP X8) · `radhesh/dataset-card`
+- **What:** `data/dataset.py`. `export` writes one gzip'd file per split in
+  the team shard format (runs, steps and save-points), `stats.json`, and a
+  dataset card `README.md` generated from the runs: every number in it is
+  computed, none is typed. `load(path, split=, family=, labelled_only=)`
+  yields `Trace` objects; `load_into_store` merges the folder into a store so
+  the runs can be replayed and forked.
+- **Left out of the export on purpose:** crashed runs, and imported runs
+  (Who&When is not ours to republish). Both are counted in the card.
+- **Verified:** 5 new tests: per-split files, filters, a fresh store gets
+  the save-points and replays a run with the same answer, card numbers match
+  the stats, CLI. Exported a snapshot of my store: 1,325 runs, 364 labelled
+  failures, 11,845 steps, 6 split files (3.6 MB).
+- **Not done:** the dataset is not published anywhere; that is a team
+  decision. The final export should be run on the merged store.
+
 ### 4. Evaluation harness (checklist row 10) · `radhesh/eval`
 - **What:**
   - `eval/metrics.py`: Top-1, Top-3, within ±1 step, MRR, with a bootstrap
