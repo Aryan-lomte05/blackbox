@@ -64,13 +64,21 @@ class RepairRequest(BaseModel):
 
 
 def diagnose(trace: Trace) -> dict:
-    """Aditya's trained ranker when available; otherwise an honest, labelled fallback."""
+    """Aditya's ranker if installed, else the GNN if trained, else an honest, labelled fallback."""
     try:
         from blackbox.diagnosis.predict import diagnose as trained  # type: ignore[import-not-found]
     except ImportError:
         trained = None
     if trained is not None:
         return {**trained(trace), "source": "trained"}
+    try:
+        from blackbox.diagnosis import gnn
+
+        if gnn.available():
+            return {**gnn.rank(trace), "source": "gnn",
+                    "monitor": [{"idx": s.idx, "answers": s.monitor} for s in trace.steps if s.monitor]}
+    except ImportError:  # torch not installed: the [ml] extra is optional
+        pass
     from blackbox.replay.verify import suspects_by_position
 
     order = suspects_by_position(trace)

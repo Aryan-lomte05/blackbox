@@ -47,6 +47,37 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   `merge` still reads the early bare-Trace shards. Test:
   `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
 
+### 13. Diagnosis GNN (scope: docs/DIAGNOSIS_GNN.md) · `aryan/gnn`
+- **What:** a relational graph network over a run (nodes = steps; 4 edge
+  types: data flow and order, both directions), plain PyTorch, a 5-seed
+  ensemble. Main head: which step is guilty. Auxiliary heads: does the run
+  fail; does a step look wrong. Features: structure, errors, MiniLM text
+  embeddings, "facts from nowhere", overlap with the answer.
+- **Leak guard (tests):** features never use `cached`, latency, tokens,
+  `meta`, fault or patch. In our planted forks those fields alone would point
+  at the planted step. `test_leak_guard_*` checks that a replayed run has
+  identical features.
+- **First results (3 Oct, 18:40; 507 runs, 66 labelled failures in train):**
+  test_known n=12: **GNN Top-1 0.417 [95% CI 0.17, 0.67]**, Top-3 0.583, vs
+  random 0.119, last model call 0.083, fallback order 0.083. Ablation (n=9 at
+  training time): no message passing 0.111, order edges only 0.444, no text
+  0.333. **Small n: indicative only.** Weakest on F6 (wrong fact, 0/3). On the
+  demo's planted-F6 run it ranks the true step 4th.
+- **Wired:** `GET /api/runs/{id}/diagnosis` order is Aditya's `predict` →
+  GNN → labelled fallback, so the demo and Verify now get GNN suspects.
+- **Bugs found and fixed while building:** a crash on batches with no labels;
+  the random baseline printed 0.000 (argmax of ties) and is now the expected
+  value; the API test silently used the locally trained model and is now
+  hermetic.
+- **Next:** retrain when the Math farm finishes; add the step-checker answers
+  as features (aimed at F6); conformal suspect lists on top (Aditya).
+
+### Farm on Aryan's 4060 (qwen2.5:7b, offsets 2000 / 800)
+- QA: 150 tasks → 399 runs, **79 labelled failures, 0 crashes**; clean pass
+  85/150. Flip rate: F4 59%, **F5 14%, F6 27% (below the 30–90% target: for
+  Radhesh to tune)**. Math restarted after **my bad offset** (2000 > the 1,319
+  GSM8K problems → 0 tasks).
+
 ### 12. `blackbox demo` on real runs, and a Verify flaw it exposed · `aryan/demo-verify-fix`
 - `blackbox demo [--run ID]`: diagnose → verify → repair → compare on a real
   failed run, printed as a story. Run on Aryan's 4060 farm data (qwen2.5:7b
