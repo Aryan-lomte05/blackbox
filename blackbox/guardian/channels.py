@@ -6,6 +6,7 @@ can be inspected exactly as it would have been sent.
     Mailgun       MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_FROM, ALERT_EMAIL_TO
     WhatsApp      TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM ("whatsapp:+14155238886"),
                   ALERT_WHATSAPP_TO ("whatsapp:+91XXXXXXXXXX")
+    EmailJS       EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY, ALERT_EMAIL_TO
     Slack         SLACK_WEBHOOK_URL (an incoming webhook)
     Telegram      TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
     Voice call    TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VOICE_FROM, ALERT_PHONE_TO (critical incidents only)
@@ -18,6 +19,7 @@ import json
 import os
 import smtplib
 import ssl
+import urllib.error
 import urllib.parse
 import urllib.request
 from email.message import EmailMessage
@@ -28,6 +30,25 @@ from blackbox.guardian import render
 from blackbox.guardian.incident import Incident
 
 OUTBOX = DEFAULT_DIR / "outbox"
+
+
+USER_AGENT = "BlackBox-Guardian/0.1 (+https://github.com/Aryan-lomte05/Half_a_Byte_maharashtra_round)"
+
+
+class ChannelError(RuntimeError):
+    """A delivery the service refused, with the service's own explanation."""
+
+
+def _request(url: str, data: bytes, headers: dict | None = None) -> tuple[int, bytes]:
+    """POST through every channel's one door: identifies itself (CDNs such as Cloudflare block Python's default
+    User-Agent, "error code: 1010") and turns HTTP errors into a message that says why."""
+    req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT, **(headers or {})})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode(errors="replace").strip()[:300]
+        raise ChannelError(f"HTTP {exc.code}: {detail or exc.reason}") from None
 
 
 def _missing(*names: str) -> list[str]:
@@ -108,10 +129,9 @@ class MailgunEmail(Channel):
             "to": os.environ["ALERT_EMAIL_TO"], "subject": render.subject(inc),
             "text": render.text_email(inc), "html": render.html_email(inc)}).encode()
         auth = base64.b64encode(f"api:{os.environ['MAILGUN_API_KEY']}".encode()).decode()
-        req = urllib.request.Request(f"https://api.mailgun.net/v3/{os.environ['MAILGUN_DOMAIN']}/messages", data=data,
-                                     headers={"Authorization": f"Basic {auth}"})
-        with urllib.request.urlopen(req, timeout=20) as r:
-            return f"accepted ({r.status})"
+        status, _ = _request(f"https://api.mailgun.net/v3/{os.environ['MAILGUN_DOMAIN']}/messages", data,
+                             {"Authorization": f"Basic {auth}"})
+        return f"accepted ({status})"
 
 
 class TwilioWhatsApp(Channel):
@@ -124,17 +144,32 @@ class TwilioWhatsApp(Channel):
         data = urllib.parse.urlencode({"From": os.environ["TWILIO_WHATSAPP_FROM"],
                                        "To": os.environ["ALERT_WHATSAPP_TO"], "Body": body}).encode()
         auth = base64.b64encode(f"{sid}:{os.environ['TWILIO_AUTH_TOKEN']}".encode()).decode()
-        req = urllib.request.Request(f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", data=data,
-                                     headers={"Authorization": f"Basic {auth}"})
-        with urllib.request.urlopen(req, timeout=20) as r:
-            return f"queued, message sid {json.load(r).get('sid')}"
+        _, reply = _request(f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", data,
+                            {"Authorization": f"Basic {auth}"})
+        return f"queued, message sid {json.loads(reply).get('sid')}"
 
 
 def _post_json(url: str, payload: dict, headers: dict | None = None) -> tuple[int, bytes]:
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
-                                 headers={"Content-Type": "application/json", **(headers or {})})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return r.status, r.read()
+    return _request(url, json.dumps(payload).encode(), {"Content-Type": "application/json", **(headers or {})})
+
+
+class EmailJSEmail(Channel):
+    """Email through EmailJS (no SMTP server). The template must use {{subject}}, {{to_email}} and
+    {{{html_message}}} (triple braces: raw HTML); see docs/GUARDIAN_SETUP.md."""
+    name = "email-emailjs"
+    required = ("EMAILJS_SERVICE_ID", "EMAILJS_TEMPLATE_ID", "EMAILJS_PUBLIC_KEY", "EMAILJS_PRIVATE_KEY", "ALERT_EMAIL_TO")
+    URL = "https://api.emailjs.com/api/v1.0/email/send"
+
+    def send(self, inc: Incident) -> str:
+        payload = {
+            "service_id": os.environ["EMAILJS_SERVICE_ID"], "template_id": os.environ["EMAILJS_TEMPLATE_ID"],
+            "user_id": os.environ["EMAILJS_PUBLIC_KEY"], "accessToken": os.environ["EMAILJS_PRIVATE_KEY"],
+            "template_params": {"to_email": os.environ["ALERT_EMAIL_TO"], "subject": render.subject(inc),
+                                "html_message": render.html_email(inc), "text_message": render.text_email(inc),
+                                "severity": inc.severity, "link": inc.link},
+        }
+        status, body = _post_json(self.URL, payload)
+        return f"sent to {os.environ['ALERT_EMAIL_TO']} ({status} {body.decode(errors='replace')[:40]})"
 
 
 class SlackWebhook(Channel):
@@ -175,11 +210,21 @@ class TwilioVoiceCall(Channel):
         data = urllib.parse.urlencode({"From": os.environ["TWILIO_VOICE_FROM"], "To": os.environ["ALERT_PHONE_TO"],
                                        "Twiml": twiml}).encode()
         auth = base64.b64encode(f"{sid}:{os.environ['TWILIO_AUTH_TOKEN']}".encode()).decode()
-        req = urllib.request.Request(f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json", data=data,
-                                     headers={"Authorization": f"Basic {auth}"})
-        with urllib.request.urlopen(req, timeout=20) as r:
-            return f"calling, call sid {json.load(r).get('sid')}"
+        _, reply = _request(f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json", data,
+                            {"Authorization": f"Basic {auth}"})
+        return f"calling, call sid {json.loads(reply).get('sid')}"
 
 
 def default_channels() -> list[Channel]:
-    return [Outbox(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(), TelegramBot(), TwilioVoiceCall()]
+    # Channel settings live in .env; load it here so every path (API, trader bot, CLI) sees them.
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(override=False)
+    except ImportError:
+        pass
+    channels: list[Channel] = [Outbox(), EmailJSEmail(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(),
+                               TelegramBot()]
+    if os.environ.get("BLACKBOX_VOICE_CALLS") == "1":  # phone calls are opt-in: an interruption, critical only
+        channels.append(TwilioVoiceCall())
+    return channels

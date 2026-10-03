@@ -52,6 +52,7 @@ class LiveRunRequest(BaseModel):
     expected: Any = None
     model_id: str = "agent-small"
     autopilot: bool = False
+    notify: bool = False  # Guardian: a failed or crashed run raises an incident on the configured channels
 
 
 class LabRequest(BaseModel):
@@ -59,6 +60,7 @@ class LabRequest(BaseModel):
     family: Literal["qa", "math", "ops"] | None = None
     mistake: Literal["auto", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"] = "auto"
     repair: bool = False
+    notify: bool = False  # send stage 13's incident to the configured channels (email, WhatsApp, Slack)
 
 
 class Decision(BaseModel):
@@ -212,6 +214,16 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                       for name, spec in providers.PROVIDERS.items()}
         return {"ok": True, "db": db().counts(), "models": models, "providers_configured": configured}
 
+    @app.get("/api/cases", tags=["Investigate"], summary="The demo cases (real recorded runs) for the Investigate picker")
+    def cases() -> dict:
+        """{case name: {run_id, summary, description, guilty}} for every case POST /api/investigate/{case} accepts."""
+        from typing import get_args
+
+        from blackbox.api.showcase import load_or_build
+
+        runs = load_or_build(db()).get("runs", {})
+        return {"cases": {name: runs[name] for name in get_args(CaseName) if name in runs}}
+
     @app.post("/api/investigate/{case}", tags=["Investigate"],
               summary="★ Investigate a case: diagnose → verify → compare (→ repair) in one call")
     def investigate(case: CaseName = PathParam(..., description="a real failed run picked from the recordings"),
@@ -254,7 +266,7 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         if not body.question and body.family != "ops":
             raise HTTPException(400, "type a question (or family=ops)")
         job = jobs.start("lab", lambda j: run_lab(body.question, family=body.family, mistake=body.mistake,
-                                                  repair=body.repair, store=db(), emit=j.emit))
+                                                  repair=body.repair, store=db(), emit=j.emit, notify=body.notify))
         return {"job_id": job.job_id, "events": f"/api/jobs/{job.job_id}/events", "result": f"/api/jobs/{job.job_id}"}
 
     dataset_cache: dict = {}
@@ -556,9 +568,18 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                 pilot = Autopilot(check=check_step)
             tr = run_task(agent, task, body.model_id, store=db(), run_id=run_id, autopilot=pilot,
                           on_step=[step_event(job)])
+            incident = None
+            if body.notify:
+                from blackbox.guardian.service import Guardian
+
+                inc = Guardian(owner="Live run", store=db()).handle(tr)  # None when the run passed
+                if inc is not None:
+                    incident = {"incident_id": inc.incident_id, "link": inc.link,
+                                "notified": [n["channel"] for n in inc.notifications if n["status"] == "sent"]}
+                    job.emit({"type": "incident", **incident})
             return {"run_id": tr.run.run_id, "status": tr.run.status, "error": tr.run.error,
                     "outcome": tr.run.outcome.model_dump(mode="json") if tr.run.outcome else None,
-                    "autopilot_rescue": tr.run.stats.get("autopilot_rescue")}
+                    "autopilot_rescue": tr.run.stats.get("autopilot_rescue"), "incident": incident}
 
         job = jobs.start("run", work)
         run_jobs[run_id] = job.job_id
@@ -609,8 +630,7 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                                                        description="comma-separated tools that move money: never auto-retried")) -> dict:
         from blackbox.guardian.service import Guardian
 
-        g = Guardian(owner=owner, dashboard=os.environ.get("BLACKBOX_DASHBOARD", "http://127.0.0.1:8000"),
-                     money_moving_tools=tuple(t.strip() for t in money_moving_tools.split(",") if t.strip()),
+        g = Guardian(owner=owner, money_moving_tools=tuple(t.strip() for t in money_moving_tools.split(",") if t.strip()),
                      store=db(), dedupe_minutes=0)
         inc = g.handle(load(run_id))
         if inc is None:

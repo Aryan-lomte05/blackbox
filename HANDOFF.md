@@ -1,5 +1,21 @@
 # HANDOFF: read this first in a new session
 
+## ☀ Morning of 4 Oct (written 05:00): what to do first
+1. **Guardian is live**: email (EmailJS, flight-recorder design), WhatsApp (Twilio sandbox), Slack all delivered
+   (#48–#53). Before the pitch: send "hi" to +1 415 523 8886 on WhatsApp (24 h sandbox window). Phone calls off.
+   Check: `py -3 -m blackbox.cli guardian test --severity high`. Lab with real alerts: `blackbox lab "..." --notify`.
+2. **Verify runs on the local 7B by default** (#54, `BLACKBOX_VERIFY_MODEL`). To use Groq: put `GROQ_API_KEYS` in
+   `.env`, then `BLACKBOX_VERIFY_MODEL=agent-strong-groq` (llama-3.3-70b; falls back to the 7B).
+3. **Advay**: `docs/UI_BRIEF.md` (design system) + `docs/UI_PROMPTS.md` (prompts in order); release
+   `ui-kit-2026-10-04`; add him as a repo collaborator if not done.
+4. **Re-run e2e** across the /docs cases after tonight's changes: `py -3 scripts/e2e_docs.py --base http://127.0.0.1:8001 --skip-lab` (server: `blackbox ui --port 8001`).
+5. Open (not started): **Laya fine-tune** on labelled steps (Aditya's checker; check whether the `laya` package
+   supports training, else train a small classifier on checker answers); **real-failure model**: label the 314
+   unlabelled natural failures with Verify on the 7B (`py -3 -m blackbox.replay.label_natural --limit 100 --repeats 1
+   --import blackbox.agents.builtin`), then retrain `gnn train --variant with_real_failures` and compare on
+   `test_natural` (n=17 today, Top-1 0). Do not change demo data in the hour before a pitch.
+6. Rotate keys pasted in chat (OpenRouter, Slack webhook, EmailJS private key, Twilio token) after the hackathon.
+
 ## ⏱ Update 4 Oct ~03:10 IST: **Pitch 1 at 11:00**, Pitch 2 at 16:00 (if we pass). Freeze the demo at 09:30.
 Merged to dev overnight (each its own PR, CI green):
 | PR | What | Where |

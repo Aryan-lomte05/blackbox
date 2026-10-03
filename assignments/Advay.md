@@ -1,5 +1,13 @@
 # Advay: Full-stack · Every Screen, Live Streaming, Demo Driver
 
+## ▶▶ DESIGN + PROMPTS (4 Oct, 05:00): read these first
+- **`docs/UI_BRIEF.md`**: the design system (tokens, Geist + JetBrains Mono, Lenis + motion rules, components,
+  every screen). Premium instrument software, **no AI slop** (no gradients, glows, emoji, fake data).
+- **`docs/UI_PROMPTS.md`**: paste-ready prompts for Claude Code, in order (setup → components → Investigate +
+  Run page → Live Lab → Prove screens → Incidents/Overview → polish). Each has a check before moving on.
+- New since the release: `GET /api/cases` (Investigate picker); `notify` on `POST /api/lab` and `POST /api/runs`
+  ("Notify my phone" toggle: real email / WhatsApp / Slack). Verify uses the local 7B by default.
+
 ## ▶ START HERE (4 Oct, 02:40): Pitch 1 is at 11:00, freeze the UI at 09:30
 1. `git checkout dev && git pull`. The backend is done and stable; you only build `web/`.
 2. **Contract:** `docs/API_FOR_UI.md` (screen → endpoint → fixture, stream event shapes). **Real responses:**

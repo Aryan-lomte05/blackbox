@@ -63,6 +63,26 @@ def _events(http, url):
     return [json.loads(line[6:]) for line in body.splitlines() if line.startswith("data: ")]
 
 
+def test_a_failed_live_run_with_notify_raises_an_incident(client, tmp_path, monkeypatch):
+    """Guardian on the live-run path. The real channels configured on this machine are replaced by an
+    outbox in a temporary folder: a test must never page anyone."""
+    from blackbox.guardian import service
+    from blackbox.guardian.channels import Outbox
+
+    monkeypatch.setattr(service, "default_channels", lambda: [Outbox(tmp_path / "outbox")])
+    monkeypatch.setattr(service, "INCIDENTS", tmp_path / "incidents")
+    monkeypatch.setenv("BLACKBOX_DASHBOARD_URL", "https://dash.example")
+    http, _ = client
+    started = http.post("/api/runs", json={"agent": "toy_agent@v1", "task_family": "toy", "task_id": "t-fr",
+                                            "task_input": {"country": "france", "other": "x"},
+                                            "expected": "Tokyo", "model_id": "fake-model", "notify": True}).json()
+    events = _events(http, f"/api/runs/{started['run_id']}/events")
+    incident = events[-1]["result"]["incident"]
+    assert "incident" in [e["type"] for e in events]
+    assert incident["notified"] == ["outbox"] and incident["link"].startswith("https://dash.example/incident/")
+    assert (tmp_path / "incidents" / f"{incident['incident_id']}.json").exists()
+
+
 def test_live_run_streams_steps_then_verify_job(client):
     http, store = client
     started = http.post("/api/runs", json={"agent": "toy_agent@v1", "task_family": "toy", "task_id": "t-fr",
@@ -80,3 +100,13 @@ def test_live_run_streams_steps_then_verify_job(client):
     vevents = _events(http, f"/api/jobs/{job['job_id']}/events")
     assert {"attempt", "result", "verdict", "done"} <= {e["type"] for e in vevents}
     assert http.get(f"/api/jobs/{job['job_id']}").json()["finished"] is True
+
+
+def test_cases_lists_only_cases_the_investigate_route_accepts(client):
+    http, _ = client
+    cases = http.get("/api/cases").json()["cases"]
+    from typing import get_args
+
+    from blackbox.api.main import CaseName
+
+    assert set(cases) <= set(get_args(CaseName))

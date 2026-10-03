@@ -23,7 +23,7 @@ from blackbox.recorder.context import dry_run_tools
 from blackbox.replay.diff import align
 from blackbox.replay.engine import fork
 from blackbox.replay.fleet import MONEY_TOOLS
-from blackbox.replay.verify import _strategies, find_twin, verify
+from blackbox.replay.verify import _strategies, find_twin, verify, verify_model
 
 Event = Callable[[dict], None]
 
@@ -90,11 +90,12 @@ def blast_radius(trace: Trace, k: int) -> dict:
             "money_moving_steps": money, "severity": "critical" if money else ("high" if hit else "low")}
 
 
-def causal_report(trace: Trace, store: Store, suspects: list[int], *, strong_model: str = "agent-local-7b",
+def causal_report(trace: Trace, store: Store, suspects: list[int], *, strong_model: str | None = None,
                   max_pairs: int = 3, on_event: Event | None = None) -> dict[str, Any]:
     if trace.run.outcome is None or trace.run.outcome.success:
         raise ValueError("a causal report needs a finished, failed run")
     emit = on_event or (lambda e: None)
+    strong_model = strong_model or verify_model()
     token = dry_run_tools.set(MONEY_TOOLS | dry_run_tools.get())
     try:
         ver = verify(trace, suspects, store=store, repeats=1, strong_model=strong_model, on_event=emit)
