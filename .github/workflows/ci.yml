@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -e ".[ui,dev]"
+      - run: pip install -e ".[ui,agents,dev]"
       - run: ruff check blackbox tests --select E9,F63,F7,F82   # syntax errors / undefined names only, for now
       - run: pytest -q -m "not live"
 
