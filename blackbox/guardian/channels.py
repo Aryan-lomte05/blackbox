@@ -6,6 +6,9 @@ can be inspected exactly as it would have been sent.
     Mailgun       MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_FROM, ALERT_EMAIL_TO
     WhatsApp      TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM ("whatsapp:+14155238886"),
                   ALERT_WHATSAPP_TO ("whatsapp:+91XXXXXXXXXX")
+    Slack         SLACK_WEBHOOK_URL (an incoming webhook)
+    Telegram      TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+    Voice call    TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VOICE_FROM, ALERT_PHONE_TO (critical incidents only)
 """
 
 from __future__ import annotations
@@ -35,9 +38,22 @@ class Channel:
     name = "channel"
     required: tuple[str, ...] = ()
 
+    declines_because = ""
+
     def available(self) -> tuple[bool, str]:
         miss = _missing(*self.required)
         return (not miss, "ready" if not miss else f"not configured (set {', '.join(miss)})")
+
+    def wants(self, inc: Incident) -> bool:  # noqa: ARG002 - subclasses decide by the incident
+        """Whether this channel should carry this incident at all (e.g. phone calls only for critical ones)."""
+        return True
+
+    def ready_for(self, inc: Incident) -> tuple[bool, str]:
+        """Send this incident on this channel? (False, the reason) when it is not configured or declines it."""
+        ok, why = self.available()
+        if ok and not self.wants(inc):
+            return False, self.declines_because
+        return ok, why
 
     def send(self, inc: Incident) -> str:
         raise NotImplementedError
@@ -57,6 +73,9 @@ class Outbox(Channel):
         (d / "email.txt").write_text(render.text_email(inc), encoding="utf-8")
         (d / "whatsapp.txt").write_text(render.whatsapp(inc), encoding="utf-8")
         (d / "subject.txt").write_text(render.subject(inc), encoding="utf-8")
+        (d / "slack.json").write_text(json.dumps(render.slack(inc), indent=2, ensure_ascii=False), encoding="utf-8")
+        (d / "telegram.html").write_text(render.telegram(inc), encoding="utf-8")
+        (d / "voice.txt").write_text(render.voice(inc), encoding="utf-8")
         return str(d)
 
 
@@ -111,5 +130,56 @@ class TwilioWhatsApp(Channel):
             return f"queued, message sid {json.load(r).get('sid')}"
 
 
+def _post_json(url: str, payload: dict, headers: dict | None = None) -> tuple[int, bytes]:
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers={"Content-Type": "application/json", **(headers or {})})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.status, r.read()
+
+
+class SlackWebhook(Channel):
+    name = "slack"
+    required = ("SLACK_WEBHOOK_URL",)
+
+    def send(self, inc: Incident) -> str:
+        status, _ = _post_json(os.environ["SLACK_WEBHOOK_URL"], render.slack(inc))
+        return f"posted ({status})"
+
+
+class TelegramBot(Channel):
+    name = "telegram"
+    required = ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID")
+
+    def send(self, inc: Incident) -> str:
+        url = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage"
+        _, body = _post_json(url, {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": render.telegram(inc)[:4000],
+                                   "parse_mode": "HTML", "disable_web_page_preview": True})
+        return f"sent, message id {json.loads(body).get('result', {}).get('message_id')}"
+
+
+class TwilioVoiceCall(Channel):
+    """Phones the owner and reads the incident aloud. Critical incidents only: a call is an interruption."""
+    name = "voice-call"
+    required = ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_VOICE_FROM", "ALERT_PHONE_TO")
+    declines_because = "phone calls are only for critical incidents"
+
+    def wants(self, inc: Incident) -> bool:
+        return inc.severity == "critical"
+
+    def send(self, inc: Incident) -> str:
+        from xml.sax.saxutils import escape
+
+        sid = os.environ["TWILIO_ACCOUNT_SID"]
+        twiml = (f'<Response><Say voice="alice">{escape(render.voice(inc))}</Say><Pause length="1"/>'
+                 f'<Say voice="alice">Repeating. {escape(inc.title)}.</Say></Response>')
+        data = urllib.parse.urlencode({"From": os.environ["TWILIO_VOICE_FROM"], "To": os.environ["ALERT_PHONE_TO"],
+                                       "Twiml": twiml}).encode()
+        auth = base64.b64encode(f"{sid}:{os.environ['TWILIO_AUTH_TOKEN']}".encode()).decode()
+        req = urllib.request.Request(f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json", data=data,
+                                     headers={"Authorization": f"Basic {auth}"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return f"calling, call sid {json.load(r).get('sid')}"
+
+
 def default_channels() -> list[Channel]:
-    return [Outbox(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp()]
+    return [Outbox(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(), TelegramBot(), TwilioVoiceCall()]

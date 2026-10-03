@@ -34,6 +34,45 @@ def whatsapp(inc: Incident) -> str:
     return "\n".join(lines)
 
 
+def slack(inc: Incident) -> dict:
+    """A Slack incoming-webhook payload (Block Kit), with a plain `text` fallback for notifications."""
+    fix = inc.how_to_fix[0] if inc.how_to_fix else "Open the incident for details."
+    blocks = [
+        {"type": "header", "text": {"type": "plain_text", "text": f"Black Box · {inc.severity.upper()}: {inc.title}"[:150]}},
+        {"type": "section", "fields": [{"type": "mrkdwn", "text": f"*What happened*\n{inc.what_happened}"},
+                                       {"type": "mrkdwn", "text": f"*Why*\n{inc.why}"}]},
+        {"type": "section", "text": {"type": "mrkdwn", "text": f"*Fix:* {fix}"}},
+    ]
+    if inc.needs_approval:
+        blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text":
+                       ":double_vertical_bar: The agent is *paused*. Nothing is retried until you approve."}]})
+    blocks.append({"type": "actions", "elements": [{"type": "button", "text": {"type": "plain_text", "text": "Open incident"},
+                                                    "url": inc.link, "style": "danger" if inc.severity == "critical" else "primary"}]})
+    return {"text": subject(inc), "blocks": blocks}
+
+
+def telegram(inc: Incident) -> str:
+    """Telegram message, parse_mode=HTML."""
+    fix = inc.how_to_fix[0] if inc.how_to_fix else "Open the incident for details."
+    esc = html.escape
+    lines = [f"🚨 <b>Black Box · {esc(inc.severity.upper())}</b>", f"<b>{esc(inc.title)}</b>", "",
+             f"<b>What happened:</b> {esc(inc.what_happened)}", f"<b>Why:</b> {esc(inc.why)}", f"<b>Fix:</b> {esc(fix)}"]
+    if inc.needs_approval:
+        lines.append("⏸ Your agent is <b>paused</b>. Nothing will be retried until you approve.")
+    lines += ["", f'<a href="{esc(inc.link, quote=True)}">Open incident</a>']
+    return "\n".join(lines)
+
+
+def voice(inc: Incident) -> str:
+    """What the phone call says: short, no symbols, no links."""
+    parts = [f"This is Black Box. A {inc.severity} problem with your agent. {inc.title}.",
+             f"What happened: {inc.what_happened}"]
+    if inc.needs_approval:
+        parts.append("Your agent is paused. Nothing will be retried until you approve it in the incident page.")
+    parts.append("Details are in your email and messages. Goodbye.")
+    return " ".join(parts)
+
+
 def text_email(inc: Incident) -> str:
     out = [subject(inc), "", f"What happened: {inc.what_happened}", f"Why: {inc.why}", "", "How to fix:"]
     out += [f"  - {f}" for f in inc.how_to_fix]
