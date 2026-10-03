@@ -51,6 +51,7 @@ class ModelConfig:
     provider: str
     model: str
     params: dict = field(default_factory=dict)
+    fallback: str | None = None  # registry id used when this one is out of quota / unreachable
 
 
 @dataclass
@@ -94,7 +95,7 @@ def load_registry(path: Path | None = None) -> dict[str, ModelConfig]:
             raise ValueError(f"models.yaml: {e['id']} uses unknown provider {e['provider']!r}")
         if e["id"] in reg:
             raise ValueError(f"models.yaml: duplicate id {e['id']!r}")
-        reg[e["id"]] = ModelConfig(e["id"], e["provider"], e["model"], e.get("params") or {})
+        reg[e["id"]] = ModelConfig(e["id"], e["provider"], e["model"], e.get("params") or {}, e.get("fallback"))
     if path is None:
         _registry = reg
     return reg
@@ -139,6 +140,7 @@ class _KeyRing:
 
 
 _rings: dict[str, _KeyRing] = {}
+_exhausted: dict[str, set[int]] = {}  # provider -> key indexes whose daily quota is used up (this process)
 _clients: dict[tuple[str, str], Any] = {}
 
 
@@ -183,14 +185,36 @@ def _parse_tool_calls(message) -> list[dict]:
 
 
 def chat(model_id: str, messages: list[dict], tools: list[dict] | None = None, **params) -> LLMResult:
+    """Call a registry model. If it is out of quota or unreachable and models.yaml names a `fallback`,
+    the fallback answers; LLMResult.provider / model_tag always say which model really answered."""
     if model_id in _fakes:
         return _fakes[model_id](messages, tools, params)
     cfg = model_config(model_id)
+    try:
+        return _chat_one(cfg, model_id, messages, tools, params)
+    except RuntimeError as exc:
+        if not cfg.fallback or cfg.fallback == model_id:
+            raise
+        print(f"[providers] {model_id} unavailable ({exc}); using fallback {cfg.fallback}", file=sys.stderr)
+        return chat(cfg.fallback, messages, tools, **params)
+
+
+def _chat_one(cfg: ModelConfig, model_id: str, messages: list[dict], tools: list[dict] | None, params: dict) -> LLMResult:
     merged = {**cfg.params, **params}
     ring = _keys_for(cfg.provider)
-    attempts = max(3, len(ring.keys) * 2)
+    deadline = time.monotonic() + float(os.environ.get("BLACKBOX_LLM_DEADLINE", "45"))
+    tried_keys: set[int] = set()
     last_exc: Exception | None = None
-    for attempt in range(attempts):
+    attempt = 0
+    while True:
+        usable = [i for i in range(len(ring.keys)) if i not in _exhausted.get(cfg.provider, set())]
+        if not usable:
+            raise RuntimeError(f"{model_id}: every {cfg.provider} key is out of its daily quota") from last_exc
+        if ring.current not in usable:
+            ring.current = usable[0]
+        if time.monotonic() > deadline:
+            raise RuntimeError(f"{model_id}: no answer within the deadline ({len(tried_keys)} keys tried)") from last_exc
+        attempt += 1
         client = _client(cfg.provider, ring.key())
         try:
             kwargs: dict[str, Any] = {"model": cfg.model, "messages": messages, **merged}
@@ -199,13 +223,20 @@ def chat(model_id: str, messages: list[dict], tools: list[dict] | None = None, *
             resp = client.chat.completions.create(**kwargs)
         except Exception as exc:  # noqa: BLE001 - classified below, re-raised if not transient
             status = getattr(exc, "status_code", None)
-            if status == 429 or status in (500, 502, 503, 504) or type(exc).__name__ in (
-                "APITimeoutError", "APIConnectionError", "RateLimitError",
+            rate_limited = status == 429 or type(exc).__name__ == "RateLimitError"
+            if rate_limited or status in (500, 502, 503, 504) or type(exc).__name__ in (
+                "APITimeoutError", "APIConnectionError",
             ):
                 last_exc = exc
-                if status == 429 or type(exc).__name__ == "RateLimitError":
+                if rate_limited:
+                    if "per-day" in str(exc) or "per day" in str(exc).lower():  # quota gone until tomorrow: skip key
+                        _exhausted.setdefault(cfg.provider, set()).add(ring.current)
+                    tried_keys.add(ring.current)
                     ring.rotate()
-                time.sleep(min(2 ** attempt, 20))
+                    # short pause per key; a longer one only after every key has been tried
+                    time.sleep(1 if len(tried_keys) < len(usable) else min(2 ** min(attempt, 4), 15))
+                else:
+                    time.sleep(min(2 ** min(attempt, 4), 15))
                 continue
             raise
         choice = resp.choices[0]
@@ -219,7 +250,6 @@ def chat(model_id: str, messages: list[dict], tools: list[dict] | None = None, *
             provider=cfg.provider,
             model_tag=cfg.model,
         )
-    raise RuntimeError(f"{model_id}: gave up after {attempts} attempts") from last_exc
 
 
 def verify() -> list[tuple[str, str, str]]:

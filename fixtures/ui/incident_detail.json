@@ -1,0 +1,71 @@
+{
+  "incident_id": "471e147062",
+  "run_id": "57c4fbcfcc3040ff",
+  "owner": "Lab",
+  "created_at": "2026-10-03T18:46:20+00:00",
+  "kind": "failure",
+  "severity": "high",
+  "title": "qa_agent gave a wrong result",
+  "what_happened": "Your agent “qa_agent” finished with a wrong result: 2010, but Christopher Nolan, 2010 was expected.",
+  "why": "Step 6 (the last step before the run stopped): final answer: 2010.",
+  "how_to_fix": [
+    "Open the incident, replay the run from this step and try a change: only the affected steps re-run.",
+    "Compare this run with a recent successful one on the incident page to see where they diverged."
+  ],
+  "actions_taken": [],
+  "needs_approval": false,
+  "signature": "4ecb2a474662",
+  "repeats": 1,
+  "evidence": {
+    "cause_step": 6,
+    "cause_note": "the last step before the run stopped",
+    "timeline": [
+      {
+        "idx": 0,
+        "label": "model decided: SEARCH: Inception director release year",
+        "flag": ""
+      },
+      {
+        "idx": 1,
+        "label": "searched: Inception director release year",
+        "flag": ""
+      },
+      {
+        "idx": 2,
+        "label": "model decided: NOTE: Inception is a 2010 science fiction heist film written and directed by Christopher …",
+        "flag": ""
+      },
+      {
+        "idx": 3,
+        "label": "searched: Who directed the film Inception, and in what year was it re…",
+        "flag": ""
+      },
+      {
+        "idx": 4,
+        "label": "model decided: NOTE: Inception is a 2011 science fiction heist film written and directed by Christopher …",
+        "flag": ""
+      },
+      {
+        "idx": 5,
+        "label": "model decided: ANSWER: 2010",
+        "flag": ""
+      },
+      {
+        "idx": 6,
+        "label": "final answer: 2010",
+        "flag": "⚠ cause"
+      }
+    ],
+    "errors": []
+  },
+  "link": "http://127.0.0.1:8000/incident/471e147062",
+  "notifications": [
+    {
+      "channel": "outbox",
+      "status": "sent",
+      "detail": "data\\outbox\\471e147062"
+    }
+  ],
+  "status": "open",
+  "decision": null
+}

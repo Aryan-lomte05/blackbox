@@ -30,11 +30,13 @@
   provider: openrouter
   model: nvidia/nemotron-3-super-120b-a12b:free
   params: {temperature: 0}
+  fallback: agent-local-14b  # free daily quota used up -> local 14B (slower, always there)
 
 - id: judge-large          # LLM-judge baseline, GenAI fixes, incident report, red-team mistakes
   provider: openrouter
   model: nvidia/nemotron-3-super-120b-a12b:free
   params: {temperature: 0.2}
+  fallback: agent-local-7b
 
 - id: overflow             # second free large model when the first is rate-limited
   provider: openrouter

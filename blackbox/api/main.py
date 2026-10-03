@@ -54,6 +54,13 @@ class LiveRunRequest(BaseModel):
     autopilot: bool = False
 
 
+class LabRequest(BaseModel):
+    question: str = ""
+    family: Literal["qa", "math", "ops"] | None = None
+    mistake: Literal["auto", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"] = "auto"
+    repair: bool = False
+
+
 class Decision(BaseModel):
     approve: bool
     by: str = "owner"
@@ -190,6 +197,24 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         if run_id == cases.get("runs", {}).get(case, {}).get("run_id"):
             out["case"]["why_this_case"] = cases["runs"][case]["summary"]
         return out
+
+    @app.post("/api/lab", tags=["Investigate"],
+              summary="★ Live Lab: type a question, plant a mistake live, stream the whole investigation")
+    def lab(body: LabRequest = Body(..., openapi_examples={
+            "math": {"summary": "Math word problem (any)", "value": {"question": "A bakery bakes 24 muffins per tray. It bakes 6 trays and sells 97 muffins. How many muffins are left?", "mistake": "auto", "repair": False}},
+            "qa": {"summary": "General-knowledge question (Wikipedia is searched live)", "value": {"question": "Who directed the film Inception, and in what year was it released?", "mistake": "auto", "repair": False}},
+            "shop": {"summary": "Shop request on a generated store (orders, stock, refunds)", "value": {"question": "", "family": "ops", "mistake": "auto", "repair": False}},
+            "wrong_fact": {"summary": "Force a specific mistake: F6 wrong fact", "value": {"question": "A train travels 180 km in 3 hours, then 120 km in 2 hours. What is its average speed in km per hour?", "mistake": "F6", "repair": True}},
+        })) -> dict:
+        """Starts a job. Stream `GET /api/jobs/{job_id}/events`: `stage` events (n = 1..14, title, detail, data)
+        and `step` events (the agent's steps as they happen), then `done` with the scorecard."""
+        from blackbox.lab import run_lab
+
+        if not body.question and body.family != "ops":
+            raise HTTPException(400, "type a question (or family=ops)")
+        job = jobs.start("lab", lambda j: run_lab(body.question, family=body.family, mistake=body.mistake,
+                                                  repair=body.repair, store=db(), emit=j.emit))
+        return {"job_id": job.job_id, "events": f"/api/jobs/{job.job_id}/events", "result": f"/api/jobs/{job.job_id}"}
 
     dataset_cache: dict = {}
 
@@ -497,6 +522,8 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
         ),
         openapi_tags=[
             {"name": "Investigate", "description": "The whole investigation of one failed run in one call."},
+            {"name": "UI", "description": "Shaped for the dashboard: overview, React Flow run graph, failure atlas, "
+                                          "case-file report, exported regression test."},
             {"name": "Dataset", "description": "Everything recorded: tasks, test sets, planted mistakes, health."},
             {"name": "Guardian", "description": "For people running agents unattended: incidents explained in plain "
                                                 "language, sent by email / WhatsApp with a link to the incident page."},
@@ -509,7 +536,8 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
+        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
+                       "http://127.0.0.1:3000").split(","),
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -537,6 +565,9 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
         except Exception as exc:  # noqa: BLE001 - the API works without demo examples
             print(f"showcase examples unavailable: {type(exc).__name__}: {exc}")
     build_routes(app, db, load, jobs, run_jobs, cases)
+    from blackbox.api import ui
+
+    ui.register(app, db, load, diagnose)
 
     return app
 

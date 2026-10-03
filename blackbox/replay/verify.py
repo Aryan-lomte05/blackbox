@@ -90,7 +90,9 @@ def verify(
             attempts = []
             for attempt in range(1 if deterministic else repeats):
                 emit({"type": "attempt", "step": idx, "strategy": name, "attempt": attempt + 1})
-                child = fork(trace, at, change, store=store, reuse_after_fork=deterministic)
+                # Repair ONLY this step: later steps are re-used unless the repair changes their inputs.
+                # (Re-running everything after it would regenerate a later mistake and blame this step.)
+                child = fork(trace, at, change, store=store, reuse_after_fork=True)
                 ok = child.run.status == "done" and child.run.outcome is not None and child.run.outcome.success
                 attempts.append({"run_id": child.run.run_id, "passed": ok, "status": child.run.status,
                                  "savings": savings(child)})

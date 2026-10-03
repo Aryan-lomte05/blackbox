@@ -153,3 +153,21 @@ def test_rerun_fixing_a_tool_step_is_proof_not_bad_luck(tmp_path):
     s = report["suspects"][0]
     assert s["verdict"] == "verified" and not s["flaky"]
     assert report["verified_step"] == 1
+
+
+
+def test_verify_repairs_only_the_suspect_not_everything_after_it(tmp_path):
+    """Regression (found in the Live Lab): re-running an earlier, innocent deterministic step must not
+    re-execute every later step too. That silently regenerates a later planted mistake, so the
+    innocent step looked like the cause. Only steps the repair affects may re-run."""
+    from blackbox.core.schema import Change
+    from blackbox.replay.engine import fork
+    from tests.test_core_replay import ToyAgent, _task, fake_model
+
+    providers.register_fake("fake-model", fake_model)
+    store = Store(tmp_path)
+    good = run_task(ToyAgent(), _task(), "fake-model", store=store)          # plan, search, tool, answer, final
+    broken = fork(good, 3, Change(kind="output", value={"text": "Tokyo"}), store=store)  # planted wrong answer
+    assert not broken.run.outcome.success
+    report = verify(broken, [1], store=store, repeats=1)                    # the search (step 1) is innocent
+    assert report["verified_step"] is None, report["suspects"][0]

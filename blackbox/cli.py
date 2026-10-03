@@ -7,6 +7,7 @@
     blackbox models                    check every models.yaml model exists at its provider
     blackbox demo [--run ID]           the whole investigation on a real failed run
     blackbox status [--watch 5]        what is running right now (queue, processes, GPU, logs, data)
+    blackbox lab "question" [--repair] the Live Lab: plant a mistake in a live run and investigate it
 """
 
 from __future__ import annotations
@@ -124,6 +125,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--run")
     s.add_argument("--repeats", type=int, default=1)
     s.set_defaults(fn=cmd_demo)
+
+    s = sub.add_parser("lab", help="Live Lab: type a question, plant a mistake live, watch the investigation")
+    s.add_argument("rest", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
 
     s = sub.add_parser("status", help="what is running now: queue, processes, GPU, logs, data, model")
     s.add_argument("--watch", type=float, default=0)
