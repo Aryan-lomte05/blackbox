@@ -71,7 +71,9 @@ def plant(trace: Trace, fault_type: str, step_idx: int, rng: random.Random, stor
     change = make_change(trace, fault_type, step_idx, rng)
     if change is None:
         raise ValueError(f"{fault_type} cannot be planted at step {step_idx} of run {trace.run.run_id}")
-    child = fork(trace, step_idx, change, store=None)
+    # The store is passed to the fork so its save-points (memory after each step) are written as it runs;
+    # saving the finished trace alone stores the steps but not the save-points they point to.
+    child = fork(trace, step_idx, change, store=store)
     child.run.split = split_for_fork(trace.run.split, fault_type, UNSEEN_FAULTS)
     child.run.fault = FaultSpec(type=fault_type, step_idx=step_idx,
                                 params={"change_kind": change.kind, "note": change.note})

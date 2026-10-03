@@ -49,6 +49,8 @@ def test_farm_task_labels_failed_forks_and_keeps_recovered_ones(store):
         else:
             assert f.run.label.root_cause_step == f.run.fault.step_idx and f.run.label.source == "injected"
         assert store.load_trace(f.run.run_id).run.fault == f.run.fault  # saved with its fault and label
+        # its save-points exist too (regression: plant forked without the store, so they were never written)
+        assert all(store.has_blob(s.state_hash_after) for s in f.steps if s.state_hash_after)
     assert any(f.run.label for f in forks)
     assert store.counts()["runs"] == 4
 
