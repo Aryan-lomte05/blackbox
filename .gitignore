@@ -27,3 +27,7 @@ Thumbs.db
 .vscode/
 .idea/
 
+
+# python build output
+/build/
+/dist/
