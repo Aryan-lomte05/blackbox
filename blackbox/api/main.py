@@ -214,6 +214,16 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                       for name, spec in providers.PROVIDERS.items()}
         return {"ok": True, "db": db().counts(), "models": models, "providers_configured": configured}
 
+    @app.get("/api/cases", tags=["Investigate"], summary="The demo cases (real recorded runs) for the Investigate picker")
+    def cases() -> dict:
+        """{case name: {run_id, summary, description, guilty}} for every case POST /api/investigate/{case} accepts."""
+        from typing import get_args
+
+        from blackbox.api.showcase import load_or_build
+
+        runs = load_or_build(db()).get("runs", {})
+        return {"cases": {name: runs[name] for name in get_args(CaseName) if name in runs}}
+
     @app.post("/api/investigate/{case}", tags=["Investigate"],
               summary="★ Investigate a case: diagnose → verify → compare (→ repair) in one call")
     def investigate(case: CaseName = PathParam(..., description="a real failed run picked from the recordings"),

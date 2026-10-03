@@ -30,7 +30,7 @@ CORS allows `http://localhost:5173` (Vite) and `http://localhost:3000` (Next/CRA
 | **Run graph** (React Flow): nodes with positions, kinds, previews, suspect rank, guilty / planted flags, checker answers; data-flow + order edges | `GET /api/runs/{id}/graph` | `run_graph.json` |
 | **Step drawer**: full request / output / memory after the step | `GET /api/runs/{id}/steps/{idx}` | `run_step_0.json` |
 | **Diagnosis panel**: top suspects, scores, known guilty step, hit or miss | `GET /api/runs/{id}/diagnosis` | `diagnosis.json` |
-| **Investigate** ("one click does everything"): story lines + every number | `POST /api/investigate/{case}` or `?run_id=` (12–20 s) | `investigate_model_finds_it.json` |
+| **Investigate** ("one click does everything"): story lines + every number | `GET /api/cases` (the picker), `POST /api/investigate/{case}` or `?run_id=` (12–20 s) | `investigate_model_finds_it.json` |
 | **Live Lab**: type a question, watch 14 stages stream | `POST /api/lab` {question, mistake, notify} → `GET /api/jobs/{job_id}/events` (SSE). `notify: true` sends stage 13's incident to email / WhatsApp / Slack (show a "notify my phone" toggle) | event shapes below |
 | **Experiments**: verify / repair / advise / replay / fork | `POST /api/runs/{id}/verify\|repair\|advise\|replay\|fork` → job SSE | see `/docs` examples |
 | **Compare**: two runs aligned step by step | `GET /api/compare?a=&b=` | `compare.json` |
