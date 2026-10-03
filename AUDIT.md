@@ -118,6 +118,23 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   `merge` still reads the early bare-Trace shards. Test:
   `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
 
+### 15. GNN retrained on 1,332 runs: a correction, and the real headline · `aryan/gnn-cv`
+- 190 labelled failures in train. **test_known (n=28): Top-1 0.357 [95% CI
+  0.18, 0.54]** vs last model call 0.250, random 0.114: the Top-1 lead is
+  **inside the confidence interval, so it is not claimed.**
+- **Top-3: 0.857** vs last model call 0.321, random 0.342. This is the
+  usable result: the 3 suspects handed to Verify contain the guilty step 86%
+  of the time.
+- **Correction to entry 13:** "message passing matters" (an n=9 ablation) does
+  not hold at n=28. Without message passing: 0.429; without text: 0.607 on
+  test_known but 0.000 on test_new_tasks. All differences are within noise,
+  and the 384-d text embeddings likely overfit ~190 examples.
+- **Protocol from here:** the variant is chosen by grouped 5-fold CV on
+  train+val (`gnn cv`, folds by task id, early stopping on an inner slice of
+  the training tasks); the test sets are used once, by the final `train
+  --variant <chosen>`. Variants: full, small_text (16-d), no_text,
+  no_message_passing, order_edges_only. Top-3 now gets a CI too.
+
 ### 14. Two recorder bugs found by Radhesh, fixed · `aryan/recorder-fixes`
 - **A fork's memory change was recorded on no step:** it was applied after
   the fork step was closed, so an F8 ("memory lost") run had no evidence at

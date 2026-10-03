@@ -53,6 +53,7 @@ class GraphExample:
     split: str | None
     family: str
     fault_type: str | None
+    task_id: str = ""
 
 
 def _clip(text: str, n: int = TEXT_CHARS) -> str:
@@ -193,6 +194,7 @@ def build(trace: Trace) -> GraphExample:
         req_text=req, out_text=out, edges=edges, candidates=candidates, root=root, odd=odd, failed=failed,
         split=trace.run.split, family=trace.run.task_family,
         fault_type=trace.run.fault.type if trace.run.fault else None,
+        task_id=trace.run.task_id,
     )
 
 
