@@ -3,7 +3,7 @@
 Every channel is optional. Each one is used only once its settings are in `.env`. The outbox
 (`data/outbox/<incident>/`) always keeps a copy of every message, even with nothing configured.
 
-Total time: about 20 minutes for all five. All of them are free (Twilio on its trial credit).
+Total time: about 15 minutes for Telegram, Slack, email and WhatsApp. All free (Twilio on its trial credit). Phone calls are optional and off by default.
 
 **Before you start:** if you have no `.env` yet, run `copy .env.example .env` in the repo root.
 Never commit or share `.env`.
@@ -37,7 +37,30 @@ blackbox guardian test            # sends a clearly-marked TEST incident through
 5. Copy the **Webhook URL** (`https://hooks.slack.com/services/T.../B.../...`) into `.env`:
    `SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...`
 
-## 3. Email via Gmail (4 minutes)
+## 3. Email via EmailJS (5 minutes, the default)
+1. Sign up at **emailjs.com** (free: 200 emails a month).
+2. **Email Services → Add New Service → Gmail** → Connect Account (allow sending) → **Create Service**.
+   Copy the **Service ID** (`service_xxxxxxx`).
+3. **Email Templates → Create New Template**:
+   - **Subject:** `{{subject}}`
+   - **To Email** (right-hand panel): `{{to_email}}`
+   - **Content:** click **Edit Content → Code Editor**, delete everything, and type exactly `{{{html_message}}}`
+     (three braces, so the styled HTML email is not escaped).
+   - **Save**, then copy the **Template ID** (`template_xxxxxxx`).
+4. **Account → General**: copy the **Public Key**. **Account → Security**: copy the **Private Key**, and tick
+   **"Allow EmailJS API for non-browser applications"** (Black Box sends from Python, not a browser), then save.
+5. In `.env`:
+   ```
+   EMAILJS_SERVICE_ID=service_xxxxxxx
+   EMAILJS_TEMPLATE_ID=template_xxxxxxx
+   EMAILJS_PUBLIC_KEY=...
+   EMAILJS_PRIVATE_KEY=...
+   ALERT_EMAIL_TO=whoever-should-receive@gmail.com
+   ```
+   EmailJS errors: `403 API calls are disabled for non-browser applications` → step 4's tick box;
+   `422 The recipients address is empty` → the template's To Email must be `{{to_email}}`.
+
+### Alternative: email via Gmail SMTP (4 minutes)
 Gmail needs an **App Password**; your normal password will not work.
 1. Open **myaccount.google.com/security** and turn on **2-Step Verification** if it is off.
 2. Open **myaccount.google.com/apppasswords**. Type the app name `Black Box` and click **Create**.
@@ -73,8 +96,8 @@ Gmail needs an **App Password**; your normal password will not work.
 - **Before the demo:** the sandbox only delivers within 24 hours of your last message to it. Send any message
   (e.g. `hi`) to +1 415 523 8886 shortly before the pitch. If it has been 3 days, send the `join` code again.
 
-## 5. Phone call via Twilio (5 minutes, uses the same Twilio account)
-Calls are placed only for **critical** incidents.
+## 5. Phone call via Twilio (optional, off by default)
+Calls are opt-in: set `BLACKBOX_VOICE_CALLS=1` to enable them, and then they are placed only for **critical** incidents.
 1. In the Twilio Console, open **Phone Numbers → Manage → Buy a number** (the trial gives you one free US number)
    and take any number with **Voice**. Put it in `.env`: `TWILIO_VOICE_FROM=+1XXXXXXXXXX`.
 2. Allow calls to India: open **Voice → Settings → Geo permissions**, tick **India**, and save.
@@ -88,7 +111,7 @@ Calls are placed only for **critical** incidents.
 ## Check everything
 ```bash
 blackbox guardian channels
-blackbox guardian test                  # critical: Telegram, Slack, email, WhatsApp, and a phone call
+blackbox guardian test                  # Telegram, Slack, email, WhatsApp (a call only with BLACKBOX_VOICE_CALLS=1)
 blackbox guardian test --severity high  # everything except the phone call
 py -3 examples/trader_bot.py --glitch   # the real demo: a trading agent glitches, Guardian alerts you
 ```

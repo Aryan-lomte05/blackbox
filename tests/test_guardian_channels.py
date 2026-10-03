@@ -91,6 +91,31 @@ def test_a_configured_call_channel_declines_a_non_critical_incident_and_says_why
     assert sent == []
 
 
+def test_emailjs_sends_the_rendered_email_with_the_private_key(monkeypatch, sent):
+    from blackbox.guardian.channels import EmailJSEmail
+
+    for k, v in {"EMAILJS_SERVICE_ID": "service_x", "EMAILJS_TEMPLATE_ID": "template_y", "EMAILJS_PUBLIC_KEY": "pub",
+                 "EMAILJS_PRIVATE_KEY": "priv", "ALERT_EMAIL_TO": "owner@example.com"}.items():
+        monkeypatch.setenv(k, v)
+    assert EmailJSEmail().send(_incident()).startswith("sent to owner@example.com (200")
+    body = json.loads(sent[0]["data"])
+    assert sent[0]["url"] == "https://api.emailjs.com/api/v1.0/email/send"
+    assert (body["service_id"], body["template_id"], body["user_id"], body["accessToken"]) == \
+        ("service_x", "template_y", "pub", "priv")
+    params = body["template_params"]
+    assert params["to_email"] == "owner@example.com" and params["subject"].startswith("[Black Box · CRITICAL]")
+    assert "<table" in params["html_message"] and "Validate the quantity" in params["text_message"]
+
+
+def test_phone_calls_are_opt_in(monkeypatch):
+    from blackbox.guardian.channels import default_channels
+
+    monkeypatch.delenv("BLACKBOX_VOICE_CALLS", raising=False)
+    assert "voice-call" not in [c.name for c in default_channels()]
+    monkeypatch.setenv("BLACKBOX_VOICE_CALLS", "1")
+    assert "voice-call" in [c.name for c in default_channels()]
+
+
 def test_outbox_keeps_every_channel_message_for_inspection(tmp_path):
     Outbox(tmp_path).send(_incident())
     files = {p.name for p in (tmp_path / "inc1").iterdir()}
