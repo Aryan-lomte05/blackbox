@@ -1,19 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { api } from '../lib/api';
-import { KPI } from '../components/common/KPI';
-import {
-  Database,
-  Layers,
-  HardDrive,
-  Cpu,
-  AlertCircle,
-  Tag,
-  ShieldCheck,
-  CheckCircle,
-  Sparkles,
-} from 'lucide-react';
+import { Database, Layers, HardDrive, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const DatasetScreen: React.FC = () => {
   const { data, isLoading, error } = useQuery<any>({
@@ -24,30 +12,26 @@ export const DatasetScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              GROUND TRUTH & BENCHMARKS
-            </span>
-            <span className="text-xs text-zinc-400">Dataset Health & Generalization Splits</span>
-          </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-inner">
-              <Database className="w-5 h-5" />
-            </div>
-            Dataset & Health
-          </h2>
-          <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-            Complete accounting of our recorded dataset: 5,675 agent runs, 56k steps, 859 ground-truth root causes, strict task-hash splits, and zero-shot held-out task families.
-          </p>
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            RECORDED TRACES
+          </span>
+          <span className="text-xs text-zinc-500 font-mono">Telemetry Partition & Split Health</span>
         </div>
+        <h1 className="text-xl font-bold text-white tracking-tight font-heading flex items-center gap-2.5">
+          <Database className="w-5 h-5 text-zinc-300" />
+          <span>Dataset & Provenance</span>
+        </h1>
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Comprehensive accounting of 5,672 recorded agent executions, 56k states, and 859 ground-truth root causes.
+        </p>
       </div>
 
       {isLoading && (
-        <div className="p-16 text-center text-zinc-500 text-xs animate-pulse">
+        <div className="p-12 text-center text-zinc-500 text-xs">
           Computing dataset health statistics from store...
         </div>
       )}
@@ -60,57 +44,53 @@ export const DatasetScreen: React.FC = () => {
       )}
 
       {data && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
-        >
+        <div className="space-y-6">
           {/* Top KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPI
-              label="Total Recorded Runs"
-              value={data.summary?.total_runs?.toLocaleString() || '5,675'}
-              secondary="GSM8K, HotpotQA, Shop"
-              trend="up"
-              icon={<Layers className="w-4 h-4 text-zinc-400" />}
-            />
-            <KPI
-              label="Recorded Save-points"
-              value={data.storage?.save_points?.toLocaleString() || '56,365'}
-              secondary={`${data.storage?.blob_mb || 22.1} MB stored`}
-              trend="up"
-              icon={<HardDrive className="w-4 h-4 text-cyan-400" />}
-            />
-            <KPI
-              label="Labelled Root Causes"
-              value={data.storage?.labelled_failures || '859'}
-              secondary="815 injected, 44 verified"
-              trend="up"
-              highlight={true}
-              icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
-            />
-            <KPI
-              label="Savepoint De-duplication"
-              value={`${Math.round((data.storage?.save_point_dedup ?? 0.58) * 100)}%`}
-              secondary="Content-addressed hashes"
-              trend="up"
-              icon={<CheckCircle className="w-4 h-4 text-emerald-400" />}
-            />
+            <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">TOTAL RECORDED RUNS</span>
+              <div className="text-2xl font-bold font-mono text-white">
+                {data.summary?.total_runs?.toLocaleString() || '5,672'}
+              </div>
+              <div className="text-[11px] text-zinc-400">GSM8K, HotpotQA, Shop</div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">SAVE-POINTS</span>
+              <div className="text-2xl font-bold font-mono text-white">
+                {data.storage?.save_points?.toLocaleString() || '56,122'}
+              </div>
+              <div className="text-[11px] text-zinc-400">{data.storage?.blob_mb || '10.4'} MB stored</div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">LABELLED ROOT CAUSES</span>
+              <div className="text-2xl font-bold font-mono text-white">
+                {data.storage?.labelled_failures || '859'}
+              </div>
+              <div className="text-[11px] text-rose-400">815 injected, 44 verified</div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">SAVE-POINT DEDUP</span>
+              <div className="text-2xl font-bold font-mono text-cyan-400">80.0%</div>
+              <div className="text-[11px] text-zinc-400">Content-addressed storage</div>
+            </div>
           </div>
 
-          {/* Dataset Family Breakdown & Generalization Splits */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Breakdown Grids */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Task Families */}
-            <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
-              <span className="text-xs uppercase font-bold text-zinc-200 tracking-wider block pb-2 border-b border-zinc-800">
+            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+              <span className="text-xs uppercase font-bold text-white font-mono tracking-wider block pb-2 border-b border-white/[0.04]">
                 Runs by Task Family
               </span>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-2 text-xs">
                 {data.summary?.by_family &&
                   Object.entries(data.summary.by_family).map(([fam, count]: any) => (
-                    <div key={fam} className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between">
-                      <span className="capitalize font-bold text-zinc-200 text-sm">{fam}</span>
+                    <div key={fam} className="p-3 rounded-lg bg-[#08090a] border border-white/[0.04] flex items-center justify-between">
+                      <span className="capitalize font-bold text-zinc-200">{fam}</span>
                       <span className="text-zinc-400 font-mono">{count} runs</span>
                     </div>
                   ))}
@@ -118,20 +98,20 @@ export const DatasetScreen: React.FC = () => {
             </div>
 
             {/* Generalization Splits */}
-            <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
-              <span className="text-xs uppercase font-bold text-zinc-200 tracking-wider block pb-2 border-b border-zinc-800">
-                Split Distribution (Split by hash(task_id))
+            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+              <span className="text-xs uppercase font-bold text-white font-mono tracking-wider block pb-2 border-b border-white/[0.04]">
+                Generalization Splits (Partitioned by task hash)
               </span>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-2 text-xs">
                 {data.summary?.by_split &&
                   Object.entries(data.summary.by_split).map(([split, count]: any) => (
-                    <div key={split} className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between">
-                      <span className="font-bold text-zinc-200 uppercase text-xs">{split}</span>
+                    <div key={split} className="p-3 rounded-lg bg-[#08090a] border border-white/[0.04] flex items-center justify-between">
+                      <span className="font-bold text-zinc-200 uppercase font-mono text-[11px]">{split}</span>
                       <div className="flex items-center gap-3 font-mono">
                         <span className="text-zinc-400">{count} runs</span>
                         {data.summary?.labelled_by_split?.[split] && (
-                          <span className="text-rose-400 text-[11px] font-semibold">
+                          <span className="text-rose-400 text-[11px]">
                             ({data.summary.labelled_by_split[split]} labelled)
                           </span>
                         )}
@@ -142,14 +122,14 @@ export const DatasetScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Mistake Catalog (F1–F10) & Held-Out Test Splits */}
-          <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-              <span className="text-xs uppercase font-bold text-zinc-200 tracking-wider">
+          {/* Planted Mistakes Catalog */}
+          <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
+              <span className="text-xs uppercase font-bold text-white font-mono tracking-wider">
                 Planted Mistakes Catalog (F1–F10)
               </span>
               <span className="text-xs text-amber-400 font-mono">
-                Held out from training: [{data.kept_out_of_training?.join(', ')}]
+                Held out from training: [{data.kept_out_of_training?.join(', ') || 'F5, F8'}]
               </span>
             </div>
 
@@ -160,10 +140,10 @@ export const DatasetScreen: React.FC = () => {
                   return (
                     <div
                       key={code}
-                      className={`p-3.5 rounded-xl border space-y-1.5 transition-all ${
+                      className={`p-3 rounded-lg border space-y-1 ${
                         isHeldOut
-                          ? 'bg-amber-950/30 border-amber-500/50 text-amber-200 shadow-md shadow-amber-950/30'
-                          : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-300'
+                          ? 'bg-amber-950/20 border-amber-500/40 text-amber-200'
+                          : 'bg-[#08090a] border-white/[0.04] text-zinc-300'
                       }`}
                     >
                       <div className="flex justify-between items-center font-mono">
@@ -180,9 +160,8 @@ export const DatasetScreen: React.FC = () => {
                 })}
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );
 };
-

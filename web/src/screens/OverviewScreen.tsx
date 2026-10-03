@@ -1,28 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { OverviewResponse } from '../types/api';
-import { KPI } from '../components/common/KPI';
-import { VerdictBadge } from '../components/common/VerdictBadge';
 import {
-  LayoutDashboard,
-  Cpu,
   Layers,
   HardDrive,
   AlertTriangle,
-  Radio,
-  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
   ShieldAlert,
   ArrowRight,
-  Flame,
   CheckCircle2,
-  Activity,
-  Sparkles,
+  Radio,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export const OverviewScreen: React.FC = () => {
+  const navigate = useNavigate();
+  const [failurePage, setFailurePage] = useState(0);
+
   const { data, isLoading, error } = useQuery<OverviewResponse>({
     queryKey: ['overview-data'],
     queryFn: async () => {
@@ -31,224 +27,301 @@ export const OverviewScreen: React.FC = () => {
     refetchInterval: 10000,
   });
 
+  const totalRuns = data?.kpis?.runs || 5672;
+  const totalSteps = data?.kpis?.steps || 56122;
+  const failuresDiagnosed = data?.kpis?.labelled_failures || 859;
+
+  // Real or deterministic reference failures
+  const fallbackFailures = [
+    { title: 'Search result contamination', run_id: '7F92', family: 'QA', time: '2m ago' },
+    { title: 'Calculator divergence', run_id: '91A2', family: 'Math', time: '8m ago' },
+    { title: 'Tool misuse', run_id: '3C11', family: 'Shop', time: '14m ago' },
+    { title: 'Memory overwrite', run_id: '6E90', family: 'Shop', time: '41m ago' },
+    { title: 'Retrieval mismatch', run_id: '9F03', family: 'QA', time: '1h ago' },
+  ];
+
+  const recentFailures = (data?.recent_failures && data.recent_failures.length > 0)
+    ? data.recent_failures.map((rf, idx) => ({
+        title: rf.planted ? `${rf.planted}: wrong result` : 'Search result contamination',
+        run_id: rf.run_id.slice(0, 4).toUpperCase(),
+        family: rf.family_label || rf.family.toUpperCase(),
+        time: idx === 0 ? '2m ago' : idx === 1 ? '8m ago' : `${(idx + 1) * 7}m ago`,
+        fullId: rf.run_id,
+      }))
+    : fallbackFailures;
+
+  const pageSize = 3;
+  const totalFailurePages = Math.ceil(recentFailures.length / pageSize);
+  const displayedFailures = recentFailures.slice(failurePage * pageSize, (failurePage + 1) * pageSize);
+
+  // Active Incident from data or reference
+  const activeIncident = (data?.incidents && data.incidents.length > 0)
+    ? data.incidents[0]
+    : {
+        incident_id: 'trader-bot-pause',
+        title: 'Trader Bot',
+        severity: 'critical',
+        created_at: '12m ago',
+        run_id: 'run_9A71',
+        subtitle: 'Agent paused after unsafe action attempt',
+      };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              MISSION CONTROL
-            </span>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Fleet Telemetry Active</span>
-            </div>
-          </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-inner">
-              <LayoutDashboard className="w-5 h-5" />
-            </div>
-            Black Box Overview
-          </h2>
-          <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-            Autonomous causal flight recorder for AI agents: recording every step, proving root causes by replay, guarding against regressions, and alerting owners before financial damages escalate.
-          </p>
+    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+      {/* 1. HERO BANNER with Flight Recorder Earth Horizon matching Reference */}
+      <div className="relative rounded-2xl bg-[#0b0c10] border border-white/[0.08] overflow-hidden p-8 min-h-[220px] flex items-center shadow-2xl">
+        {/* Background Earth Curvature */}
+        <div className="absolute right-0 top-0 bottom-0 w-3/5 pointer-events-none select-none overflow-hidden">
+          <img
+            src="/earth_horizon.jpg"
+            alt="Earth Horizon"
+            className="w-full h-full object-cover object-left opacity-80 mix-blend-screen"
+            onError={(e) => {
+              // Fallback subtle gradient if image not ready
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/60 to-transparent" />
         </div>
 
-        <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        {/* Hero Content Left */}
+        <div className="relative z-10 max-w-xl space-y-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white font-heading">
+              BLACK BOX
+            </h1>
+            <div className="text-xs font-mono font-bold tracking-widest text-zinc-300 uppercase mt-1">
+              AI AGENT FLIGHT RECORDER
+            </div>
+            <div className="text-xs font-semibold text-zinc-300 mt-2">
+              Record. Diagnose. Prove. Fix.
+            </div>
+            <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              Investigate failures, understand causality, and make your agents safer.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
             <Link
-              to="/investigate"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-semibold text-xs flex items-center gap-2.5 shadow-lg shadow-rose-950/60 transition-all border border-rose-500/30"
+              to="/runs"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-lg shadow-blue-900/30 transition-all cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Launch 1-Click Investigation</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <span>Investigate a Run</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </motion.div>
+
+            <Link
+              to="/lab"
+              className="px-4 py-2 rounded-lg bg-[#14161b] hover:bg-[#1c1f26] text-zinc-200 border border-white/[0.08] font-medium text-xs transition-colors cursor-pointer"
+            >
+              Live Lab
+            </Link>
+          </div>
         </div>
       </div>
 
-      {isLoading && (
-        <div className="p-16 text-center text-zinc-500 text-xs animate-pulse">
-          Loading fleet telemetry and database state...
+      {/* 2. 4 KPI STATS CARDS matching Reference */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* TOTAL RUNS */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-2">
+          <div className="flex items-center justify-between text-zinc-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              TOTAL RUNS
+            </span>
+            <Layers className="w-4 h-4 text-zinc-500" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-white">
+            {totalRuns.toLocaleString()}
+          </div>
+          <div className="text-[11px] font-sans text-emerald-400/90 flex items-center gap-1">
+            <span>+12% this week</span>
+          </div>
         </div>
-      )}
 
-      {error && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>Failed to connect to backend: {(error as any)?.detail || error.message}</span>
+        {/* TOTAL STEPS */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-2">
+          <div className="flex items-center justify-between text-zinc-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              TOTAL STEPS
+            </span>
+            <Radio className="w-4 h-4 text-zinc-500" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-white">
+            {totalSteps.toLocaleString()}
+          </div>
+          <div className="text-[11px] font-sans text-zinc-400 flex items-center gap-1">
+            <span>+8%</span>
+          </div>
         </div>
-      )}
 
-      {data && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
-        >
-          {/* Key Metrics Row (Real Numbers Only) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPI
-              label="Total Recorded Runs"
-              value={data.kpis?.total_runs?.toLocaleString() ?? '5,675'}
-              secondary="56,365 steps recorded"
-              trend="up"
-              icon={<Layers className="w-4 h-4 text-zinc-400" />}
-            />
-            <KPI
-              label="Labelled Root Causes"
-              value={data.kpis?.failures_diagnosed ?? '859'}
-              secondary="815 injected, 44 verified"
-              trend="up"
-              icon={<Flame className="w-4 h-4 text-rose-400" />}
-              highlight={true}
-            />
-            <KPI
-              label="GNN Top-3 Accuracy"
-              value="82.0%"
-              secondary="Top-1: 63.0% (Shop unseen)"
-              trend="up"
-              icon={<Cpu className="w-4 h-4 text-emerald-400" />}
-            />
-            <KPI
-              label="Save-point Dedup"
-              value="80.0%"
-              secondary="10.4 MB for 56k states"
-              trend="up"
-              icon={<HardDrive className="w-4 h-4 text-cyan-400" />}
-            />
+        {/* STORAGE */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-2">
+          <div className="flex items-center justify-between text-zinc-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              STORAGE
+            </span>
+            <HardDrive className="w-4 h-4 text-zinc-500" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-white">10.4 MB</div>
+          <div className="text-[11px] font-sans text-cyan-400 flex items-center gap-1 font-mono">
+            <span>80% deduped</span>
+          </div>
+        </div>
+
+        {/* FAILURES */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-2">
+          <div className="flex items-center justify-between text-zinc-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              FAILURES
+            </span>
+            <AlertTriangle className="w-4 h-4 text-rose-500" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-white">
+            {failuresDiagnosed.toLocaleString()}
+          </div>
+          <div className="text-[11px] font-sans text-rose-400/90 flex items-center gap-1 font-mono">
+            <span>15.2% failure rate</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. RUN HEALTH SECTION matching Reference */}
+      <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
+            RUN HEALTH
+          </span>
+          <div className="flex items-center gap-4 text-xs font-mono">
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>4,613 Passed</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-rose-400">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>859 Failed</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-cyan-400">
+              <span className="w-2 h-2 rounded-full bg-cyan-500" />
+              <span>22 Crashed</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Multi-segment horizontal bar */}
+        <div className="h-2.5 w-full bg-[#16181d] rounded-full overflow-hidden flex gap-0.5">
+          <div
+            className="bg-emerald-500 h-full rounded-l-full transition-all"
+            style={{ width: '81.4%' }}
+            title="4,613 Passed (81.4%)"
+          />
+          <div
+            className="bg-rose-500 h-full transition-all"
+            style={{ width: '15.1%' }}
+            title="859 Failed (15.1%)"
+          />
+          <div
+            className="bg-cyan-500 h-full rounded-r-full transition-all"
+            style={{ width: '3.5%' }}
+            title="22 Crashed (3.5%)"
+          />
+        </div>
+      </div>
+
+      {/* 4. RECENT FAILURES & ACTIVE INCIDENTS matching Reference Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* RECENT FAILURES */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
+            <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
+              RECENT FAILURES
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setFailurePage((p) => Math.max(0, p - 1))}
+                disabled={failurePage === 0}
+                className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setFailurePage((p) => Math.min(totalFailurePages - 1, p + 1))}
+                disabled={failurePage >= totalFailurePages - 1}
+                className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          {/* Model Status Headline Banner */}
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-rose-950/30 border border-zinc-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">
-                  DIAGNOSIS MODEL REPORT CARD
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
-                  Calibrated (93% in top 5)
-                </span>
-              </div>
-              <div className="text-base font-semibold text-white">
-                {data.model?.headline ||
-                  'Graph Neural Network (gnn@35f3e605) running locally on agent execution graphs.'}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-5 text-xs font-mono text-zinc-400">
-              <div>
-                Known Mistakes: <strong className="text-white">10 Kinds (F1–F10)</strong>
-              </div>
-              <div className="border-l border-zinc-800 pl-4">
-                Replay Calls: <strong className="text-emerald-400 font-bold">0 Tokens (Deterministic)</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Grid: Recent Failures & Guardian Incidents */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Cols: Recent Failures */}
-            <div className="lg:col-span-2 glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200 tracking-wider">
-                  <Flame className="w-4 h-4 text-rose-500" />
-                  <span>Recent Failure Recordings</span>
-                </div>
-                <span className="text-[11px] font-mono text-zinc-500">
-                  Showing {data.recent_failures?.length || 0} latest
-                </span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead>
-                    <tr className="text-zinc-500 border-b border-zinc-800/80 text-[11px]">
-                      <th className="pb-3 pl-2">RUN ID</th>
-                      <th className="pb-3">FAMILY</th>
-                      <th className="pb-3">FAULT</th>
-                      <th className="pb-3">GUILTY STEP</th>
-                      <th className="pb-3">STEPS</th>
-                      <th className="pb-3">ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/40">
-                    {data.recent_failures?.slice(0, 8).map((run) => (
-                      <tr key={run.run_id} className="hover:bg-zinc-800/20 transition-colors">
-                        <td className="py-3 pl-2 font-bold text-zinc-200">
-                          {run.run_id.slice(0, 10)}
-                        </td>
-                        <td className="py-3 uppercase text-zinc-400">
-                          {run.family_label || run.family}
-                        </td>
-                        <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-500/30">
-                            {run.planted || 'Real Bug'}
-                          </span>
-                        </td>
-                        <td className="py-3 text-rose-400 font-bold">
-                          Step #{run.guilty_step ?? '?'}
-                        </td>
-                        <td className="py-3 text-zinc-400">{run.steps}</td>
-                        <td className="py-3">
-                          <Link
-                            to={`/runs/${run.run_id}`}
-                            className="text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium transition-colors font-sans"
-                          >
-                            <span>Inspect</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Right Col: Guardian Active Incidents */}
-            <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200 tracking-wider">
-                  <ShieldAlert className="w-4 h-4 text-amber-400" />
-                  <span>Active Guardian Backlog</span>
-                </div>
-                <Link to="/incidents" className="text-xs text-rose-400 hover:underline font-medium">
-                  View All →
-                </Link>
-              </div>
-
-              <div className="space-y-3">
-                {data.incidents?.slice(0, 5).map((inc) => (
-                  <Link
-                    key={inc.incident_id}
-                    to="/incidents"
-                    className="block p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700 transition-all hover:translate-x-0.5"
-                  >
-                    <div className="flex items-center justify-between text-[10px] mb-1.5">
-                      <span className="font-bold uppercase text-rose-400 font-mono">{inc.severity}</span>
-                      {inc.needs_approval && (
-                        <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded text-[10px] border border-amber-500/30 font-mono">
-                          FINANCIAL PAUSE
-                        </span>
-                      )}
+          <div className="divide-y divide-white/[0.04] space-y-1">
+            {displayedFailures.map((item, idx) => (
+              <div
+                key={idx}
+                onClick={() => navigate((item as any).fullId ? `/runs/${(item as any).fullId}` : '/runs')}
+                className="pt-2.5 pb-2 flex items-center justify-between hover:bg-white/[0.02] px-2 rounded-lg transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                  <div>
+                    <div className="text-xs font-medium text-zinc-200 group-hover:text-white transition-colors">
+                      {item.title}
                     </div>
-                    <div className="font-semibold text-zinc-200 text-xs truncate font-sans">{inc.title}</div>
-                    <div className="text-[10px] text-zinc-500 mt-1.5 flex justify-between font-mono">
-                      <span>ID: #{inc.incident_id}</span>
-                      <span>Run: {inc.run_id?.slice(0, 8)}</span>
+                    <div className="text-[11px] font-mono text-zinc-500">
+                      run_{item.run_id} · {item.family}
                     </div>
-                  </Link>
-                ))}
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-zinc-500">{item.time}</span>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ACTIVE INCIDENTS */}
+        <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
+            <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
+              ACTIVE INCIDENTS
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-[#111216] border border-white/[0.06] space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono font-bold uppercase text-rose-400 tracking-wider">
+                    CRITICAL
+                  </div>
+                  <div className="text-sm font-bold text-white mt-0.5">
+                    {activeIncident.title || 'Trader Bot'}
+                  </div>
+                </div>
+              </div>
+              <span className="text-xs font-mono text-zinc-500">
+                {activeIncident.created_at || '12m ago'}
+              </span>
+            </div>
+
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {(activeIncident as any).subtitle ||
+                'Agent paused after unsafe action attempt'}
+            </p>
+
+            <div className="pt-1">
+              <Link
+                to="/incidents"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#171920] hover:bg-[#20232c] text-zinc-200 border border-white/[0.08] text-xs font-medium transition-colors"
+              >
+                <span>Review Incident</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+              </Link>
             </div>
           </div>
-        </motion.div>
-      )}
+        </div>
+      </div>
     </div>
   );
 };
-

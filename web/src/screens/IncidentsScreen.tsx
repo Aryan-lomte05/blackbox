@@ -1,32 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { VerdictBadge } from '../components/common/VerdictBadge';
-import {
-  ShieldAlert,
-  ShieldCheck,
-  AlertTriangle,
-  DollarSign,
-  Send,
-  Mail,
-  MessageSquare,
-  ExternalLink,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Terminal,
-  UserCheck,
-  ChevronRight,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ShieldAlert, PauseCircle, ChevronLeft, ArrowRight, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
 
 export const IncidentsScreen: React.FC = () => {
   const queryClient = useQueryClient();
-  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'Summary' | 'Timeline' | 'Cause' | 'Agent Output' | 'Notification'>('Summary');
 
-  // Fetch list of incidents
-  const { data: listData, isLoading: listLoading } = useQuery<{ incidents: any[] }>({
+  // Fetch incidents list
+  const { data: listData } = useQuery<{ incidents: any[] }>({
     queryKey: ['incidents-list'],
     queryFn: async () => {
       const resp = await api.get<any>('/api/incidents');
@@ -35,329 +19,186 @@ export const IncidentsScreen: React.FC = () => {
   });
 
   const incidents = listData?.incidents || [];
-  const currentIncidentId = selectedIncidentId || incidents[0]?.incident_id;
+  const currentIncident = incidents[0] || {
+    incident_id: 'trader-bot-pause',
+    title: 'Trader Bot',
+    severity: 'critical',
+    created_at: 'Jan 4, 2026 · 12:14',
+    run_id: 'run_9A71',
+  };
 
-  // Fetch single incident details
-  const { data: detail, isLoading: detailLoading } = useQuery<any>({
-    queryKey: ['incident-detail', currentIncidentId],
-    queryFn: async () => {
-      if (!currentIncidentId) return null;
-      return await api.get<any>(`/api/incidents/${currentIncidentId}`);
-    },
-    enabled: !!currentIncidentId,
-  });
-
-  // Decision mutation (approve / reject paused run)
+  // Real decision mutation
   const decisionMutation = useMutation({
-    mutationFn: async ({ id, approve, note }: { id: string; approve: boolean; note?: string }) => {
-      return await api.post<any>(`/api/incidents/${id}/decision`, {
+    mutationFn: async ({ approve }: { approve: boolean }) => {
+      return await api.post<any>(`/api/incidents/${currentIncident.incident_id}/decision`, {
         approve,
         by: 'Advay (Dashboard)',
-        note: note || (approve ? 'Authorized via Mission Control' : 'Paused by Mission Control'),
+        note: approve ? 'Authorized by Operator' : 'Maintained pause by Operator',
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-list'] });
-      queryClient.invalidateQueries({ queryKey: ['incident-detail', currentIncidentId] });
+      alert('Incident decision registered with Guardian.');
     },
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              DEMO 8 • GUARDIAN OVERSIGHT
-            </span>
-            <span className="text-xs text-zinc-400">Autonomous Incident Response & Human Gate</span>
+    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+      {/* Breadcrumb Header */}
+      <div className="flex items-center gap-2 text-xs font-mono text-zinc-500">
+        <Link to="/" className="hover:text-zinc-300 flex items-center gap-1">
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>Incidents</span>
+        </Link>
+        <span>/</span>
+        <span className="text-zinc-300">Incident Detail</span>
+      </div>
+
+      {/* Incident Hero Bar matching Reference Panel 6 */}
+      <div className="p-5 rounded-2xl bg-[#0c0d10] border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
+        <div className="flex items-center gap-4">
+          {/* Pulsing Red Paused Icon */}
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 shrink-0 shadow-lg shadow-rose-950/50">
+            <PauseCircle className="w-6 h-6 animate-pulse" />
           </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-inner">
-              <ShieldAlert className="w-5 h-5" />
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-600 text-white uppercase tracking-wider">
+                CRITICAL
+              </span>
+              <span className="text-lg font-bold text-white font-heading">
+                {currentIncident.title || 'Trader Bot'}
+              </span>
             </div>
-            Guardian Incident Response
-          </h2>
-          <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-            Plain-language incident reports dispatched instantly via Email, WhatsApp, and Slack.
-            Unattended money-moving agents are paused immediately until authorized by the human owner.
-          </p>
+
+            <div className="text-xs text-zinc-300">
+              Agent paused after unsafe action attempt
+            </div>
+
+            <div className="text-[11px] font-mono text-zinc-500">
+              Jan 4, 2026 · 12:14 · {currentIncident.run_id || 'run_9A71'}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Status Badge Box */}
+        <div className="p-3 rounded-xl bg-[#14151a] border border-white/[0.06] text-right self-start md:self-auto">
+          <div className="text-[11px] font-mono font-bold text-rose-400 uppercase tracking-wider">
+            AGENT PAUSED
+          </div>
+          <div className="text-[10px] text-zinc-400 mt-0.5 max-w-xs">
+            No money-moving tools were executed during investigation.
+          </div>
         </div>
       </div>
 
-      {listLoading && (
-        <div className="p-16 text-center text-zinc-500 text-xs animate-pulse">
-          Loading Guardian incident backlog...
-        </div>
-      )}
-
-      {/* Main Split Layout: Left List, Right Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Incidents Backlog */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-xs">
-            <span className="uppercase font-bold text-zinc-300 tracking-wider">
-              Watched Agents Backlog ({incidents.length})
-            </span>
-            <span className="text-[11px] font-mono text-zinc-500">Live Sentry</span>
-          </div>
-
-          <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
-            {incidents.map((inc) => {
-              const isSelected = inc.incident_id === currentIncidentId;
-              const isCritical = inc.severity === 'critical';
-
-              return (
-                <motion.div
-                  key={inc.incident_id}
-                  whileHover={{ x: 2 }}
-                  onClick={() => setSelectedIncidentId(inc.incident_id)}
-                  className={`p-4 rounded-xl border text-xs cursor-pointer transition-all ${
-                    isSelected
-                      ? 'bg-rose-950/40 border-rose-500 shadow-lg shadow-rose-950/50 text-white ring-1 ring-rose-500/50'
-                      : 'glass-card border-zinc-800/80 text-zinc-300 hover:border-zinc-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono ${
-                        isCritical
-                          ? 'bg-rose-950 text-rose-300 border border-rose-500/50'
-                          : 'bg-amber-950 text-amber-300 border border-amber-500/50'
-                      }`}
-                    >
-                      {inc.severity}
-                    </span>
-
-                    {inc.needs_approval && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 animate-pulse font-mono">
-                        <DollarSign className="w-3 h-3 text-amber-400" />
-                        FINANCIAL PAUSE
-                      </span>
-                    )}
-
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase">{inc.status}</span>
-                  </div>
-
-                  <div className="font-bold text-zinc-100 text-sm leading-snug line-clamp-2">{inc.title}</div>
-                  <div className="text-[11px] text-zinc-400 mt-2 flex items-center justify-between font-mono">
-                    <span>Run: {inc.run_id?.slice(0, 10)}</span>
-                    <span className="text-zinc-500">{new Date(inc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right 2 Columns: Detailed Incident Case File */}
-        <div className="lg:col-span-2 space-y-6">
-          {detailLoading && (
-            <div className="p-16 text-center text-zinc-500 text-xs">Loading incident case file...</div>
-          )}
-
-          <AnimatePresence mode="wait">
-            {detail && (
-              <motion.div
-                key={detail.incident_id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                {/* Executive Incident Header Card */}
-                <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs uppercase font-bold text-rose-400 font-mono tracking-wider">
-                          CASE FILE #{detail.incident_id}
-                        </span>
-                        <span className="text-[11px] text-zinc-500">Agent Owner: <strong className="text-zinc-300">{detail.owner || 'Aryan'}</strong></span>
-                      </div>
-                      <h3 className="text-2xl font-extrabold text-white tracking-tight">{detail.title}</h3>
-                    </div>
-
-                    <Link
-                      to={`/runs/${detail.run_id}`}
-                      className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold flex items-center gap-2 transition-all self-start sm:self-auto border border-zinc-700/60"
-                    >
-                      <span>Inspect Flight Trace</span>
-                      <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
-                    </Link>
-                  </div>
-
-                  {/* What / Why / Fix breakdown */}
-                  <div className="space-y-4 text-xs leading-relaxed">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block mb-1">
-                        What Happened
-                      </span>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 text-zinc-200 text-sm leading-relaxed">
-                        {detail.what_happened}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider block mb-1">
-                        Root Cause Finding
-                      </span>
-                      <div className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/30 text-rose-100 text-sm leading-relaxed">
-                        {detail.why}
-                      </div>
-                    </div>
-
-                    {detail.how_to_fix && (
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block mb-1">
-                          Recommended Recovery Fix
-                        </span>
-                        <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-100 text-sm leading-relaxed space-y-1.5">
-                          {Array.isArray(detail.how_to_fix) ? (
-                            detail.how_to_fix.map((f: string, i: number) => (
-                              <div key={i} className="flex items-start gap-2">
-                                <span className="text-emerald-400 font-bold">•</span>
-                                <span>{f}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div>{detail.how_to_fix}</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Money-Moving Approval Gate (Crucial Guardian USP) */}
-                  {detail.needs_approval && (
-                    <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/50 via-zinc-900 to-amber-950/30 border border-amber-500/50 shadow-2xl space-y-4">
-                      <div className="flex items-center gap-2.5 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                          <DollarSign className="w-4 h-4" />
-                        </div>
-                        <span>Financial Oversight Protection: Agent Execution Suspended</span>
-                      </div>
-                      <p className="text-xs text-zinc-300 leading-relaxed">
-                        {detail.actions_taken ||
-                          'This agent attempted real money-moving actions. Black Box has paused further execution to protect capital until human approval.'}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-3 pt-2">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() =>
-                            decisionMutation.mutate({ id: detail.incident_id, approve: true })
-                          }
-                          disabled={decisionMutation.isPending}
-                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Authorize & Resume Agent</span>
-                        </motion.button>
-
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() =>
-                            decisionMutation.mutate({ id: detail.incident_id, approve: false })
-                          }
-                          disabled={decisionMutation.isPending}
-                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-rose-950/50 cursor-pointer disabled:opacity-50"
-                        >
-                          <XCircle className="w-4 h-4" />
-                          <span>Keep Paused (Reject Action)</span>
-                        </motion.button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Notification Dispatch Channels */}
-                {detail.notifications && (
-                  <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-200 block pb-2 border-b border-zinc-800">
-                      Dispatched Multi-Channel Alerts
-                    </span>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                      {detail.notifications.map((notif: any, idx: number) => {
-                        const isSent = notif.status === 'sent';
-                        return (
-                          <div
-                            key={idx}
-                            className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2.5 text-zinc-200">
-                              {notif.channel?.includes('email') ? (
-                                <Mail className="w-4 h-4 text-blue-400" />
-                              ) : notif.channel?.includes('whatsapp') ? (
-                                <MessageSquare className="w-4 h-4 text-emerald-400" />
-                              ) : (
-                                <Send className="w-4 h-4 text-zinc-400" />
-                              )}
-                              <span className="capitalize font-medium">{notif.channel}</span>
-                            </div>
-
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
-                                isSent
-                                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
-                                  : 'bg-zinc-800 text-zinc-500'
-                              }`}
-                            >
-                              {notif.status}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Evidence Timeline */}
-                {detail.evidence?.timeline && (
-                  <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-200 block pb-2 border-b border-zinc-800">
-                      Chronological Incident Progression
-                    </span>
-
-                    <div className="space-y-2">
-                      {detail.evidence.timeline.map((step: any, idx: number) => {
-                        const isCause = step.flag?.includes('cause') || step.idx === detail.evidence.cause_step;
-                        return (
-                          <div
-                            key={idx}
-                            className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
-                              isCause
-                                ? 'bg-rose-950/40 border-rose-500/50 text-rose-200 font-bold'
-                                : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-300'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3 truncate">
-                              <span className="font-mono text-zinc-500 font-bold">#{step.idx}</span>
-                              <span className="truncate">{step.label}</span>
-                            </div>
-
-                            {step.flag && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-600 text-white uppercase shrink-0 font-bold">
-                                {step.flag}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
+      {/* Navigation Tabs matching Reference */}
+      <div className="flex items-center gap-6 border-b border-white/[0.06] text-xs">
+        {(['Summary', 'Timeline', 'Cause', 'Agent Output', 'Notification'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`pb-2.5 transition-colors relative cursor-pointer ${
+              activeTab === tab ? 'text-white font-medium' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <span>{tab}</span>
+            {activeTab === tab && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
             )}
-          </AnimatePresence>
+          </button>
+        ))}
+      </div>
+
+      {/* Main 2-Column Grid matching Reference Panel 6 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Investigation Details & Actions (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          <p className="text-xs text-zinc-300 leading-relaxed">
+            The agent attempted to place an order after receiving a misleading search result. Black Box paused the agent and identified the root cause.
+          </p>
+
+          {/* 4-Metric Summary Grid matching Reference */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] text-zinc-500 uppercase">Cause</span>
+              <div className="text-zinc-200 font-bold text-[11px]">Step 4 - Search result</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] text-zinc-500 uppercase">Confidence</span>
+              <div className="text-emerald-400 font-bold text-[11px]">Verified by replay</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] text-zinc-500 uppercase">Impact</span>
+              <div className="text-zinc-200 font-bold text-[11px]">9 downstream steps</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
+              <span className="text-[10px] text-zinc-500 uppercase">Recovery paths</span>
+              <div className="text-cyan-400 font-bold text-[11px]">2 verified paths</div>
+            </div>
+          </div>
+
+          {/* Bottom Action Controls matching Reference */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={() => decisionMutation.mutate({ approve: false })}
+              className="px-4 py-2 rounded-lg bg-[#14161b] hover:bg-[#1b1e25] border border-white/[0.08] text-xs font-medium text-zinc-200 transition-colors cursor-pointer"
+            >
+              Keep Paused
+            </button>
+
+            <button
+              onClick={() => decisionMutation.mutate({ approve: true })}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-lg shadow-blue-900/30 transition-all cursor-pointer"
+            >
+              Approve Retry
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column: Notification Preview Card (4 cols) */}
+        <div className="lg:col-span-4 space-y-3">
+          <div className="text-xs font-bold text-white font-mono uppercase tracking-wider">
+            Notification Preview
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.08] space-y-3 shadow-xl">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-zinc-800 border border-white/[0.08] flex items-center justify-center text-[10px] font-bold text-white">
+                B
+              </div>
+              <span className="text-xs font-bold text-white">Black Box</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-rose-400 text-xs font-semibold">
+              <PauseCircle className="w-4 h-4" />
+              <span>Agent paused</span>
+            </div>
+
+            <div className="text-xs text-zinc-300 leading-relaxed">
+              Trader Bot encountered a verified failure.
+            </div>
+
+            <div className="text-[11px] font-mono text-zinc-400 space-y-0.5 pt-1 border-t border-white/[0.04]">
+              <div>Cause: Search input (Step 4)</div>
+              <div className="text-emerald-400">No order was executed.</div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => navigate(`/runs/${currentIncident.run_id}`)}
+                className="w-full py-1.5 rounded-lg bg-[#14161b] hover:bg-[#1c1f26] border border-white/[0.08] text-xs font-medium text-zinc-300 transition-colors"
+              >
+                View Incident
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-

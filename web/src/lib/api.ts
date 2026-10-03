@@ -130,6 +130,22 @@ export const api = {
       const mod = await import('../../../fixtures/ui/status.json');
       return mod.default as unknown as T;
     }
+    if (cleanPath === '/api/runs' || cleanPath.startsWith('/api/runs?')) {
+      const mod = await import('../../../fixtures/ui/runs_failed_labelled.json');
+      return mod.default as unknown as T;
+    }
+    if (cleanPath.includes('/diagnosis')) {
+      const mod = await import('../../../fixtures/ui/diagnosis.json');
+      return mod.default as unknown as T;
+    }
+    if (cleanPath === '/api/compare' || cleanPath.startsWith('/api/compare?')) {
+      const mod = await import('../../../fixtures/ui/compare.json');
+      return mod.default as unknown as T;
+    }
+    if (cleanPath.startsWith('/api/runs/')) {
+      const mod = await import('../../../fixtures/ui/run_detail.json');
+      return mod.default as unknown as T;
+    }
     throw new ApiError(404, `No fixture found for route ${path}`);
   },
 
