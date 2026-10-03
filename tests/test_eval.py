@@ -46,6 +46,17 @@ WW_ROW = {
 
 
 # ---- metrics ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _no_local_models(monkeypatch):
+    """Hermetic: a diagnosis model trained on this machine must not change what these tests see."""
+    try:
+        from blackbox.diagnosis import gnn
+
+        monkeypatch.setattr(gnn, "available", lambda *a, **k: False)
+    except ImportError:
+        pass
+
 def test_score_on_known_rankings():
     m = score([[2, 5, 1], [0, 1, 2], [4, 3], []], [2, 2, 9, 1])
     assert m["n"] == 4
