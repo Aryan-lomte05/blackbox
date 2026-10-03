@@ -65,7 +65,7 @@ def test_model_learns_a_planted_signal():
         n = int(rng.integers(5, 10))
         x = rng.normal(0, 0.1, (n, feature_dim())).astype(np.float32)
         root = int(rng.integers(0, n - 1))
-        x[root, -3] += 2.0  # "facts from nowhere"
+        x[root, 31] += 2.0  # "facts from nowhere" (share of unsupported facts)
         cand = np.array([True] * (n - 1) + [False])
         ex = GraphExample(f"r{i}", x, [""] * n, [""] * n, [(2, j, j + 1) for j in range(n - 1)], cand, root,
                           np.full(n, np.nan, np.float32), 1.0, "train", "toy", "F6")
@@ -73,6 +73,6 @@ def test_model_learns_a_planted_signal():
         return Prepared(ex, z, z)
 
     data = [example(i) for i in range(120)]
-    cfg = Config(epochs=60, patience=60, seeds=1, use_text=False)
+    cfg = Config(epochs=60, patience=60, seeds=1, use_text=False, n_features=feature_dim())
     model = train_one(data[:100], data[100:], cfg, seed=0, device=torch.device("cpu"))
     assert _top1([model], data[100:], cfg, torch.device("cpu")) >= 0.8

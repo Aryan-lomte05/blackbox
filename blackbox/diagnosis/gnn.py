@@ -27,7 +27,7 @@ from torch import nn
 
 from blackbox.core.schema import Trace
 from blackbox.core.store import DEFAULT_DIR, Store
-from blackbox.diagnosis.graph_data import EmbeddingCache, GraphExample, build, feature_dim
+from blackbox.diagnosis.graph_data import ERROR_COL, EmbeddingCache, GraphExample, build, feature_dim
 
 MODEL_DIR = DEFAULT_DIR / "models"
 MODEL_PATH = MODEL_DIR / "gnn.pt"
@@ -45,6 +45,7 @@ class Config:
     text_dim: int = 64          # projection of the 384-d sentence embeddings
     graph_features: bool = True  # False zeroes the features computed from data-flow links (ablation)
     verified_weight: float = 1.0  # loss weight of real failures (cause proven by experiment) vs planted ones
+    n_features: int = 34          # how many hand features the model reads (34 = before checker features)
     edge_types: tuple[int, ...] = (0, 1, 2, 3)  # () = no message passing (an MLP)
     aux_weight: float = 0.3
     lr: float = 2e-3
@@ -62,7 +63,7 @@ class RelGNN(nn.Module):
         self.cfg = cfg
         text_in = 2 * cfg.text_dim + 1 if cfg.use_text else 0
         self.text = nn.Linear(384, cfg.text_dim) if cfg.use_text else None
-        self.inp = nn.Sequential(nn.Linear(feature_dim() + text_in, cfg.hidden), nn.GELU(), nn.Dropout(cfg.dropout))
+        self.inp = nn.Sequential(nn.Linear(cfg.n_features + text_in, cfg.hidden), nn.GELU(), nn.Dropout(cfg.dropout))
         self.rel = nn.ModuleList([nn.ModuleList([nn.Linear(cfg.hidden, cfg.hidden, bias=False)
                                                  for _ in cfg.edge_types]) for _ in range(cfg.layers)])
         self.gru = nn.ModuleList([nn.GRUCell(cfg.hidden, cfg.hidden) for _ in range(cfg.layers)])
@@ -74,7 +75,7 @@ class RelGNN(nn.Module):
 
     def forward(self, x, req, out, adj, mask):
         """x [B,N,F], req/out [B,N,384], adj [B,R,N,N] (row-normalised), mask [B,N] real nodes."""
-        parts = [x]
+        parts = [x[..., : self.cfg.n_features]]
         if self.text is not None:
             r, o = self.text(req), self.text(out)
             cos = torch.nn.functional.cosine_similarity(req, out, dim=-1).unsqueeze(-1)
@@ -301,7 +302,7 @@ def baseline_probs(p: Prepared, kind: str) -> np.ndarray:
     elif kind == "first_model_call":  # blame the agent's opening decision (often the plan)
         score = np.where(llm & p.ex.candidates, 1000 - pos, -pos)
     elif kind == "fallback_order":  # the API's fallback: errors first, then model calls latest-first
-        err = p.ex.x[:, feature_dim() - 6] > 0
+        err = p.ex.x[:, ERROR_COL] > 0
         score = np.where(err, 1e6, 0) + np.where(llm, 1e3, 0) + pos
     else:
         raise ValueError(kind)
@@ -400,7 +401,7 @@ def train_cmd(args) -> int:
     def fit(cfg: Config) -> list[RelGNN]:
         return [train_one(train, val, cfg, seed, device) for seed in range(cfg.seeds)]
 
-    cfg = Config(seeds=args.seeds, **VARIANTS[args.variant])
+    cfg = Config(seeds=args.seeds, n_features=feature_dim(), **VARIANTS[args.variant])
     models = fit(cfg)
     metrics = {"config": asdict(cfg), "variant": args.variant, "model": f"gnn@{_config_hash(cfg)}",
                "data": {f"{s}|{'labelled' if lab else 'unlabelled'}": n for (s, lab), n in sorted(split_of.items(), key=str)},
@@ -451,7 +452,7 @@ def cv_cmd(args) -> int:
     names = args.variants.split(",") if args.variants else list(VARIANTS)
     results: dict[str, dict] = {}
     for name in names:
-        cfg = Config(seeds=1, **VARIANTS[name])
+        cfg = Config(seeds=1, n_features=feature_dim(), **VARIANTS[name])
         t1s, t3s, per_fold = [], [], []
         for k in range(args.folds):
             held = [p for p in pool if _fold(p.ex.task_id, args.folds) == k]
