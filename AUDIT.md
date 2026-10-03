@@ -7,6 +7,52 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Radhesh · `radhesh/*` branches
 
+### 3. Mistakes F7–F10, kept back from training (checklist row 7) · `radhesh/faults-unseen`
+- **What:** `faults/catalog.py` now has all ten mistakes.
+  - F7 wrong tool: the tool the model named is swapped for another of the
+    same family, preferring one with the same arguments. Shop runs only (the
+    QA and Math agents never choose between tools).
+  - F8 memory lost: a text or list value is emptied (not removed: a missing
+    key would crash the agent, and a crash is never a label), only where a
+    later step reads the emptied value.
+  - F9 instruction dropped: one sentence of the system prompt, or its whole
+    reply-format block, is removed and the step is asked again for real.
+  - F10 answers too early: stops instead of calculating / calling a tool /
+    searching again.
+  - F1 can now give another existing record id (Shop order ids).
+  - Farm: `--faults all`. F7–F10 are never planted on a training task; on
+    other QA/Math tasks their runs get split `test_new_mistakes`; Shop runs
+    stay `test_new_tasks`.
+- **Verified:** 27 new tests (`tests/test_faults_unseen.py`), 169 passing.
+  10 sampled changes per mistake and agent appear in the forked step; F8 is
+  forked at every allowed step of all three agents with no crash; three
+  mutated rules each fail a test.
+- **Real runs** (60 new tasks per family, `agent-local`, 4 forks, all ten
+  mistakes): 552 runs, 142 labelled failures, **0 crashes**. Pass→fail:
+
+  | | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | F10 |
+  |---|---|---|---|---|---|---|---|---|---|---|
+  | Math | 100% (15) | 78% (9) | 44% (9) | – | – | 66% (32) | – | 14% (7) | 43% (7) | 60% (5) |
+  | QA | – | – | – | 73% (26) | 46% (28) | 24% (54) | – | 38% (16) | 9% (11) | 0% (5) |
+  | Shop | 43% (23) | – | 70% (23) | – | – | 67% (6) | 15% (20) | 0% (41) | 0% (20) | 20% (15) |
+
+  (run counts in brackets; the F9 numbers are from before the format-block
+  option was added.)
+- **Outside the 30–90% target, and why:** Math F1 is 100% (any changed number
+  in arithmetic changes the answer). Shop F7–F10 are low because the 3B model
+  keeps making redundant calls after the request is already handled, so a
+  mistake planted on one of those steps is harmless, and wiped history only
+  makes it repeat calls the tools refuse. QA F10 is 0%: the agent's own
+  minimum of two searches absorbs an early answer. QA F6 24%. To tune next.
+- **Found in the recorder, not changed (Aryan's folders):**
+  1. A `state` change is applied in `RunContext._begin` after the fork step is
+     closed, so the write is recorded on no step: an F8 run shows no evidence
+     at its planted step. Applying the pending change before
+     `_close_open_step()` fixes it. `test_memory_loss_is_recorded_as_a_write_
+     of_the_planted_step` is marked xfail until then.
+  2. `fork()` runs with no store and saves afterwards, so a fork's
+     `state_hash_after` values name blobs that were never written.
+
 ### 2. Shop agent, mock shop API, 200 generated tasks (checklist row 7) · `radhesh/shop-agent`
 - **What:**
   - `agents/tools/shop.py`: six tools (`get_order`, `check_stock`,

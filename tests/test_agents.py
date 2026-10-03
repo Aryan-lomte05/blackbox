@@ -53,16 +53,15 @@ def fake_math(messages, tools, params) -> LLMResult:
     CALLS.append(user)
     if system.startswith("You plan how"):
         return _reply("1. eggs left after eating and baking\n2. money from selling them")
+    last_line = user.strip().splitlines()[-1]
+    last = last_line.rsplit("=", 1)[1].strip() if "=" in last_line else None  # None: no result to read
     if system.startswith("You solve"):
-        results = user.split("Results so far:", 1)[1]
-        if "(none yet)" in results:
+        if last is None:
             return _reply("CALC: 16 - 3 - 4")
-        if "2." not in results:
-            last = results.strip().splitlines()[-1].rsplit("=", 1)[1].strip()
+        if "2." not in user.split("Results so far:", 1)[1]:
             return _reply(f"CALC: {last} * 2")
         return _reply("DONE")
-    last = user.strip().splitlines()[-1].rsplit("=", 1)[1].strip()
-    return _reply(f"FINAL: {last}")
+    return _reply(f"FINAL: {last}" if last is not None else "FINAL: unknown")
 
 
 def qa_task() -> Task:

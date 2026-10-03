@@ -30,9 +30,9 @@ from blackbox.core.hashing import fingerprint
 from blackbox.core.schema import FaultSpec, Label, Trace
 from blackbox.core.store import DEFAULT_DIR, Store
 from blackbox.data.shards import read_traces, write_traces
-from blackbox.data.splits import split_for
+from blackbox.data.splits import allows_unseen_mistakes, split_for, split_for_fork
 from blackbox.data.tasks import load_tasks
-from blackbox.faults.catalog import TRAIN_FAULTS, make_change
+from blackbox.faults.catalog import FAULTS, TRAIN_FAULTS, UNSEEN_FAULTS, make_change
 from blackbox.replay.engine import fork
 
 AGENTS = {"qa": "qa_agent@v1", "math": "math_agent@v1", "ops": "shop_agent@v1"}
@@ -72,6 +72,7 @@ def plant(trace: Trace, fault_type: str, step_idx: int, rng: random.Random, stor
     if change is None:
         raise ValueError(f"{fault_type} cannot be planted at step {step_idx} of run {trace.run.run_id}")
     child = fork(trace, step_idx, change, store=None)
+    child.run.split = split_for_fork(trace.run.split, fault_type, UNSEEN_FAULTS)
     child.run.fault = FaultSpec(type=fault_type, step_idx=step_idx,
                                 params={"change_kind": change.kind, "note": change.note})
     if child.run.status == "done" and child.run.outcome is not None and not child.run.outcome.success:
@@ -90,6 +91,8 @@ def farm_task(task: Task, model_id: str, *, store: Store | None, n_forks: int,
     if clean.run.status != "done" or clean.run.outcome is None or not clean.run.outcome.success:
         return traces  # a natural failure or a crash: nothing to plant on
     rng = random.Random(int(fingerprint([task.task_id, model_id, seed])[:12], 16))
+    if not allows_unseen_mistakes(split):
+        fault_types = tuple(f for f in fault_types if f not in UNSEEN_FAULTS)
     for fault_type, step_idx in pick_faults(clean, fault_types, n_forks, rng):
         traces.append(plant(clean, fault_type, step_idx, rng, store=store))
     return traces
@@ -188,6 +191,16 @@ def run_farm(tasks: list[Task], model_id: str, *, store: Store | None, n_forks: 
     return traces
 
 
+def parse_faults(text: str) -> tuple[str, ...]:
+    if text.strip().lower() == "all":
+        return tuple(FAULTS)
+    names = tuple(f.strip().upper() for f in text.split(",") if f.strip())
+    unknown = [f for f in names if f not in FAULTS]
+    if unknown:
+        raise SystemExit(f"unknown mistake type(s) {unknown}. Known: {', '.join(FAULTS)}, or 'all'")
+    return names
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Generate clean and planted-mistake runs, and write a shard.")
     ap.add_argument("--family", required=True, choices=sorted(AGENTS))
@@ -195,7 +208,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--offset", type=int, default=0, help="skip this many tasks (give each machine its own range)")
     ap.add_argument("--model", default="agent-small", help="registry id from models.yaml")
     ap.add_argument("--forks", type=int, default=3, help="planted-mistake forks per passing run")
-    ap.add_argument("--faults", default=",".join(TRAIN_FAULTS), help="comma-separated mistake types")
+    ap.add_argument("--faults", default=",".join(TRAIN_FAULTS),
+                    help="comma-separated mistake types, or 'all' for F1-F10 "
+                         "(F7-F10 are skipped on training tasks; default: F1-F6)")
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args(argv)
@@ -207,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     store = Store()
     try:
         traces = run_farm(tasks, args.model, store=store, n_forks=args.forks,
-                          fault_types=tuple(f.strip() for f in args.faults.split(",") if f.strip()),
+                          fault_types=parse_faults(args.faults),
                           workers=args.workers, seed=args.seed)
         if not traces:
             print("no runs produced")

@@ -14,6 +14,13 @@ of what was recorded.
     F4  misleading paragraph       retrieval   output
     F5  search misses the paragraph retrieval  output
     F6  wrong intermediate fact    llm         output
+
+Kept back from training, to test mistakes the ranker has never seen:
+
+    F7  model picks the wrong tool llm         output
+    F8  memory value lost          any         state
+    F9  instruction dropped        llm         messages
+    F10 model answers too early    llm         output
 """
 
 from __future__ import annotations
@@ -23,11 +30,18 @@ import re
 from dataclasses import dataclass
 from typing import Callable
 
+from blackbox.agents.tools.registry import all_tools, get_tool
 from blackbox.core.schema import Change, Step, Trace
 
 _NUMBER = re.compile(r"(?<![\w.])\d+(?:\.\d+)?(?![\w]|\.\d)")
 _LIST_MARKER = re.compile(r"^\s*\d+[.)]\s", re.MULTILINE)
 _YES_NO = re.compile(r"\b(yes|no)\b", re.IGNORECASE)
+_RECORD_ID = re.compile(r"^([A-Za-z]+)(\d+)$")
+_ACTION_LINE = re.compile(r"^(\s*ACTION\s*:\s*)([A-Za-z_]\w*)", re.IGNORECASE | re.MULTILINE)
+_CALC_LINE = re.compile(r"^\s*CALC\s*:", re.IGNORECASE | re.MULTILINE)
+_NEXT_SEARCH = re.compile(r"^(\s*NEXT\s*:\s*)SEARCH\b.*$", re.IGNORECASE | re.MULTILINE)
+_SENTENCE_END = re.compile(r"(?<=[.:])\s+")
+ANY_STEP = "any"
 
 MakeChange = Callable[[Trace, Step, random.Random], "Change | None"]
 
@@ -89,6 +103,18 @@ def _word_overlap(a: str, b: str) -> int:
     return len(set(a.lower().split()) & set(b.lower().split()))
 
 
+def _other_id(value: str, args: dict, rng: random.Random) -> str:
+    """A wrong record id: another one found in the data the tool was given, else the next number."""
+    prefix, number = _RECORD_ID.match(value).groups()
+    known = sorted(
+        key for table in args.values() if isinstance(table, dict)
+        for records in table.values() if isinstance(records, dict)
+        for key in records
+        if isinstance(key, str) and key != value and _RECORD_ID.match(key) and key.startswith(prefix)
+    )
+    return rng.choice(known) if known else f"{prefix}{int(number) + 1}"
+
+
 # ---- F1-F3: tool steps ------------------------------------------------------------
 def f1_wrong_tool_argument(trace: Trace, step: Step, rng: random.Random) -> Change | None:
     args = step.request.get("args") or {}
@@ -99,6 +125,8 @@ def f1_wrong_tool_argument(trace: Trace, step: Step, rng: random.Random) -> Chan
             continue
         if isinstance(value, (int, float)):
             candidates.append((key, perturb_number(value, rng), value))
+        elif isinstance(value, str) and _RECORD_ID.match(value):
+            candidates.append((key, _other_id(value, args, rng), value))  # wrong id
         elif isinstance(value, str):
             edited = perturb_number_in_text(value, rng)
             if edited:
@@ -203,6 +231,120 @@ def f6_wrong_fact(trace: Trace, step: Step, rng: random.Random) -> Change | None
     return None
 
 
+# ---- F7-F10: kept back from training ------------------------------------------------
+def f7_wrong_tool(trace: Trace, step: Step, rng: random.Random) -> Change | None:
+    """The model names another tool of the same family. One that takes the same
+    arguments is preferred, so the call goes through and does the wrong thing."""
+    text = (step.output or {}).get("text")
+    m = _ACTION_LINE.search(text) if isinstance(text, str) else None
+    spec = get_tool(m.group(2)) if m else None
+    if spec is None:
+        return None
+    others = [t for t in all_tools() if t.category == spec.category and t.name != spec.name]
+    if not others:
+        return None
+    same_args = [t for t in others if set(t.parameters["properties"]) == set(spec.parameters["properties"])]
+    pick = rng.choice(same_args or others)
+    new = text[: m.start(2)] + pick.name + text[m.end(2):]
+    return Change(kind="output", value={**step.output, "text": new}, note=f"F7: {spec.name} -> {pick.name}")
+
+
+def memory_after(trace: Trace, step_idx: int) -> dict:
+    """What the run's memory holds right after step `step_idx`, for the keys the run has written."""
+    memory: dict = {}
+    for s in trace.steps[: step_idx + 1]:
+        for key, diff in s.state_diff.items():
+            memory[key] = diff.get("after")
+    return memory
+
+
+def first_step_to_notice(trace: Trace, step_idx: int, key: str) -> int | None:
+    """The first step that would read `key` after it is wiped at `step_idx`, or None.
+
+    The recorder applies a memory change when the next step begins, after that
+    step's request was built. So the next step cannot notice, and if it writes
+    the key (from what it read before the wipe) the wipe is undone. After
+    that, a write that replaces the value outright also undoes it, while one
+    that builds on the old value (`results = results + [new]`) carries the
+    loss forward.
+    """
+    following = trace.steps[step_idx + 1:]
+    if not following or key in following[0].writes:
+        return None
+    for s in following[1:]:
+        if key in s.reads:
+            return s.idx
+        if key in s.writes and not _builds_on_old_value(s.state_diff.get(key) or {}):
+            return None
+    return None
+
+
+def _builds_on_old_value(diff: dict) -> bool:
+    before, after = diff.get("before"), diff.get("after")
+    if isinstance(before, list) and isinstance(after, list):
+        return bool(before) and after[: len(before)] == before
+    if isinstance(before, str) and isinstance(after, str):
+        return bool(before) and before in after
+    return False
+
+
+def f8_memory_lost(trace: Trace, step: Step, rng: random.Random) -> Change | None:
+    """A memory value is wiped right after this step.
+
+    The value is emptied, not removed: a missing key would crash the agent,
+    and a crash is our bug, never a labelled failure. Only text and lists
+    are wiped, and only where a later step reads the wiped value.
+    """
+    memory = memory_after(trace, step.idx)
+    candidates = sorted(k for k, v in memory.items() if isinstance(v, (str, list)) and v
+                        and first_step_to_notice(trace, step.idx, k) is not None)
+    if not candidates:
+        return None
+    key = rng.choice(candidates)
+    return Change(kind="state", value={key: "" if isinstance(memory[key], str) else []},
+                  note=f"F8: memory {key!r} wiped")
+
+
+def f9_instruction_dropped(trace: Trace, step: Step, rng: random.Random) -> Change | None:
+    """Part of the system prompt goes missing; the step is then asked again for real.
+
+    Either one sentence is dropped, or the whole reply-format block at the end
+    (a truncated prompt). The first sentence always stays: it says what the job is.
+    """
+    messages = step.request.get("messages") or []
+    system = next((i for i, m in enumerate(messages) if m.get("role") == "system"), None)
+    if system is None:
+        return None
+    content = messages[system].get("content")
+    pieces = _SENTENCE_END.split(content) if isinstance(content, str) else []
+    if len(pieces) < 2:
+        return None
+    options = [(i, i + 1) for i in range(1, len(pieces))]
+    fmt = next((i for i in range(1, len(pieces)) if pieces[i].lower().startswith("reply")), None)
+    if fmt is not None and (fmt, len(pieces)) not in options:
+        options.append((fmt, len(pieces)))
+    start, stop = rng.choice(options)
+    new = [dict(m) for m in messages]
+    new[system]["content"] = " ".join(pieces[:start] + pieces[stop:])
+    return Change(kind="messages", value=new, note=f"F9: dropped {' '.join(pieces[start:stop])[:60]!r}")
+
+
+def f10_answers_too_early(trace: Trace, step: Step, rng: random.Random) -> Change | None:
+    """The model stops working while there is still something to do."""
+    text = (step.output or {}).get("text")
+    if not isinstance(text, str):
+        return None
+    if _ACTION_LINE.search(text):
+        new, what = "DONE: Your request has been handled.", "stopped instead of calling a tool"
+    elif _CALC_LINE.search(text):
+        new, what = "DONE", "stopped instead of calculating"
+    elif _NEXT_SEARCH.search(text):
+        new, what = _NEXT_SEARCH.sub(r"\1ANSWER", text), "answered instead of searching again"
+    else:
+        return None
+    return Change(kind="output", value={**step.output, "text": new}, note=f"F10: {what}")
+
+
 FAULTS: dict[str, Fault] = {
     f.type: f
     for f in (
@@ -212,9 +354,14 @@ FAULTS: dict[str, Fault] = {
         Fault("F4", "search returns a misleading paragraph", "retrieval", f4_misleading_paragraph),
         Fault("F5", "search misses the right paragraph", "retrieval", f5_search_misses),
         Fault("F6", "model states a wrong intermediate fact", "llm", f6_wrong_fact),
+        Fault("F7", "model picks the wrong tool", "llm", f7_wrong_tool),
+        Fault("F8", "memory value lost", ANY_STEP, f8_memory_lost),
+        Fault("F9", "an instruction is dropped from the prompt", "llm", f9_instruction_dropped),
+        Fault("F10", "model answers too early", "llm", f10_answers_too_early),
     )
 }
 TRAIN_FAULTS = ("F1", "F2", "F3", "F4", "F5", "F6")
+UNSEEN_FAULTS = ("F7", "F8", "F9", "F10")  # never trained on (SYSTEM.md §3.2)
 
 
 def make_change(trace: Trace, fault_type: str, step_idx: int, rng: random.Random) -> Change | None:
@@ -223,7 +370,9 @@ def make_change(trace: Trace, fault_type: str, step_idx: int, rng: random.Random
         raise KeyError(f"unknown fault {fault_type!r}. Known: {', '.join(FAULTS)}")
     fault = FAULTS[fault_type]
     step = trace.steps[step_idx]
-    if step.kind != fault.step_kind or step.error is not None:
+    if step.error is not None or step.kind == "final":
+        return None
+    if fault.step_kind not in (ANY_STEP, step.kind):
         return None
     return fault.make(trace, step, rng)
 
