@@ -47,6 +47,29 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   `merge` still reads the early bare-Trace shards. Test:
   `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
 
+### 12. `blackbox demo` on real runs, and a Verify flaw it exposed · `aryan/demo-verify-fix`
+- `blackbox demo [--run ID]`: diagnose → verify → repair → compare on a real
+  failed run, printed as a story. Run on Aryan's 4060 farm data (qwen2.5:7b
+  agent; Nemotron-3-Super-120B (free OpenRouter) as `agent-strong` / `judge-large`).
+- **Flaw found by running it on a planted-mistake run (F6 at step 0):** Verify
+  "verified" step 7, the step that writes the answer, by pasting a passing
+  run's output into it. That copies the answer and proves nothing. Fixed:
+  (1) no twin repair on answer-producing steps; (2) every suspect is tested and
+  the **earliest** verified step is the cause (SYSTEM.md §6.2). Regression
+  test `test_verify_does_not_blame_the_answer_step_by_copying_a_twins_answer`
+  failed before the fix and passes after.
+- After the fix the same run verifies step 4 (a stronger model there flips
+  it). Step 0 was not tried because the fallback suspect order only offers
+  [7, 6, 4]: **the trained ranker is what closes this gap** (good before/after
+  for the pitch).
+- `label_natural` now tests every step earliest-first, uses no ranker output
+  (hard rule 5) and repairs with the local 7B by default (free OpenRouter
+  keys are rate-limited).
+- Real repair output on that run: 3 of 4 GenAI fixes passed, each re-running
+  1 of 9 steps (1,576 tokens saved per fix); the fixed answer is "Columbine".
+- Storage on real farm data: 1,974 save-points stored as 518 files (74%
+  de-duplicated).
+
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
 ### 11. First live verification (real model, local Ollama) · `aryan/live-tests`

@@ -74,7 +74,7 @@ def test_verify_proves_the_model_step_and_labels_it(tmp_path):
     tr = run_task(CapitalAgent(), TASK, "agent-weak", store=store)
     assert not tr.run.outcome.success
     report = verify(tr, [1, 0], store=store, repeats=2)
-    (s1,) = report["suspects"]  # stops at the first verified suspect
+    s1 = report["suspects"][0]  # every suspect is tested; the earliest verified cause wins
     assert s1["step"] == 1 and s1["verdict"] == "verified" and s1["causal_effect"] == 1.0
     assert report["verified_step"] == 0  # the tool step was a symptom; the model decision is the cause
     label = label_from_verification(tr, report, store)
@@ -124,3 +124,15 @@ def test_repair_cards_are_tested_by_fork(tmp_path):
 def test_suspects_fallback_orders_model_calls_late_first(tmp_path):
     tr = run_task(CapitalAgent(), TASK, "agent-weak", store=Store(tmp_path))
     assert suspects_by_position(tr)[0] == 0
+
+
+def test_verify_does_not_blame_the_answer_step_by_copying_a_twins_answer(tmp_path):
+    """Regression: pasting a passing run's answer into the step that writes the
+    answer always 'fixes' the run. That is a symptom, not the root cause."""
+    store = Store(tmp_path)
+    run_task(CapitalAgent(), TASK, "agent-strong", store=store)          # a passing twin exists
+    tr = run_task(CapitalAgent(), TASK, "agent-weak", store=store)       # failed run
+    report = verify(tr, [1, 0], store=store, repeats=1)                  # answer-producing step listed first
+    s1 = next(s for s in report["suspects"] if s["step"] == 1)
+    assert "twin" not in [x["strategy"] for x in s1["strategies"]]
+    assert report["verified_step"] == 0                                  # the earliest real cause

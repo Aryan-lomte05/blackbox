@@ -5,6 +5,7 @@
     blackbox show <run_id>             print a run step by step
     blackbox replay <run_id>           replay from the recording (0 model calls) and compare outcomes
     blackbox models                    check every models.yaml model exists at its provider
+    blackbox demo [--run ID]           the whole investigation on a real failed run
 """
 
 from __future__ import annotations
@@ -88,6 +89,14 @@ def cmd_ui(args) -> int:
     return 0
 
 
+def cmd_demo(args) -> int:
+    from blackbox.demo import demo
+
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
+    return demo(Store(args.data), args.run, args.repeats)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="blackbox", description="A flight recorder for AI agents.")
     p.add_argument("--data", default=None, help="data directory (default: $BLACKBOX_DATA or ./data)")
@@ -109,6 +118,11 @@ def main(argv: list[str] | None = None) -> int:
 
     s = sub.add_parser("models", help="check models.yaml against providers")
     s.set_defaults(fn=cmd_models)
+
+    s = sub.add_parser("demo", help="diagnose -> verify -> repair -> compare on a real failed run")
+    s.add_argument("--run")
+    s.add_argument("--repeats", type=int, default=1)
+    s.set_defaults(fn=cmd_demo)
 
     s = sub.add_parser("ui", help="serve the API and web app")
     s.add_argument("--host", default="127.0.0.1")

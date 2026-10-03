@@ -38,7 +38,9 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="blackbox.replay.label_natural")
     p.add_argument("--data", default=str(DEFAULT_DIR))
     p.add_argument("--limit", type=int, default=50)
-    p.add_argument("--max-suspects", type=int, default=4)
+    p.add_argument("--max-suspects", type=int, default=12, help="steps tested, earliest first")
+    p.add_argument("--strong-model", default="agent-local-7b",
+                   help="repair model (local by default: free OpenRouter keys are rate-limited)")
     p.add_argument("--repeats", type=int, default=2)
     p.add_argument("--import", dest="imports", action="append", default=[],
                    help="module that registers agents/checkers (repeatable)")
@@ -51,10 +53,10 @@ def main(argv: list[str] | None = None) -> int:
         stats["tried"] += 1
         trace = store.load_trace(run_id)
         try:
-            from blackbox.api.main import diagnose  # trained ranker if installed, else fallback order
-
-            order = diagnose(trace)["suspects"] or suspects_by_position(trace)
-            report = verify(trace, order[: args.max_suspects], store=store, repeats=args.repeats)
+            # A label must be the EARLIEST step whose repair flips the run, so every
+            # step is a candidate, earliest first; no ranker output is used (hard rule 5).
+            order = sorted(suspects_by_position(trace))[: args.max_suspects]
+            report = verify(trace, order, store=store, repeats=args.repeats, strong_model=args.strong_model)
         except Exception as exc:  # noqa: BLE001 - reported per run, the batch continues
             stats["errors"] += 1
             print(f"{run_id}: ERROR {type(exc).__name__}: {exc}", file=sys.stderr)
