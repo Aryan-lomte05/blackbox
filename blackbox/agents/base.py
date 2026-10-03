@@ -78,11 +78,23 @@ def register_checker(family: str, fn: Checker) -> Checker:
     return fn
 
 
+def _load_builtin() -> None:
+    """Register our test agents on first miss, so a process that only replays
+    stored runs (API, CLI) finds them. Skipped when the `agents` extra is absent."""
+    try:
+        import blackbox.agents.builtin  # noqa: F401
+    except ModuleNotFoundError as exc:
+        if exc.name is None or exc.name.startswith("blackbox"):
+            raise
+
+
 def get_agent(ref: str) -> Agent:
     if ref not in _AGENTS and ref.endswith("@fn"):
         from blackbox.integrations import resolve_function_agent  # user function agents
 
         resolve_function_agent(ref)
+    if ref not in _AGENTS:
+        _load_builtin()
     if ref not in _AGENTS:
         raise KeyError(f"agent {ref!r} not registered (import its module). Known: {sorted(_AGENTS)}")
     return _AGENTS[ref]()

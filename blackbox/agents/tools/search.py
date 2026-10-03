@@ -56,17 +56,19 @@ def make_retriever(paragraphs: list[dict]) -> Callable[..., list[dict]]:
     tokenized = [tokenize(f"{p['title']} {p['text']}") for p in paragraphs]
     bm25 = BM25Okapi(tokenized) if any(tokenized) else None
 
-    def search(query: str, k: int = 3) -> list[dict]:
+    def search(query: str, k: int = 3, exclude: list[int] | None = None) -> list[dict]:
+        """`exclude`: paragraph ids already read, so a second search brings new ones."""
         terms = content_terms(query)
         if bm25 is None or not terms:
             return []
         scores = bm25.get_scores(terms)
-        vocab_hit = [any(t in doc for t in terms) for doc in tokenized]
-        order = sorted(range(len(paragraphs)), key=lambda i: (-scores[i], i))
+        skip = set(exclude or [])
+        # a paragraph sharing no query word is not a result
+        hits = [i for i, doc in enumerate(tokenized) if i not in skip and any(t in doc for t in terms)]
+        hits.sort(key=lambda i: (-scores[i], i))
         return [
             {"id": i, "title": paragraphs[i]["title"], "text": paragraphs[i]["text"], "score": round(float(scores[i]), 4)}
-            for i in order[: max(0, int(k))]
-            if vocab_hit[i]  # a paragraph sharing no query word is not a result
+            for i in hits[: max(0, int(k))]
         ]
 
     return search

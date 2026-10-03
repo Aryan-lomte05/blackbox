@@ -23,6 +23,7 @@ PARAGRAPHS = [
 def test_calculator_through_registry():
     assert call_tool("calculator", {"expression": "(48 / 2) * 3"}) == 72
     assert call_tool("calculator", {"expression": "$1,200 x 3 ="}) == 3600
+    assert call_tool("calculator", {"expression": "9 * 2 = 19"}) == 18  # a stated result is ignored
     assert call_tool("calculator", {"expression": "20% * 50"}) == 10
     assert call_tool("calculator", {"expression": "17 % 5"}) == 2
     assert call_tool("calculator", {"expression": "7 / 2"}) == 3.5
