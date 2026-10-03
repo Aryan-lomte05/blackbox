@@ -13,9 +13,9 @@ import { CausalScreen } from './screens/CausalScreen';
 import { CrashTestScreen } from './screens/CrashTestScreen';
 import { SimilarScreen } from './screens/SimilarScreen';
 import { IncidentsScreen } from './screens/IncidentsScreen';
-const OverviewStub = () => <div className="p-8 text-zinc-400 font-mono">Overview screen building next...</div>;
-const AtlasStub = () => <div className="p-8 text-zinc-400 font-mono">Atlas screen building next...</div>;
-const DatasetStub = () => <div className="p-8 text-zinc-400 font-mono">Dataset screen building next...</div>;
+import { OverviewScreen } from './screens/OverviewScreen';
+import { AtlasScreen } from './screens/AtlasScreen';
+import { DatasetScreen } from './screens/DatasetScreen';
 
 export const App: React.FC = () => {
   return (
@@ -42,9 +42,9 @@ export const App: React.FC = () => {
                 <Route path="/crash-test" element={<CrashTestScreen />} />
                 <Route path="/similar" element={<SimilarScreen />} />
                 <Route path="/incidents" element={<IncidentsScreen />} />
-                <Route path="/atlas" element={<AtlasStub />} />
-                <Route path="/dataset" element={<DatasetStub />} />
-                <Route path="/" element={<InvestigateScreen />} />
+                <Route path="/atlas" element={<AtlasScreen />} />
+                <Route path="/dataset" element={<DatasetScreen />} />
+                <Route path="/" element={<OverviewScreen />} />
               </Routes>
             </main>
           </div>
