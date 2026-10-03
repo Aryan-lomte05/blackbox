@@ -79,20 +79,29 @@ class ReplayPlan:
     fork_idx: int | None = None  # None = pure replay of the whole run
     change: Change | None = None
     reuse_after_fork: bool = True
-    _used: set[int] = field(default_factory=set)
-    _by_hash: dict[str, list[Step]] = field(default_factory=dict)
+    # Earlier runs of the same family (the parent's own parents): their steps can be re-used too, so
+    # undoing a planted change re-uses the original run's steps instead of asking the model again.
+    ancestors: list[Trace] = field(default_factory=list)
+    _used: set[tuple[str, int]] = field(default_factory=set)
+    _by_hash: dict[str, list[tuple[str, Step]]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        for s in self.parent.steps:
-            self._by_hash.setdefault(s.input_hash, []).append(s)
+        for tr in [self.parent, *self.ancestors]:
+            # The run being forked comes first and is the truth, planted mistakes included (Verify
+            # relies on that). In an ANCESTOR, a step whose output a fork replaced has the original's
+            # input hash but not its output: never serve it as "the same step".
+            patched = tr.run.fork_step_idx if tr is not self.parent and tr.run.patch is not None else None
+            for s in tr.steps:
+                if s.idx != patched:
+                    self._by_hash.setdefault(s.input_hash, []).append((tr.run.run_id, s))
 
     def recorded(self, idx: int) -> Step | None:
         return self.parent.steps[idx] if idx < len(self.parent.steps) else None
 
     def find_reusable(self, input_hash: str) -> Step | None:
-        for s in self._by_hash.get(input_hash, []):
-            if s.idx not in self._used and s.error is None:
-                self._used.add(s.idx)
+        for run_id, s in self._by_hash.get(input_hash, []):
+            if (run_id, s.idx) not in self._used and s.error is None:
+                self._used.add((run_id, s.idx))
                 return s
         return None
 

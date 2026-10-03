@@ -167,6 +167,23 @@ def test_savings_count_the_original_cost_through_a_chain_of_forks(store):
     assert savings(second)["tokens_saved"] == savings(first)["tokens_saved"] > 0
 
 
+def test_undoing_a_planted_change_reuses_the_original_runs_steps(store):
+    """Forking a planted copy back to the original output must re-use the ORIGINAL run's later
+    steps (same inputs), not ask the model again; the planted step itself is never re-used."""
+    from blackbox.recorder.context import ReplayPlan
+
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    planted = fork(tr, 1, Change(kind="output", value={"docs": DOCS["japan"]}), store=store)
+    assert planted.run.outcome.final_answer == "Tokyo"
+    plan = ReplayPlan(parent=tr, fork_idx=1, ancestors=[planted])  # an ancestor's planted step is never served
+    assert [st.output for _, st in plan._by_hash[tr.steps[1].input_hash]] == [tr.steps[1].output]
+    CALLS.clear()
+    undone = fork(planted, 1, Change(kind="output", value=tr.steps[1].output), store=store)
+    assert undone.run.outcome.success and undone.run.outcome.final_answer == "Paris"
+    assert CALLS == []  # the answer step came from the original run's recording
+    assert undone.steps[3].cached
+
+
 def test_dry_run_tools_never_execute_during_a_rerun(store):
     from blackbox.recorder.context import dry_run_tools
 
