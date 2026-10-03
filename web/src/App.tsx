@@ -8,7 +8,7 @@ import { Header } from './components/common/Header';
 import { InvestigateScreen } from './screens/InvestigateScreen';
 import { RunGraphScreen } from './screens/RunGraphScreen';
 import { LiveLabScreen } from './screens/LiveLabScreen';
-const FleetFixStub = () => <div className="p-8 text-zinc-400 font-mono">Fleet Firewall screen building next...</div>;
+import { FleetFixScreen } from './screens/FleetFixScreen';
 const CausalStub = () => <div className="p-8 text-zinc-400 font-mono">Causal Report screen building next...</div>;
 const CrashTestStub = () => <div className="p-8 text-zinc-400 font-mono">Crash Test screen building next...</div>;
 const SimilarStub = () => <div className="p-8 text-zinc-400 font-mono">Similar Failures screen building next...</div>;
@@ -37,7 +37,7 @@ export const App: React.FC = () => {
                 <Route path="/runs/:id" element={<RunGraphScreen />} />
                 <Route path="/runs" element={<Navigate to="/runs/37452fc329e1498f" replace />} />
                 <Route path="/lab" element={<LiveLabScreen />} />
-                <Route path="/fleet" element={<FleetFixStub />} />
+                <Route path="/fleet" element={<FleetFixScreen />} />
                 <Route path="/causal" element={<CausalStub />} />
                 <Route path="/crash-test" element={<CrashTestStub />} />
                 <Route path="/similar" element={<SimilarStub />} />
