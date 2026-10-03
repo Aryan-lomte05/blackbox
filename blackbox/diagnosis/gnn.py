@@ -33,7 +33,6 @@ MODEL_DIR = DEFAULT_DIR / "models"
 MODEL_PATH = MODEL_DIR / "gnn.pt"
 METRICS_PATH = MODEL_DIR / "gnn_metrics.json"
 EMB_CACHE = MODEL_DIR / "emb_cache.npz"
-TEXT_PROJ = 64
 EVAL_SPLITS = ("val", "test_known", "test_new_mistakes", "test_new_tasks", "test_natural", "external")
 
 
@@ -43,6 +42,7 @@ class Config:
     layers: int = 3
     dropout: float = 0.2
     use_text: bool = True
+    text_dim: int = 64          # projection of the 384-d sentence embeddings
     edge_types: tuple[int, ...] = (0, 1, 2, 3)  # () = no message passing (an MLP)
     aux_weight: float = 0.3
     lr: float = 2e-3
@@ -58,8 +58,8 @@ class RelGNN(nn.Module):
     def __init__(self, cfg: Config):
         super().__init__()
         self.cfg = cfg
-        text_in = 2 * TEXT_PROJ + 1 if cfg.use_text else 0
-        self.text = nn.Linear(384, TEXT_PROJ) if cfg.use_text else None
+        text_in = 2 * cfg.text_dim + 1 if cfg.use_text else 0
+        self.text = nn.Linear(384, cfg.text_dim) if cfg.use_text else None
         self.inp = nn.Sequential(nn.Linear(feature_dim() + text_in, cfg.hidden), nn.GELU(), nn.Dropout(cfg.dropout))
         self.rel = nn.ModuleList([nn.ModuleList([nn.Linear(cfg.hidden, cfg.hidden, bias=False)
                                                  for _ in cfg.edge_types]) for _ in range(cfg.layers)])
@@ -244,7 +244,8 @@ def score_rankings(labelled: list[Prepared], probs: list[np.ndarray]) -> dict:
     pm1 = [float(abs(int(np.argmax(pr)) - p.ex.root) <= 1) for pr, p in zip(probs, labelled)]
     rr = [1.0 / r for r in ranks]
     return {"n": len(ranks), "top1": round(float(np.mean(t1)), 4), "top1_ci95": [round(v, 4) for v in _bootstrap(t1)],
-            "top3": round(float(np.mean(t3)), 4), "pm1": round(float(np.mean(pm1)), 4),
+            "top3": round(float(np.mean(t3)), 4), "top3_ci95": [round(v, 4) for v in _bootstrap(t3)],
+            "pm1": round(float(np.mean(pm1)), 4),
             "mrr": round(float(np.mean(rr)), 4)}
 
 
@@ -335,9 +336,9 @@ def train_cmd(args) -> int:
     def fit(cfg: Config) -> list[RelGNN]:
         return [train_one(train, val, cfg, seed, device) for seed in range(cfg.seeds)]
 
-    cfg = Config(seeds=args.seeds)
+    cfg = Config(seeds=args.seeds, **VARIANTS[args.variant])
     models = fit(cfg)
-    metrics = {"config": asdict(cfg), "model": f"gnn@{_config_hash(cfg)}",
+    metrics = {"config": asdict(cfg), "variant": args.variant, "model": f"gnn@{_config_hash(cfg)}",
                "data": {f"{s}|{'labelled' if lab else 'unlabelled'}": n for (s, lab), n in sorted(split_of.items(), key=str)},
                "device": str(device), **evaluate(models, prepared, cfg, device)}
     if args.ablations:
@@ -357,6 +358,56 @@ def train_cmd(args) -> int:
     METRICS_PATH.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     _print_report(metrics)
     print(f"\nsaved {MODEL_PATH} and {METRICS_PATH} ({time.time() - t0:.0f}s)")
+    return 0
+
+
+VARIANTS = {
+    "full": {},
+    "small_text": {"text_dim": 16},
+    "no_text": {"use_text": False},
+    "no_message_passing": {"edge_types": ()},
+    "order_edges_only": {"edge_types": (2, 3)},
+}
+
+
+def _fold(task_id: str, k: int) -> int:
+    return int(hashlib.sha1(f"cv|{task_id}".encode()).hexdigest()[:8], 16) % k
+
+
+def cv_cmd(args) -> int:
+    """Grouped k-fold CV on train+val (folds by task id; test sets untouched).
+    Picks the model variant; the test sets are then used once, by `train`."""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    prepared = prepare(load_examples(Store(args.data)), EmbeddingCache(EMB_CACHE))
+    pool = [p for p in prepared if p.ex.split in ("train", "val")]
+    names = args.variants.split(",") if args.variants else list(VARIANTS)
+    results: dict[str, dict] = {}
+    for name in names:
+        cfg = Config(seeds=1, **VARIANTS[name])
+        t1s, t3s, per_fold = [], [], []
+        for k in range(args.folds):
+            held = [p for p in pool if _fold(p.ex.task_id, args.folds) == k]
+            rest = [p for p in pool if _fold(p.ex.task_id, args.folds) != k]
+            # early stopping on a slice of the TRAINING tasks, never on the held-out fold
+            inner = [p for p in rest if _fold(p.ex.task_id + "|inner", 10) == 0 and p.ex.root is not None]
+            fit = [p for p in rest if not (_fold(p.ex.task_id + "|inner", 10) == 0)]
+            model = train_one(fit, inner, cfg, seed=k, device=device)
+            lab = [p for p in held if p.ex.root is not None]
+            if not lab:
+                continue
+            r = score_rankings(lab, predict_probs([model], lab, cfg, device))
+            per_fold.append({"n": r["n"], "top1": r["top1"], "top3": r["top3"]})
+            t1s += [r["top1"]] * r["n"]
+            t3s += [r["top3"]] * r["n"]
+        results[name] = {"config": VARIANTS[name], "folds": per_fold,
+                         "top1": round(float(np.mean(t1s)), 4), "top3": round(float(np.mean(t3s)), 4),
+                         "n": len(t1s)}
+        print(f"{name:20} top1 {results[name]['top1']:.3f}  top3 {results[name]['top3']:.3f}  "
+              f"(n={len(t1s)}; per fold top1 {[f['top1'] for f in per_fold]})", flush=True)
+    best = max(results, key=lambda n: (results[n]["top3"] + results[n]["top1"]))
+    out = {"folds": args.folds, "pool": len(pool), "results": results, "chosen": best}
+    (MODEL_DIR / "gnn_cv.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+    print(f"\nchosen by CV (top1 + top3): {best}  -> train it with: train --variant {best}")
     return 0
 
 
@@ -409,12 +460,18 @@ def main(argv: list[str] | None = None) -> int:
     t = sub.add_parser("train")
     t.add_argument("--seeds", type=int, default=5)
     t.add_argument("--ablations", action="store_true")
+    t.add_argument("--variant", default="full", choices=list(VARIANTS))
+    c = sub.add_parser("cv", help="grouped k-fold CV on train+val to choose the variant")
+    c.add_argument("--folds", type=int, default=5)
+    c.add_argument("--variants", default="", help="comma-separated subset of " + ",".join(VARIANTS))
     sub.add_parser("eval")
     args = p.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
     if args.cmd == "train":
         return train_cmd(args)
+    if args.cmd == "cv":
+        return cv_cmd(args)
     if not available():
         print("no trained model: run `train` first", file=sys.stderr)
         return 1
