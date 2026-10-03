@@ -34,6 +34,8 @@ class Incident(BaseModel):
     evidence: dict[str, Any] = Field(default_factory=dict)
     link: str = ""
     notifications: list[dict] = Field(default_factory=list)  # {"channel", "status", "detail"}
+    status: Literal["open", "approved", "rejected", "resolved"] = "open"
+    decision: dict | None = None  # {"by", "at", "note"}: who approved / rejected a paused retry, and when
 
 
 def signature_of(agent: str, kind: str, step_name: str | None, error: str | None) -> str:

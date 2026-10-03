@@ -107,3 +107,16 @@ def test_investigation_never_executes_money_moving_tools(tmp_path):
         assert inc.needs_approval and "never re-run" in inc.why + " ".join(inc.how_to_fix)
     finally:
         A.tool_caller = real
+
+
+def test_owner_decides_on_a_paused_retry(tmp_path):
+    from blackbox.guardian.service import decide, is_retry_approved
+
+    g = _guardian(tmp_path, money_moving_tools=("echo",))
+    inc = g.handle(run_task(CapitalAgent(), TASK, "agent-weak", store=g.store))
+    root = tmp_path / "incidents"
+    assert not is_retry_approved(inc.incident_id, root)
+    done = decide(inc.incident_id, True, "Aryan", "feed is back", root)
+    assert done.status == "approved" and done.decision["by"] == "Aryan" and is_retry_approved(inc.incident_id, root)
+    with pytest.raises(ValueError):
+        decide(inc.incident_id, False, "Aryan", "", root)  # a decision is final
