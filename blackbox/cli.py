@@ -171,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_fleet)
 
     s = sub.add_parser("mcp", help="run Black Box as an MCP server on stdio (for Claude Code, Cursor, ...)")
-    s.set_defaults(fn=lambda a: __import__("blackbox.mcp_server", fromlist=["main"]).main())
+    s.set_defaults(fn=lambda a: __import__("blackbox.mcp", fromlist=["serve"]).serve())
 
     s = sub.add_parser("export-test", help="write a pytest regression test that replays a recorded run")
     s.add_argument("run_id")
