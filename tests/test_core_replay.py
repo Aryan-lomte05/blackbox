@@ -154,3 +154,14 @@ def test_fork_writes_its_save_points_and_attributes_a_state_change(store):
     planted = child.steps[1]
     assert "docs" in planted.writes and planted.state_diff["docs"]["after"] == []
     assert all(store.has_blob(s.state_hash_after) for s in child.steps)
+
+
+def test_savings_count_the_original_cost_through_a_chain_of_forks(store):
+    """A fork of a fork re-uses steps that were themselves re-used (no tokens of their own):
+    the savings meter must still count what those steps cost when they really ran."""
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    first = fork(tr, 3, Change(kind="output", value={"text": "Paris"}), store=store)
+    assert first.steps[0].cached and first.steps[0].tokens_in is None
+    second = fork(first, 3, Change(kind="output", value={"text": "Tokyo"}), store=store)
+    assert second.steps[0].meta["saved_tokens"] == 15  # step 0 really cost 10 + 5 tokens
+    assert savings(second)["tokens_saved"] == savings(first)["tokens_saved"] > 0

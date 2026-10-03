@@ -8,9 +8,10 @@ from __future__ import annotations
 import os
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict
@@ -93,51 +94,60 @@ def _sse(job: Job) -> StreamingResponse:
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-def create_app(store: Store | None = None) -> FastAPI:
-    app = FastAPI(
-        title="Black Box",
-        version="0.1.0",
-        summary="A flight recorder for AI agents.",
-        description=(
-            "Record every step of an agent run with a save-point, name the steps most likely to have caused a "
-            "failure, **prove** the cause by re-running with only that step repaired (re-running only what the "
-            "repair affects), and test GenAI fixes the same way.\n\n"
-            "* **Runs**: browse recorded runs and their steps (with save-points and who-used-what links).\n"
-            "* **Diagnosis**: the trained model's ranking of a failed run's steps.\n"
-            "* **Experiments**: replay, fork, verify, repair, cheaper-model advice (long jobs stream events).\n"
-            "* **Status**: what is running on the recording machine right now.\n\n"
-            "Inspector page: [/](/). Every number comes from recorded runs; nothing is filled in."
-        ),
-        openapi_tags=[
-            {"name": "Runs", "description": "Recorded runs, steps, save-points, comparison."},
-            {"name": "Diagnosis", "description": "Which step most likely caused a failure."},
-            {"name": "Experiments", "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."},
-            {"name": "Jobs", "description": "Server-sent event streams and results of background jobs."},
-            {"name": "Status", "description": "Machine, queue, data and model state."},
-        ],
-    )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    app.state.store = store
-    jobs = JobManager()
-    run_jobs: dict[str, str] = {}  # run_id -> job_id, for /api/runs/{id}/events
+Family = Literal["qa", "math", "ops", "external"]
+Split = Literal["train", "val", "calib", "test_known", "test_new_mistakes", "test_new_tasks", "test_natural",
+                "test_outside"]
+Cheaper = Literal["agent-local", "agent-local-7b"]
+FaultType = Literal["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"]
+Outcome_ = Literal["pass", "fail"]
 
-    def db() -> Store:
-        if app.state.store is None:
-            app.state.store = Store()
-        return app.state.store
+CaseName = Literal["model_finds_it", "model_misses_it", "shop_new_task_type", "math_failure",
+                   "real_failure_verified", "real_failure_unlabelled"]
 
-    def load(run_id: str) -> Trace:
-        try:
-            return db().load_trace(run_id)
-        except KeyError:
-            raise HTTPException(404, f"no run {run_id!r}") from None
+DEMO_SCRIPT = (
+    "## Demo script (click *Try it out*, pick a case from the **Examples** dropdown, press *Execute*)\n\n"
+    "1. **List runs**: filter to failed runs with a known guilty step.\n"
+    "2. **Open a run**: its steps, who-used-what links and the planted mistake.\n"
+    "3. **Diagnose**: the trained model's top suspects. Compare with the run's `label.root_cause_step`.\n"
+    "4. **Verify**: re-run with one suspect repaired at a time; returns a `job_id`.\n"
+    "5. **Job result**: paste that `job_id` to see the verdict (the proven cause and its causal effect).\n"
+    "6. **Fork**: undo a planted mistake (the run passes again) or plant one in a passing run. "
+    "The response shows how many steps were re-run vs re-used.\n"
+    "7. **Compare**: original vs the planted copy, first difference marked.\n"
+    "8. **Replay**: re-run from the recording with zero model calls.\n"
+    "9. **Repair**: GenAI fixes for the guilty step, each tested by a fork (uses the big model).\n"
+    "10. **Cheaper-model advisor**: which model calls could use a smaller model.\n"
+    "11. **Live run**: a fresh task on the local 7B model; stream its steps at `/api/runs/{run_id}/events`.\n\n"
+)
 
-    @app.get("/api/health", tags=["Status"])
+
+def build_routes(app, db, load, jobs, run_jobs, cases):
+    """All /api routes, with Swagger dropdown examples from real recorded runs (blackbox.api.showcase)."""
+    from blackbox.api.showcase import body_examples, run_id_examples
+
+    any_run = run_id_examples(cases)
+    failed = run_id_examples(cases, ("model_finds_it", "model_misses_it", "shop_new_task_type", "math_failure",
+                                     "real_failure_verified", "real_failure_unlabelled"))
+    passing = run_id_examples(cases, ("passing_run",))
+    fork_bodies = cases.get("fork_bodies", {})
+    fork_run_ids = {k: {"summary": v["summary"], "description": "Use with the matching request body below.",
+                        "value": v["run_id"]} for k, v in fork_bodies.items()}
+    guilty_bodies = {k: {"summary": v["summary"], "description": v["description"],
+                         "value": {"step_idx": v["guilty"], "rounds": 1, "evidence": ""}}
+                     for k, v in cases.get("runs", {}).items() if v.get("guilty") is not None}
+    verify_bodies = {
+        "use_diagnosis": {"summary": "Test the diagnosis model's top 3 suspects (1 attempt each: fastest)",
+                          "value": {"suspects": None, "repeats": 1}},
+        "three_attempts": {"summary": "Same, 3 attempts per repair: tells bad luck from a real bug",
+                           "value": {"suspects": None, "repeats": 3}},
+    }
+    compare = cases.get("compare", {})
+    cmp_a = {k: {"summary": v["summary"], "description": v["description"], "value": v["a"]} for k, v in compare.items()}
+    cmp_b = {k: {"summary": v["summary"], "description": v["description"], "value": v["b"]} for k, v in compare.items()}
+    live = body_examples(cases.get("live", {}))
+
+
+    @app.get("/api/health", tags=["Status"], summary="Health: database counts, models, providers")
     def health() -> dict[str, Any]:
         try:
             models = sorted(providers.load_registry())
@@ -147,33 +157,92 @@ def create_app(store: Store | None = None) -> FastAPI:
                       for name, spec in providers.PROVIDERS.items()}
         return {"ok": True, "db": db().counts(), "models": models, "providers_configured": configured}
 
-    @app.get("/api/runs", tags=["Runs"])
+    @app.post("/api/investigate/{case}", tags=["Investigate"],
+              summary="★ Investigate a case: diagnose → verify → compare (→ repair) in one call")
+    def investigate(case: CaseName = PathParam(..., description="a real failed run picked from the recordings"),
+                    repair: bool = Query(False, description="also ask GenAI for fixes and test each (uses the big model; slower)"),
+                    repeats: int = Query(1, ge=1, le=3, description="attempts per repair (3 tells bad luck from a real bug)"),
+                    run_id: str | None = Query(None, description="optional: investigate this run instead of the case")) -> dict:
+        """Returns a case file: `story` (numbered plain-language lines), the case, the diagnosis, every verify
+        attempt with steps re-run vs re-used, the comparison with the fixed run, and repairs if asked."""
+        from blackbox.api.investigate import case_file
+
+        if run_id is None:
+            info = cases.get("runs", {}).get(case)
+            if info is None:
+                raise HTTPException(404, f"no recorded run for case {case!r} on this machine yet")
+            run_id = info["run_id"]
+        try:
+            out = case_file(load(run_id), db(), diagnose, repeats=repeats, repair=repair)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from None
+        if run_id == cases.get("runs", {}).get(case, {}).get("run_id"):
+            out["case"]["why_this_case"] = cases["runs"][case]["summary"]
+        return out
+
+    dataset_cache: dict = {}
+
+    @app.get("/api/dataset", tags=["Dataset"], summary="0 · Dataset: everything recorded so far")
+    def dataset() -> dict:
+        """Totals, task families, test sets, label sources, planted-mistake health (how often each mistake
+        broke a run), the agent model's report card, and storage. Computed from the database; cached until
+        the number of runs changes."""
+        from blackbox.api.showcase import FAULT_NAMES
+        from blackbox.eval.report import data_summary, health_by_family, iter_traces, model_report_card
+
+        counts = db().counts()
+        if dataset_cache.get("runs") != counts["runs"]:
+            traces = list(iter_traces(db()))
+            dataset_cache.clear()
+            dataset_cache.update({
+                "runs": counts["runs"],
+                "body": {
+                    "summary": data_summary(traces),
+                    "health_by_family": health_by_family(traces),
+                    "model_report_card": model_report_card(traces),
+                },
+            })
+        dedup = 1 - counts["unique_save_points"] / counts["save_points"] if counts["save_points"] else 0.0
+        return {
+            **dataset_cache["body"],
+            "storage": {**counts, "save_point_dedup": round(dedup, 3)},
+            "sources": {
+                "qa": "HotpotQA distractor questions (downloaded); every run generated by our QA agent",
+                "math": "GSM8K problems (downloaded); every run generated by our Math agent",
+                "ops": "Shop tasks generated by script; never used for training (test_new_tasks)",
+                "external": "Who&When failure logs (downloaded); outside test only",
+            },
+            "mistakes": FAULT_NAMES,
+            "kept_out_of_training": ["F7", "F8", "F9", "F10", "all Shop (ops) tasks"],
+        }
+
+    @app.get("/api/runs", tags=["Runs"], summary="1 · List runs")
     def list_runs(
-        family: str | None = None,
+        outcome: Outcome_ | None = Query(None, description="pass or fail"),
+        labelled: bool | None = Query(None, description="only runs whose guilty step is known"),
+        family: Family | None = Query(None, description="qa, math, ops (Shop), external (Who&When)"),
+        split: Split | None = Query(None, description="which test set"),
+        fault: FaultType | None = Query(None),
         task_id: str | None = None,
-        outcome: str | None = Query(None, pattern="^(pass|fail)$"),
-        split: str | None = None,
-        fault: str | None = None,
-        parent: str | None = None,
-        labelled: bool | None = None,
-        limit: int = Query(50, le=500),
+        parent: str | None = Query(None, description="forks of this run"),
+        limit: int = Query(20, le=500),
         offset: int = 0,
     ) -> dict:
         runs = db().list_runs(
             task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
-            has_label=labelled,
-            success=None if outcome is None else outcome == "pass", limit=limit, offset=offset,
+            has_label=labelled, success=None if outcome is None else outcome == "pass", limit=limit, offset=offset,
         )
         return {"runs": [r.model_dump(mode="json") for r in runs], "limit": limit, "offset": offset}
 
-    @app.get("/api/runs/{run_id}", tags=["Runs"])
-    def get_run(run_id: str) -> dict:
+    @app.get("/api/runs/{run_id}", tags=["Runs"], summary="2 · Open a run (steps + who-used-what links)")
+    def get_run(run_id: str = PathParam(..., openapi_examples=any_run or None)) -> dict:
         tr = load(run_id)
         return {"run": tr.run.model_dump(mode="json"), "steps": [_step_summary(s) for s in tr.steps],
                 "edges": _edges(tr.steps)}
 
-    @app.get("/api/runs/{run_id}/steps/{idx}", tags=["Runs"])
-    def get_step(run_id: str, idx: int) -> dict:
+    @app.get("/api/runs/{run_id}/steps/{idx}", tags=["Runs"], summary="One step with its save-point")
+    def get_step(run_id: str = PathParam(..., openapi_examples=any_run or None),
+                 idx: int = PathParam(..., ge=0, examples=[0])) -> dict:
         tr = load(run_id)
         if not 0 <= idx < len(tr.steps):
             raise HTTPException(404, f"run {run_id} has no step {idx}")
@@ -183,15 +252,43 @@ def create_app(store: Store | None = None) -> FastAPI:
             state = db().get_blob(step.state_hash_after)
         return {"step": step.model_dump(mode="json"), "state_after": state}
 
-    @app.post("/api/runs/{run_id}/replay", tags=["Experiments"])
-    def replay(run_id: str) -> dict:
-        child = replay_trace(load(run_id))
-        if child.run.status == "crashed":
-            raise HTTPException(500, child.run.error)
-        return {"run": child.run.model_dump(mode="json"), "savings": savings(child)}
+    @app.get("/api/runs/{run_id}/diagnosis", tags=["Diagnosis"], summary="3 · Diagnose: rank the steps of a failed run")
+    def get_diagnosis(run_id: str = PathParam(..., openapi_examples=failed or None)) -> dict:
+        trace = load(run_id)
+        out = diagnose(trace)
+        if trace.run.label is not None and trace.run.label.root_cause_step is not None:
+            g = trace.run.label.root_cause_step
+            out["known_guilty_step"] = g
+            out["guilty_in_top3"] = g in out.get("suspects", [])[:3]
+        return out
 
-    @app.post("/api/runs/{run_id}/fork", tags=["Experiments"])
-    def fork(run_id: str, body: ForkRequest) -> dict:
+    @app.post("/api/runs/{run_id}/verify", tags=["Experiments"],
+              summary="4 · Verify: prove the cause by re-running with one suspect repaired")
+    def start_verify(run_id: str = PathParam(..., openapi_examples=failed or None),
+                     body: VerifyRequest = Body(..., openapi_examples=verify_bodies)) -> dict:
+        from blackbox.replay.verify import verify
+
+        trace = load(run_id)
+        if trace.run.outcome is None or trace.run.outcome.success:
+            raise HTTPException(400, "verify needs a finished, failed run")
+        suspects = body.suspects or diagnose(trace)["suspects"]
+        job = jobs.start("verify", lambda j: verify(trace, suspects, store=db(), repeats=body.repeats,
+                                                     on_event=j.emit))
+        return {"job_id": job.job_id, "suspects": suspects,
+                "next": f"GET /api/jobs/{job.job_id} for the result, or /api/jobs/{job.job_id}/events to stream it"}
+
+    @app.get("/api/jobs/{job_id}", tags=["Jobs"], summary="5 · Job result (paste the job_id from Verify / Repair / Advise)")
+    def job_status(job_id: str) -> dict:
+        job = jobs.get(job_id)
+        if job is None:
+            raise HTTPException(404, f"no job {job_id}")
+        return {"job_id": job.job_id, "kind": job.kind, "finished": job.finished, "n_events": len(job.events),
+                "events": job.events[-30:], "result": job.result}
+
+    @app.post("/api/runs/{run_id}/fork", tags=["Experiments"],
+              summary="6 · Fork: change one step and re-run only what it affects")
+    def fork(run_id: str = PathParam(..., openapi_examples=fork_run_ids or any_run or None),
+             body: ForkRequest = Body(..., openapi_examples=body_examples(fork_bodies) or None)) -> dict:
         parent = load(run_id)
         try:
             child = fork_trace(parent, body.step_idx, body.change, store=db())
@@ -203,12 +300,44 @@ def create_app(store: Store | None = None) -> FastAPI:
                 "savings": savings(child),
                 "outcome": child.run.outcome.model_dump(mode="json") if child.run.outcome else None}
 
-    @app.get("/api/runs/{run_id}/diagnosis", tags=["Diagnosis"])
-    def get_diagnosis(run_id: str) -> dict:
-        return diagnose(load(run_id))
+    @app.get("/api/compare", tags=["Runs"], summary="7 · Compare two runs step by step")
+    def compare(a: str = Query(..., openapi_examples=cmp_a or None),
+                b: str = Query(..., openapi_examples=cmp_b or None)) -> dict:
+        return compare_traces(load(a), load(b))
 
-    @app.post("/api/runs", tags=["Experiments"])
-    def start_run(body: LiveRunRequest) -> dict:
+    @app.post("/api/runs/{run_id}/replay", tags=["Experiments"], summary="8 · Replay from the recording (0 model calls)")
+    def replay(run_id: str = PathParam(..., openapi_examples=any_run or None)) -> dict:
+        child = replay_trace(load(run_id))
+        if child.run.status == "crashed":
+            raise HTTPException(500, child.run.error)
+        return {"run": child.run.model_dump(mode="json"), "savings": savings(child),
+                "model_calls_made": child.run.stats.get("n_llm_calls")}
+
+    @app.post("/api/runs/{run_id}/repair", tags=["Experiments"],
+              summary="9 · Repair: GenAI fixes for a step, each tested by a fork")
+    def start_repair(run_id: str = PathParam(..., openapi_examples=failed or None),
+                     body: RepairRequest = Body(..., openapi_examples=guilty_bodies or None)) -> dict:
+        from blackbox.replay.repair import repair
+
+        trace = load(run_id)
+        job = jobs.start("repair", lambda j: repair(trace, body.step_idx, store=db(), rounds=body.rounds,
+                                                     evidence=body.evidence, on_event=j.emit))
+        return {"job_id": job.job_id, "next": f"GET /api/jobs/{job.job_id}"}
+
+    @app.post("/api/runs/{run_id}/advise", tags=["Experiments"],
+              summary="10 · Cheaper-model advisor (on a passing run)")
+    def start_advise(run_id: str = PathParam(..., openapi_examples=passing or None),
+                     cheaper_model: Cheaper = Query("agent-local")) -> dict:
+        from blackbox.replay.advisor import advise
+
+        trace = load(run_id)
+        if trace.run.outcome is None or not trace.run.outcome.success:
+            raise HTTPException(400, "the advisor needs a passing run")
+        job = jobs.start("advise", lambda j: advise(trace, cheaper_model, store=db(), on_event=j.emit))
+        return {"job_id": job.job_id, "next": f"GET /api/jobs/{job.job_id}"}
+
+    @app.post("/api/runs", tags=["Experiments"], summary="11 · Live run: a fresh task, recorded as it happens")
+    def start_run(body: LiveRunRequest = Body(..., openapi_examples=live or None)) -> dict:
         try:
             agent = get_agent(body.agent)
         except KeyError as exc:
@@ -238,62 +367,24 @@ def create_app(store: Store | None = None) -> FastAPI:
 
         job = jobs.start("run", work)
         run_jobs[run_id] = job.job_id
-        return {"run_id": run_id, "job_id": job.job_id}
+        return {"run_id": run_id, "job_id": job.job_id,
+                "next": f"GET /api/jobs/{job.job_id} (or stream /api/runs/{run_id}/events), then open the run"}
 
-    @app.get("/api/runs/{run_id}/events", tags=["Jobs"])
+    @app.get("/api/runs/{run_id}/events", tags=["Jobs"], summary="Stream a live run's steps (server-sent events)")
     def run_events(run_id: str):
         job = jobs.get(run_jobs.get(run_id, ""))
         if job is None:
             raise HTTPException(404, f"no live job for run {run_id}")
         return _sse(job)
 
-    @app.post("/api/runs/{run_id}/verify", tags=["Experiments"])
-    def start_verify(run_id: str, body: VerifyRequest) -> dict:
-        from blackbox.replay.verify import verify
-
-        trace = load(run_id)
-        if trace.run.outcome is None or trace.run.outcome.success:
-            raise HTTPException(400, "verify needs a finished, failed run")
-        suspects = body.suspects or diagnose(trace)["suspects"]
-        job = jobs.start("verify", lambda j: verify(trace, suspects, store=db(), repeats=body.repeats,
-                                                     on_event=j.emit))
-        return {"job_id": job.job_id, "suspects": suspects}
-
-    @app.post("/api/runs/{run_id}/repair", tags=["Experiments"])
-    def start_repair(run_id: str, body: RepairRequest) -> dict:
-        from blackbox.replay.repair import repair
-
-        trace = load(run_id)
-        job = jobs.start("repair", lambda j: repair(trace, body.step_idx, store=db(), rounds=body.rounds,
-                                                     evidence=body.evidence, on_event=j.emit))
-        return {"job_id": job.job_id}
-
-    @app.post("/api/runs/{run_id}/advise", tags=["Experiments"])
-    def start_advise(run_id: str, cheaper_model: str = "agent-local") -> dict:
-        from blackbox.replay.advisor import advise
-
-        trace = load(run_id)
-        if trace.run.outcome is None or not trace.run.outcome.success:
-            raise HTTPException(400, "the advisor needs a passing run")
-        job = jobs.start("advise", lambda j: advise(trace, cheaper_model, store=db(), on_event=j.emit))
-        return {"job_id": job.job_id}
-
-    @app.get("/api/jobs/{job_id}/events", tags=["Jobs"])
+    @app.get("/api/jobs/{job_id}/events", tags=["Jobs"], summary="Stream a job's events (server-sent events)")
     def job_events(job_id: str):
         job = jobs.get(job_id)
         if job is None:
             raise HTTPException(404, f"no job {job_id}")
         return _sse(job)
 
-    @app.get("/api/jobs/{job_id}", tags=["Jobs"])
-    def job_status(job_id: str) -> dict:
-        job = jobs.get(job_id)
-        if job is None:
-            raise HTTPException(404, f"no job {job_id}")
-        return {"job_id": job.job_id, "kind": job.kind, "finished": job.finished, "n_events": len(job.events),
-                "result": job.result}
-
-    @app.get("/api/status", tags=["Status"])
+    @app.get("/api/status", tags=["Status"], summary="Live status: queue, jobs, GPU, data, model results")
     def status() -> dict:
         """Queue, running jobs, GPU/Ollama, logs, data totals, model metrics and the latest eval report."""
         from blackbox.status import as_json
@@ -304,9 +395,62 @@ def create_app(store: Store | None = None) -> FastAPI:
     def inspector():
         return FileResponse(Path(__file__).parent / "static" / "inspector.html", media_type="text/html")
 
-    @app.get("/api/compare", tags=["Runs"])
-    def compare(a: str, b: str) -> dict:
-        return compare_traces(load(a), load(b))
+
+def create_app(store: Store | None = None, examples: bool | None = None) -> FastAPI:
+    app = FastAPI(
+        title="Black Box",
+        version="0.1.0",
+        summary="A flight recorder for AI agents.",
+        description=(
+            "Record every step of an agent run with a save-point, name the steps most likely to have caused a "
+            "failure, **prove** the cause by re-running with only that step repaired (re-running only what the "
+            "repair affects), and test GenAI fixes the same way.\n\n"
+            "* **Runs**: browse recorded runs and their steps (with save-points and who-used-what links).\n"
+            "* **Diagnosis**: the trained model's ranking of a failed run's steps.\n"
+            "* **Experiments**: replay, fork, verify, repair, cheaper-model advice (long jobs stream events).\n"
+            "* **Status**: what is running on the recording machine right now.\n\n"
+            "Inspector page: [/](/). Every number comes from recorded runs; nothing is filled in."
+        ),
+        openapi_tags=[
+            {"name": "Investigate", "description": "The whole investigation of one failed run in one call."},
+            {"name": "Dataset", "description": "Everything recorded: tasks, test sets, planted mistakes, health."},
+            {"name": "Runs", "description": "Recorded runs, steps, save-points, comparison."},
+            {"name": "Diagnosis", "description": "Which step most likely caused a failure."},
+            {"name": "Experiments", "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."},
+            {"name": "Jobs", "description": "Server-sent event streams and results of background jobs."},
+            {"name": "Status", "description": "Machine, queue, data and model state."},
+        ],
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.state.store = store
+    jobs = JobManager()
+    run_jobs: dict[str, str] = {}  # run_id -> job_id, for /api/runs/{id}/events
+
+    def db() -> Store:
+        if app.state.store is None:
+            app.state.store = Store()
+        return app.state.store
+
+    def load(run_id: str) -> Trace:
+        try:
+            return db().load_trace(run_id)
+        except KeyError:
+            raise HTTPException(404, f"no run {run_id!r}") from None
+
+    cases: dict = {}
+    if examples if examples is not None else store is None:
+        try:
+            from blackbox.api.showcase import load_or_build
+
+            cases = load_or_build(db())
+        except Exception as exc:  # noqa: BLE001 - the API works without demo examples
+            print(f"showcase examples unavailable: {type(exc).__name__}: {exc}")
+    build_routes(app, db, load, jobs, run_jobs, cases)
 
     return app
 

@@ -86,7 +86,7 @@ def cmd_ui(args) -> int:
     from blackbox.api.main import create_app
 
     print(f"Black Box on http://{args.host}:{args.port}  (data: {args.data})")
-    uvicorn.run(create_app(Store(args.data)), host=args.host, port=args.port)
+    uvicorn.run(create_app(Store(args.data), examples=True), host=args.host, port=args.port)
     return 0
 
 

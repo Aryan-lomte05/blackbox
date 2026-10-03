@@ -99,10 +99,14 @@ def verify(
             per["strategies"].append({"strategy": name, "forked_at": at, "flipped": flips,
                                       "attempts": len(attempts), "runs": attempts,
                                       "change": change.model_dump(mode="json") if change else None})
-        repair = [s for s in per["strategies"] if s["strategy"] != "rerun"]
         rerun = next(s for s in per["strategies"] if s["strategy"] == "rerun")
+        # "Bad luck" only exists for model calls, which can answer differently each time. A tool or
+        # search step is a deterministic function: if re-running it fixes the run, its recorded output
+        # was wrong (a planted mistake or a transient tool failure), so the rerun counts as a repair.
+        deterministic_step = trace.steps[idx].kind in ("tool", "retrieval")
+        repair = [s for s in per["strategies"] if s["strategy"] != "rerun" or deterministic_step]
         best = max(repair, key=lambda s: s["flipped"] / s["attempts"], default=None)
-        per["flaky"] = rerun["flipped"] * 2 >= rerun["attempts"] and rerun["flipped"] > 0
+        per["flaky"] = (not deterministic_step) and rerun["flipped"] * 2 >= rerun["attempts"] and rerun["flipped"] > 0
         per["causal_effect"] = round(best["flipped"] / best["attempts"], 3) if best else 0.0
         per["verified"] = bool(best) and per["causal_effect"] >= 0.5 and not per["flaky"]
         # Credit the step where the working fix was applied: a tool step whose
