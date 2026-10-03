@@ -107,6 +107,30 @@ def test_emailjs_sends_the_rendered_email_with_the_private_key(monkeypatch, sent
     assert "<table" in params["html_message"] and "Validate the quantity" in params["text_message"]
 
 
+def test_every_request_identifies_itself(monkeypatch, sent):
+    """Cloudflare-fronted APIs (EmailJS) reject Python's default User-Agent with "error code: 1010"."""
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.test/abc")
+    SlackWebhook().send(_incident())
+    agent = {k.lower(): v for k, v in sent[0]["headers"].items()}["user-agent"]
+    assert agent.startswith("BlackBox-Guardian/")
+
+
+def test_a_refusal_carries_the_services_reason(monkeypatch):
+    import urllib.error
+
+    from blackbox.guardian.channels import ChannelError, EmailJSEmail
+
+    def refuse(req, timeout=None):
+        raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {},
+                                     io.BytesIO(b"API access from non-browser environments is currently disabled."))
+
+    monkeypatch.setattr(channels.urllib.request, "urlopen", refuse)
+    for k in ("EMAILJS_SERVICE_ID", "EMAILJS_TEMPLATE_ID", "EMAILJS_PUBLIC_KEY", "EMAILJS_PRIVATE_KEY", "ALERT_EMAIL_TO"):
+        monkeypatch.setenv(k, "x")
+    with pytest.raises(ChannelError, match="403: API access from non-browser environments"):
+        EmailJSEmail().send(_incident())
+
+
 def test_phone_calls_are_opt_in(monkeypatch):
     from blackbox.guardian.channels import default_channels
 
