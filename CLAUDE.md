@@ -47,14 +47,14 @@ data/         gitignored: DB, save-points, shards, reports
 
 ## Commands
 ```bash
-py -3 -m pip install -r requirements.txt
+py -3 -m pip install -e ".[all,dev]"              # installs the package + `blackbox` CLI
 cp .env.example .env                                   # then fill keys
-py -3 -m blackbox.recorder.providers verify            # every models.yaml tag exists
+blackbox models                                        # every models.yaml tag exists
 py -3 -m blackbox.data.farm --family qa --n 50 --model agent-small   # generate runs → shard
 py -3 -m blackbox.data.shards merge                    # shards → data/blackbox.db
 py -3 -m blackbox.diagnosis.train
 py -3 -m blackbox.eval.report
-py -3 -m uvicorn blackbox.api.main:app --port 8000 --reload
+blackbox ui                                            # API on :8000 (dev: py -3 -m uvicorn blackbox.api.main:app --reload)
 cd web && npm install && npm run dev                   # http://localhost:5173
 py -3 -m pytest tests/test_<area>.py -q                # run the tests that touch your change
 ```

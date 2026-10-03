@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-blackbox"            # PyPI name (TBC at kickoff); import name: blackbox
+version = "0.1.0"
+description = "A flight recorder for AI agents: record, warn live, diagnose, prove and fix failing steps."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "pydantic>=2.5",
+  "pyyaml>=6",
+  "python-dotenv>=1",
+  "openai>=1.40",
+]
+
+[project.optional-dependencies]
+checker = ["laya", "system-one-adapter[openai]"]   # step-checker cascade (Laya local -> Jev -> LLM)
+jev = ["typesafe-sdk"]
+ml = ["lightgbm>=4", "scikit-learn>=1.4", "shap>=0.45", "sentence-transformers>=3", "numpy"]
+ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "sse-starlette>=2"]
+agents = ["rank-bm25>=0.2", "datasets>=2.18"]       # our test agents + task loaders
+dev = ["pytest>=8", "ruff>=0.5"]
+all = ["agent-blackbox[checker,ml,ui,agents]"]
+
+[project.scripts]
+blackbox = "blackbox.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["blackbox*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: hits a real provider; needs keys (deselect with -m 'not live')"]
+
+[tool.ruff]
+line-length = 120
