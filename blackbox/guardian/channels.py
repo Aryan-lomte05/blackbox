@@ -182,4 +182,11 @@ class TwilioVoiceCall(Channel):
 
 
 def default_channels() -> list[Channel]:
+    # Channel settings live in .env; load it here so every path (API, trader bot, CLI) sees them.
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(override=False)
+    except ImportError:
+        pass
     return [Outbox(), SMTPEmail(), MailgunEmail(), TwilioWhatsApp(), SlackWebhook(), TelegramBot(), TwilioVoiceCall()]
