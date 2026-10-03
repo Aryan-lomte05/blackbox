@@ -27,7 +27,7 @@ from torch import nn
 
 from blackbox.core.schema import Trace
 from blackbox.core.store import DEFAULT_DIR, Store
-from blackbox.diagnosis.graph_data import EmbeddingCache, GraphExample, build, feature_dim
+from blackbox.diagnosis.graph_data import ERROR_COL, EmbeddingCache, GraphExample, build, feature_dim
 
 MODEL_DIR = DEFAULT_DIR / "models"
 MODEL_PATH = MODEL_DIR / "gnn.pt"
@@ -45,6 +45,7 @@ class Config:
     text_dim: int = 64          # projection of the 384-d sentence embeddings
     graph_features: bool = True  # False zeroes the features computed from data-flow links (ablation)
     verified_weight: float = 1.0  # loss weight of real failures (cause proven by experiment) vs planted ones
+    n_features: int = 34          # how many hand features the model reads (34 = before checker features)
     edge_types: tuple[int, ...] = (0, 1, 2, 3)  # () = no message passing (an MLP)
     aux_weight: float = 0.3
     lr: float = 2e-3
@@ -62,7 +63,7 @@ class RelGNN(nn.Module):
         self.cfg = cfg
         text_in = 2 * cfg.text_dim + 1 if cfg.use_text else 0
         self.text = nn.Linear(384, cfg.text_dim) if cfg.use_text else None
-        self.inp = nn.Sequential(nn.Linear(feature_dim() + text_in, cfg.hidden), nn.GELU(), nn.Dropout(cfg.dropout))
+        self.inp = nn.Sequential(nn.Linear(cfg.n_features + text_in, cfg.hidden), nn.GELU(), nn.Dropout(cfg.dropout))
         self.rel = nn.ModuleList([nn.ModuleList([nn.Linear(cfg.hidden, cfg.hidden, bias=False)
                                                  for _ in cfg.edge_types]) for _ in range(cfg.layers)])
         self.gru = nn.ModuleList([nn.GRUCell(cfg.hidden, cfg.hidden) for _ in range(cfg.layers)])
@@ -74,7 +75,7 @@ class RelGNN(nn.Module):
 
     def forward(self, x, req, out, adj, mask):
         """x [B,N,F], req/out [B,N,384], adj [B,R,N,N] (row-normalised), mask [B,N] real nodes."""
-        parts = [x]
+        parts = [x[..., : self.cfg.n_features]]
         if self.text is not None:
             r, o = self.text(req), self.text(out)
             cos = torch.nn.functional.cosine_similarity(req, out, dim=-1).unsqueeze(-1)
@@ -301,7 +302,7 @@ def baseline_probs(p: Prepared, kind: str) -> np.ndarray:
     elif kind == "first_model_call":  # blame the agent's opening decision (often the plan)
         score = np.where(llm & p.ex.candidates, 1000 - pos, -pos)
     elif kind == "fallback_order":  # the API's fallback: errors first, then model calls latest-first
-        err = p.ex.x[:, feature_dim() - 6] > 0
+        err = p.ex.x[:, ERROR_COL] > 0
         score = np.where(err, 1e6, 0) + np.where(llm, 1e3, 0) + pos
     else:
         raise ValueError(kind)
@@ -316,11 +317,22 @@ def evaluate(models, items: list[Prepared], cfg: Config, device) -> dict:
     by_split: dict[str, list[Prepared]] = defaultdict(list)
     for p in items:
         if p.ex.root is not None:
-            by_split[p.ex.split or "none"].append(p)
+            if p.ex.label_source != "verified":  # planted-mistake sets stay planted-only
+                by_split[p.ex.split or "none"].append(p)
             # Real failures (nothing planted, cause proven by experiment) on tasks never used to train
             # or choose the model: reported on their own so planted and real results never mix.
             if p.ex.label_source == "verified" and p.ex.split not in ("train", "val"):
                 by_split["test_natural"].append(p)
+    # U10: suspect-set size covering the true cause 90% of the time, calibrated on `calib` only
+    calib = by_split.get("calib", [])
+    if calib:
+        from blackbox.diagnosis.evidence import calibrate, save_calibration
+
+        cprobs = predict_probs(models, calib, cfg, device)
+        ranks = [_ranks(with_first_decision(pr, p), p.ex.root) for pr, p in zip(cprobs, calib)]
+        info = calibrate(ranks)
+        report["suspect_set_90"] = info
+        save_calibration(info)
     for split in EVAL_SPLITS:
         lab = by_split.get(split, [])
         if not lab:
@@ -329,6 +341,11 @@ def evaluate(models, items: list[Prepared], cfg: Config, device) -> dict:
         report["splits"][split] = score_rankings(lab, probs)
         report.setdefault("policy_model_plus_first_decision", {})[split] = score_rankings(
             lab, [with_first_decision(pr, p) for pr, p in zip(probs, lab)])
+        if report.get("suspect_set_90"):
+            k = report["suspect_set_90"]["k"]
+            hits = [_ranks(with_first_decision(pr, p), p.ex.root) <= k for pr, p in zip(probs, lab)]
+            report.setdefault("suspect_set_90_coverage", {})[split] = {"k": k, "n": len(lab),
+                                                                       "coverage": round(float(np.mean(hits)), 3)}
         report["baselines"][split] = {
             kind: score_rankings(lab, [baseline_probs(p, kind) for p in lab])
             for kind in ("last_model_call", "first_model_call", "fallback_order")
@@ -384,7 +401,7 @@ def train_cmd(args) -> int:
     def fit(cfg: Config) -> list[RelGNN]:
         return [train_one(train, val, cfg, seed, device) for seed in range(cfg.seeds)]
 
-    cfg = Config(seeds=args.seeds, **VARIANTS[args.variant])
+    cfg = Config(seeds=args.seeds, n_features=feature_dim(), **VARIANTS[args.variant])
     models = fit(cfg)
     metrics = {"config": asdict(cfg), "variant": args.variant, "model": f"gnn@{_config_hash(cfg)}",
                "data": {f"{s}|{'labelled' if lab else 'unlabelled'}": n for (s, lab), n in sorted(split_of.items(), key=str)},
@@ -435,7 +452,7 @@ def cv_cmd(args) -> int:
     names = args.variants.split(",") if args.variants else list(VARIANTS)
     results: dict[str, dict] = {}
     for name in names:
-        cfg = Config(seeds=1, **VARIANTS[name])
+        cfg = Config(seeds=1, n_features=feature_dim(), **VARIANTS[name])
         t1s, t3s, per_fold = [], [], []
         for k in range(args.folds):
             held = [p for p in pool if _fold(p.ex.task_id, args.folds) == k]
@@ -473,6 +490,9 @@ def _print_report(m: dict) -> None:
               f"   first-model-call {b.get('first_model_call', {}).get('top1', float('nan')):.3f}")
     for split, r in (m.get("policy_model_plus_first_decision") or {}).items():
         print(f"  policy model+first decision  {split:16} top1 {r['top1']:.3f}  top3 {r['top3']:.3f}")
+    if m.get("suspect_set_90"):
+        print(f"90% suspect set: k={m['suspect_set_90']['k']} (calib n={m['suspect_set_90']['n_calib']}); coverage: "
+              + ", ".join(f"{k} {v['coverage']:.2f} (n={v['n']})" for k, v in m.get("suspect_set_90_coverage", {}).items()))
     if m.get("by_fault"):
         print("test_known by mistake type: " + ", ".join(f"{k} {v['top1']:.2f} (n={v['n']})" for k, v in m["by_fault"].items()))
     for name, rep in (m.get("ablations") or {}).items():
@@ -513,9 +533,15 @@ def rank(trace: Trace, path: Path = MODEL_PATH, top_k: int = 3) -> dict:
     # failures of weak models usually start at the opening plan and planted ones rarely do.
     policy = [int(i) for i in np.argsort(-with_first_decision(probs, prepared[0]), kind="stable")
               if prepared[0].ex.candidates[i]]
+    from blackbox.diagnosis.evidence import sentences, suspect_set_size, trail
+
+    cal = suspect_set_size()
+    k90 = cal["k"] if cal else None
+    evidence = [{"idx": i, "sentences": sentences(trace, i), "trail": trail(trace, i)} for i in policy[:top_k]]
     return {"suspects": policy[:top_k], "model": name, "policy": "model top 2 + first decision",
+            "suspect_set_90": ({"steps": policy[:k90], **cal} if cal else None), "evidence_sentences": evidence,
             "scores": [{"idx": i, "p": round(float(probs[i]), 4), "rank": r + 1} for r, i in enumerate(order)],
-            "evidence": []}
+            "evidence": evidence}
 
 
 def main(argv: list[str] | None = None) -> int:

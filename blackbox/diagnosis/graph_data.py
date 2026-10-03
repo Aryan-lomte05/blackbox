@@ -166,6 +166,7 @@ def build(trace: Trace) -> GraphExample:
             len(unsupported) / max(1, len(produced)),            # share of facts from nowhere
             math.log1p(len(unsupported)),
             len(ow & final_words) / max(1, len(ow | final_words)),  # overlap with the final answer
+            *_checker(s),                                        # appended last: older models read the first 34
         ], np.float32)]))
 
     edges = []
@@ -200,12 +201,27 @@ def build(trace: Trace) -> GraphExample:
     )
 
 
+def _checker(step: Step) -> tuple[float, float, float]:
+    """Live-checker answers saved on the step (scripts/backfill_monitor.py): checked?, consistent, on track.
+    Read from the step's content only, so a replayed step has the same values (leak-safe)."""
+    m = step.monitor if isinstance(step.monitor, dict) else None
+    if not m or not m.get("tier"):
+        return (0.0, 0.0, 0.0)
+    c = (m.get("consistent") or {}).get("prob")
+    o = (m.get("on_track") or {}).get("prob")
+    return (1.0, float(c) if c is not None else 0.0, float(o) if o is not None else 0.0)
+
+
 def root_ok(idx: int, candidates: np.ndarray) -> bool:
     return 0 <= idx < len(candidates) and bool(candidates[idx])
 
 
+LEGACY_FEATURES = len(KINDS) + NODE_BUCKETS + 13   # models trained before checker features (34)
+ERROR_COL = len(KINDS) + NODE_BUCKETS + 7          # "the step raised an error"
+
+
 def feature_dim() -> int:
-    return len(KINDS) + NODE_BUCKETS + 13
+    return LEGACY_FEATURES + 3
 
 
 # ---- text embeddings (cached on disk by fingerprint) ------------------------------------
