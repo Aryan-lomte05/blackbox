@@ -57,7 +57,7 @@ def test_notifications_get_no_reply_and_unknown_methods_an_error():
 # ---- registry --------------------------------------------------------------------------------
 def test_every_tool_has_a_category_a_description_and_an_object_schema():
     tools = registry.all_tools()
-    assert len(tools) >= 25
+    assert len(tools) >= 27
     for t in tools:
         assert t.category in CATEGORIES and len(t.description) > 20
         assert t.input_schema["type"] == "object"
@@ -87,6 +87,7 @@ def test_experiment_tools(recorded):
     assert "0 model calls" in call("replay", run_id=a.run.run_id)
     out = call("fork", run_id=a.run.run_id, step_idx=3, new_output_json='{"text": "Tokyo"}')
     assert out.startswith("New run") and "FAIL" in out
+    assert "Crash test of toy_agent" in call("crash_test", run_id=a.run.run_id)
 
 
 def test_a_missing_run_is_a_tool_error_not_a_crash(recorded):
@@ -152,4 +153,4 @@ def test_stdio_transport():
                           timeout=120, check=False, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     replies = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
     assert [r.get("id") for r in replies] == [1, 2, None]  # the notification gets no reply
-    assert len(replies[1]["result"]["tools"]) >= 25 and replies[2]["error"]["code"] == -32700
+    assert len(replies[1]["result"]["tools"]) >= 27 and replies[2]["error"]["code"] == -32700

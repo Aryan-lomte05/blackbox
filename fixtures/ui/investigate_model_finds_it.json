@@ -4,8 +4,8 @@
     "2. We planted F3 (tool returned nothing) at step 4, so the true guilty step is 4.",
     "3. The diagnosis model named steps [4, 12, 0] as the top suspects (gnn). The true guilty step is ranked first.",
     "4. Verify re-ran the run with one suspect repaired at a time and PROVED step 4 is the cause. That matches the known guilty step.",
-    "5. Those experiments re-ran 13 steps in total and re-used 41 from the recording.",
-    "6. Fixed run 3d4dc400de8e4980 answers 14 (first difference at aligned step 4; outcome flipped: True)."
+    "5. Those experiments re-ran 9 steps in total and re-used 32 from the recording.",
+    "6. Fixed run a98f2148c8e24bd2 answers 14 (first difference at aligned step 4; outcome flipped: True)."
   ],
   "case": {
     "run_id": "37452fc329e1498f",
@@ -76,17 +76,6 @@
         "causal_effect": 1.0,
         "attempts": [
           {
-            "repair": "twin",
-            "at_step": 4,
-            "passed": "1/1",
-            "re_ran": [
-              1
-            ],
-            "re_used": [
-              13
-            ]
-          },
-          {
             "repair": "rerun",
             "at_step": 4,
             "passed": "1/1",
@@ -129,20 +118,20 @@
             "at_step": 0,
             "passed": "0/1",
             "re_ran": [
-              10
+              7
             ],
             "re_used": [
-              3
+              7
             ]
           }
         ]
       }
     ],
-    "steps_re_run_total": 13,
-    "steps_re_used_total": 41
+    "steps_re_run_total": 9,
+    "steps_re_used_total": 32
   },
   "comparison": {
-    "fixed_run_id": "3d4dc400de8e4980",
+    "fixed_run_id": "a98f2148c8e24bd2",
     "fixed_answer": "14",
     "first_difference_at": 4,
     "pairs_changed": 10,
@@ -299,5 +288,5 @@
       "output": "\"9\""
     }
   ],
-  "seconds": 12.4
+  "seconds": 14.8
 }

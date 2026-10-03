@@ -15,7 +15,7 @@ Model Context Protocol `2025-06-18` over stdio (newline-delimited JSON-RPC 2.0).
 
 ## Capabilities
 
-### Tools (25)
+### Tools (27)
 
 | Category | Tool | What it does | Cost |
 |---|---|---|---|
@@ -28,6 +28,7 @@ Model Context Protocol `2025-06-18` over stdio (newline-delimited JSON-RPC 2.0).
 | diagnosis | `verify` | prove the cause by repairing one suspect at a time | 10-60 s |
 | diagnosis | `causal_report` | necessary vs sufficient, joint causes, recovery paths, blast radius | 10-60 s |
 | diagnosis | `investigate` | diagnose → verify → compare, as a story | 10-60 s |
+| diagnosis | `similar_failures` | seen this before? fingerprint, look-alike failures and their causes, NOVEL, approved fixes | instant |
 | diagnosis | `time_travel` | stand inside step k: what it saw, remembered, did, and affected | instant |
 | diagnosis | `blame_map` | Mermaid diagram: guilty step, contamination trail, suspects | seconds |
 | experiments | `replay` | re-run from the recording, 0 model calls | instant |
@@ -35,6 +36,7 @@ Model Context Protocol `2025-06-18` over stdio (newline-delimited JSON-RPC 2.0).
 | experiments | `repair` | GenAI fixes for a step, each tested by replay | minutes |
 | experiments | `fleet_fix` | one failure → one general rule → tested on similar failures + passing runs → APPROVE / BLOCK | ~40 s per run |
 | experiments | `time_machine` | re-run recorded history under a new rule or model | ~40 s per run |
+| experiments | `crash_test` | red team a passing run: every known mistake planted, graded, 1-5 stars; failures become labelled data | ~5 s per mistake |
 | experiments | `cheaper_model` | which model calls can move to a cheaper model | minutes |
 | experiments | `live_lab` | type a question; plant a mistake live; 14-stage investigation | 1-5 min |
 | guardian | `list_incidents`, `incident` | incidents explained for the agent's owner | instant |

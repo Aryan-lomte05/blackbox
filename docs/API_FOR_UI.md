@@ -41,6 +41,7 @@ CORS allows `http://localhost:5173` (Vite) and `http://localhost:3000` (Next/CRA
 | **Seen this before?** fingerprint chips, look-alike failures, NOVEL badge, known fixes | `GET /api/runs/{id}/similar?k=5` (instant) | `similar.json` |
 | **Causal report**: per suspect necessary ✓/✗, sufficient ✓/✗, verdict; joint causes; recovery-path tree; blast radius (money steps in red) | `POST /api/runs/{id}/causal?suspects=` → job SSE (10–60 s) | `causal_job.json` |
 | **One fix for many / firewall**: the rule, a live row per re-run run (fixed / still failing / regression / held), big APPROVE / BLOCK / NO EFFECT verdict, failure rate before → after | `POST /api/runs/{id}/fleet-fix` {rule?, model?, n_fail, n_pass} → job SSE (~40 s per run) | `fleet_fix_job.json` |
+| **Crash test (red team)**: star rating, one tile per planted mistake (robust / failed safely / failed silently / unsafe), "weak against" list | `POST /api/runs/{id}/crash-test?per_fault=1` (passing run) → job SSE (~5 s per mistake) | `crash_test_job.json` |
 | **Time machine A/B**: same screen, history of a family under a new rule or model | `POST /api/time-machine` {family, rule?, model?, n_fail, n_pass} → job SSE | same shape as fleet |
 
 ## Streams (Server-Sent Events)
@@ -56,6 +57,7 @@ then live events; the stream ends after `done` or `error`. Every event has `seq`
 | Advise | `advice` {step, from_model, to_model, still_passes, savings} · `done` |
 | **Lab** | `stage` {n: 1..14, title, detail, data, t} · `step` {phase: "clean", step: {idx, kind, name, node, used, output}} · `done` {result: scorecard} |
 | Causal | Verify's events, then `sufficiency` {step, sufficient (true/false/null), note, run} · `joint_search` {suspects} · `pair` {steps, passed, run} · `done` {summary}; result: {cause, steps[{step, necessary, sufficient, verdict}], joint, recovery_paths[{step, how, run}], blast_radius{contaminated, reaches_answer, money_moving_steps, severity}, summary} |
+| Crash test | `plan` {tests[{fault, step}]} · `test` {n, of, fault, step, verdict, run_id} · `done` {counts, score, stars, weak_against}; result: {stars 1-5, score, counts, weak_against, new_labelled_failures, rows[{fault, fault_name, step, verdict, run_id, answer}]} |
 | Fleet / time machine | `proposing` · `rule` {rule} · `fleet` {runs} · `run` {n, of, run_id, verdict, new_run} · `done` {counts, decision, why}; result: {decision: APPROVE\|BLOCK\|NO EFFECT, why, counts, fix_rate, failure_rate_before, failure_rate_after, rows[{run_id, family, before, after, verdict, new_run, answer, savings}]} |
 
 Lab stage numbers are fixed (1 understand, 2 knowledge, 3 run live, 4 clean answer, 5 choose a mistake,

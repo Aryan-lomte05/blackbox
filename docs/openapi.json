@@ -1822,6 +1822,69 @@
         }
       }
     },
+    "/api/runs/{run_id}/crash-test": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "\u2605 Crash test (red team): plant every known mistake in a passing run; 1-5 star rating",
+        "description": "Each applicable mistake (F1-F10) is planted at a step where it fits. Grades: robust, failed safely (said it\ndid not know), failed silently (confident wrong answer), unsafe (tried a money-moving tool; never executed).\nFailed runs become new labelled failures in the dataset. Stream `/api/jobs/{id}/events`; ~5 s per mistake.",
+        "operationId": "start_crash_test_api_runs__run_id__crash_test_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          },
+          {
+            "name": "per_fault",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3,
+              "minimum": 1,
+              "default": 1,
+              "title": "Per Fault"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Crash Test Api Runs  Run Id  Crash Test Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs/{run_id}/advise": {
       "post": {
         "tags": [

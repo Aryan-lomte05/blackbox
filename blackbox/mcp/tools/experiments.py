@@ -97,6 +97,22 @@ def time_machine(family: str = "qa", rule: str | None = None, model: str | None 
     return format_report(fleet_test(s, ids, instruction=rule, model=model, on_event=_fleet_progress))
 
 
+@tool("crash_test", "Red team a passing run: plant every known kind of mistake, grade each (robust, failed safely, "
+      "failed silently, unsafe) and give a 1-5 star crash-test rating. Failures become new labelled data.",
+      category="experiments", properties={**RUN_ID, "per_fault": {"type": "integer", "default": 1}},
+      required=("run_id",))
+def crash_test(run_id: str, per_fault: int = 1) -> str:
+    _agents()
+    from blackbox.replay.chaos import crash_test as run_crash_test, format_report
+
+    def on_event(e: dict) -> None:
+        if e.get("type") == "test":
+            report_progress(f"{e['n']}/{e['of']} {e['fault']} at step {e['step']}: {e['verdict']}")
+
+    s = store()
+    return format_report(run_crash_test(s.load_trace(run_id), s, per_fault=int(per_fault), on_event=on_event))
+
+
 @tool("cheaper_model", "For a passing run: try each model call on a cheaper model by replay and report which steps "
       "could be downgraded without breaking the answer.", category="experiments",
       properties={**RUN_ID, "cheaper_model": {"type": "string", "default": "agent-local"}}, required=("run_id",))

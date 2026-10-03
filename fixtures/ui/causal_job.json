@@ -1,12 +1,12 @@
 {
   "start": {
-    "job_id": "45040d3e36c1",
+    "job_id": "bd3b3a649552",
     "suspects": [
       4,
       12,
       0
     ],
-    "next": "GET /api/jobs/45040d3e36c1/events"
+    "next": "GET /api/jobs/bd3b3a649552/events"
   },
   "events": [
     {
@@ -15,13 +15,13 @@
       "strategy": "twin",
       "attempt": 1,
       "seq": 0,
-      "t": 1791061927.139
+      "t": 1791062543.386
     },
     {
       "type": "result",
       "step": 4,
       "strategy": "twin",
-      "run_id": "c994c7786503491a",
+      "run_id": "017df5cf107d4e8f",
       "passed": true,
       "status": "done",
       "savings": {
@@ -32,7 +32,7 @@
         "seconds_saved": 10.922
       },
       "seq": 1,
-      "t": 1791061927.179
+      "t": 1791062543.428
     },
     {
       "type": "attempt",
@@ -40,13 +40,13 @@
       "strategy": "rerun",
       "attempt": 1,
       "seq": 2,
-      "t": 1791061927.179
+      "t": 1791062543.428
     },
     {
       "type": "result",
       "step": 4,
       "strategy": "rerun",
-      "run_id": "0038e5530da743a0",
+      "run_id": "36d12c41d9974b59",
       "passed": true,
       "status": "done",
       "savings": {
@@ -57,7 +57,7 @@
         "seconds_saved": 10.922
       },
       "seq": 3,
-      "t": 1791061927.227
+      "t": 1791062543.464
     },
     {
       "type": "verdict",
@@ -67,7 +67,7 @@
       "causal_effect": 1.0,
       "flaky": false,
       "seq": 4,
-      "t": 1791061927.227
+      "t": 1791062543.464
     },
     {
       "type": "attempt",
@@ -75,13 +75,13 @@
       "strategy": "rerun",
       "attempt": 1,
       "seq": 5,
-      "t": 1791061927.227
+      "t": 1791062543.464
     },
     {
       "type": "result",
       "step": 12,
       "strategy": "rerun",
-      "run_id": "bfd2e9444ba84123",
+      "run_id": "6c5c8027f75b486a",
       "passed": false,
       "status": "done",
       "savings": {
@@ -92,7 +92,7 @@
         "seconds_saved": 9.55
       },
       "seq": 6,
-      "t": 1791061927.679
+      "t": 1791062543.96
     },
     {
       "type": "verdict",
@@ -102,7 +102,7 @@
       "causal_effect": 0.0,
       "flaky": false,
       "seq": 7,
-      "t": 1791061927.68
+      "t": 1791062543.96
     },
     {
       "type": "attempt",
@@ -110,24 +110,24 @@
       "strategy": "rerun",
       "attempt": 1,
       "seq": 8,
-      "t": 1791061927.716
+      "t": 1791062543.986
     },
     {
       "type": "result",
       "step": 0,
       "strategy": "rerun",
-      "run_id": "07690a6e77644a3e",
+      "run_id": "bbb80208e2ea44fc",
       "passed": false,
-      "status": "done",
+      "status": "crashed",
       "savings": {
         "steps_total": 14,
-        "steps_executed": 10,
-        "steps_reused": 3,
+        "steps_executed": 3,
+        "steps_reused": 2,
         "tokens_saved": 0,
         "seconds_saved": 0.0
       },
       "seq": 9,
-      "t": 1791061934.352
+      "t": 1791062640.725
     },
     {
       "type": "verdict",
@@ -137,27 +137,27 @@
       "causal_effect": 0.0,
       "flaky": false,
       "seq": 10,
-      "t": 1791061934.353
+      "t": 1791062640.726
     },
     {
       "type": "sufficiency",
       "step": 4,
       "sufficient": false,
-      "run": "bc0b36507f1b4144",
+      "run": "fb4cd3e467414e7a",
       "into": "a94b964728bd42f8",
       "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed",
       "seq": 11,
-      "t": 1791061937.668
+      "t": 1791062652.775
     },
     {
       "type": "sufficiency",
       "step": 12,
       "sufficient": true,
-      "run": "fcf46358d347416f",
+      "run": "881e28167d6244d8",
       "into": "a94b964728bd42f8",
       "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed",
       "seq": 12,
-      "t": 1791061937.747
+      "t": 1791062652.89
     },
     {
       "type": "sufficiency",
@@ -165,13 +165,13 @@
       "sufficient": false,
       "note": "the passing run did exactly the same here",
       "seq": 13,
-      "t": 1791061937.778
+      "t": 1791062652.914
     },
     {
       "type": "done",
       "summary": "Step 4 (tool:calculator): contributing cause (needed, not enough alone). Step 12 (llm:agent-local-7b): sufficient but not necessary (the run also fails another way). Step 0 (llm:agent-local-7b): not a cause. 2 verified ways to recover. Blast radius of step 4: 9 of 9 later steps, including the answer (severity high).",
       "seq": 14,
-      "t": 1791061937.778
+      "t": 1791062652.918
     },
     {
       "type": "done",
@@ -187,7 +187,7 @@
             "sufficient": false,
             "sufficiency": {
               "sufficient": false,
-              "run": "bc0b36507f1b4144",
+              "run": "fb4cd3e467414e7a",
               "into": "a94b964728bd42f8",
               "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed"
             },
@@ -202,7 +202,7 @@
             "sufficient": true,
             "sufficiency": {
               "sufficient": true,
-              "run": "fcf46358d347416f",
+              "run": "881e28167d6244d8",
               "into": "a94b964728bd42f8",
               "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed"
             },
@@ -228,19 +228,19 @@
           {
             "step": 4,
             "how": "twin",
-            "run": "c994c7786503491a",
+            "run": "017df5cf107d4e8f",
             "change": {
               "kind": "output",
               "value": {
                 "result": 32
               },
-              "note": "from passing run 1b364ba77f4f4953 step 4"
+              "note": "from passing run a98f2148c8e24bd2 step 4"
             }
           },
           {
             "step": 4,
             "how": "rerun",
-            "run": "0038e5530da743a0",
+            "run": "36d12c41d9974b59",
             "change": null
           }
         ],
@@ -265,7 +265,7 @@
         "summary": "Step 4 (tool:calculator): contributing cause (needed, not enough alone). Step 12 (llm:agent-local-7b): sufficient but not necessary (the run also fails another way). Step 0 (llm:agent-local-7b): not a cause. 2 verified ways to recover. Blast radius of step 4: 9 of 9 later steps, including the answer (severity high)."
       },
       "seq": 15,
-      "t": 1791061937.778
+      "t": 1791062652.919
     }
   ],
   "result": {
@@ -280,7 +280,7 @@
         "sufficient": false,
         "sufficiency": {
           "sufficient": false,
-          "run": "bc0b36507f1b4144",
+          "run": "fb4cd3e467414e7a",
           "into": "a94b964728bd42f8",
           "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed"
         },
@@ -295,7 +295,7 @@
         "sufficient": true,
         "sufficiency": {
           "sufficient": true,
-          "run": "fcf46358d347416f",
+          "run": "881e28167d6244d8",
           "into": "a94b964728bd42f8",
           "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed"
         },
@@ -321,19 +321,19 @@
       {
         "step": 4,
         "how": "twin",
-        "run": "c994c7786503491a",
+        "run": "017df5cf107d4e8f",
         "change": {
           "kind": "output",
           "value": {
             "result": 32
           },
-          "note": "from passing run 1b364ba77f4f4953 step 4"
+          "note": "from passing run a98f2148c8e24bd2 step 4"
         }
       },
       {
         "step": 4,
         "how": "rerun",
-        "run": "0038e5530da743a0",
+        "run": "36d12c41d9974b59",
         "change": null
       }
     ],

@@ -86,6 +86,8 @@ def main() -> int:
             "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about "
                     "the exact entity asked, search again with a more specific query before answering.",
             "n_fail": 2, "n_pass": 1})
+        if "passing_run" in runs:
+            save_job("crash_test", http, f"/api/runs/{runs['passing_run']['run_id']}/crash-test")
 
     Path("docs").mkdir(exist_ok=True)
     Path("docs/openapi.json").write_text(json.dumps(app.openapi(), indent=2), encoding="utf-8")
