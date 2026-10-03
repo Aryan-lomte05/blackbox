@@ -7,6 +7,39 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Radhesh · `radhesh/*` branches
 
+### 4. Evaluation harness (checklist row 10) · `radhesh/eval`
+- **What:**
+  - `eval/metrics.py`: Top-1, Top-3, within ±1 step, MRR, with a bootstrap
+    95% interval on Top-1. Random is scored as an expectation, not a draw.
+  - `eval/baselines.py`: `last_step`, `first_error`.
+  - `eval/llm_judge.py`: the Who&When paper's two prompts (`all_at_once`,
+    `step_by_step`) on any registry model; answers cached in
+    `data/reports/judge_cache.json`. The judge is told the run failed and is
+    not shown the expected answer or the planted mistake. `step_by_step`
+    skips runs longer than 20 steps (one call per step) and those runs are
+    left out of its `n`, not counted as misses.
+  - `data/importers/who_and_when.py`: 181 of 184 records import as
+    `task_family="external"`, split `test_outside`, label source `imported`
+    (3 skipped: their marked step is not a step of the run).
+  - `eval/report.py`: `py -3 -m blackbox.eval.report` writes
+    `data/reports/latest.json` + `latest.md`: guilty-step table per test set
+    and method, Top-1 per planted mistake, data health per family, model
+    report card (X7), and an `absent` section naming every §7 table it could
+    not compute, with the reason.
+  - Learned methods are picked up when present: `diagnosis.predict.diagnose`
+    (Aditya) and `diagnosis.gnn.rank` (if a model file exists).
+- **Verified:** 20 new tests (`tests/test_eval.py`). The report ran on a
+  snapshot of my store: 1,506 runs, 545 labelled failures (364 planted, 181
+  imported). Random Top-1 comes out at 15.1% on `test_known` (about 1 / 7
+  steps), which is the sanity check on the scoring code.
+- **First baseline numbers (local qwen2.5:3b runs, small n):** `test_known`
+  n=21: random 15.1%, last step 19.1%, first error 0.0%. `test_outside`
+  n=181: random 9.5%, last step 3.9%, first error 11.1%.
+- **Not in the report yet, each listed under `absent`:** our ranker and the
+  GNN (no model on my machine), suspect-list coverage, live warning, Jev vs
+  LLM, verify, repair, report citations, `test_natural` (no verified labels
+  in my store). The LLM-judge rows need `--judge` and the judge model's key.
+
 ### 3. Mistakes F7–F10, kept back from training (checklist row 7) · `radhesh/faults-unseen`
 - **What:** `faults/catalog.py` now has all ten mistakes.
   - F7 wrong tool: the tool the model named is swapped for another of the
