@@ -136,3 +136,20 @@ def test_verify_does_not_blame_the_answer_step_by_copying_a_twins_answer(tmp_pat
     s1 = next(s for s in report["suspects"] if s["step"] == 1)
     assert "twin" not in [x["strategy"] for x in s1["strategies"]]
     assert report["verified_step"] == 0                                  # the earliest real cause
+
+
+def test_rerun_fixing_a_tool_step_is_proof_not_bad_luck(tmp_path):
+    """A tool is a deterministic function: if re-running it gives a result that fixes the run,
+    the recorded output was wrong (a planted mistake or a transient tool failure). That step
+    is the cause. 'Bad luck' only applies to model calls, which can answer differently."""
+    from blackbox.core.schema import Change, Label
+    from blackbox.replay.engine import fork
+
+    store = Store(tmp_path)
+    good = run_task(CapitalAgent(), TASK, "agent-strong", store=store)
+    broken = fork(good, 1, Change(kind="output", value={"result": {"echo": "Lyon"}}), store=store)  # planted at the tool
+    broken.run.label = Label(root_cause_step=1, source="injected")
+    report = verify(broken, [1], store=store, repeats=2)
+    s = report["suspects"][0]
+    assert s["verdict"] == "verified" and not s["flaky"]
+    assert report["verified_step"] == 1

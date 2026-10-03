@@ -294,9 +294,16 @@ class RunContext:
         step.error = recorded.error
         step.cached = True
         step.latency_ms = 0.0
+        # What re-using it saves is what the step cost when it really ran. If the recorded
+        # step was itself re-used, its own cost fields are empty: carry the original cost.
+        if recorded.cached:
+            saved_ms = recorded.meta.get("saved_ms", 0.0)
+            saved_tokens = recorded.meta.get("saved_tokens", 0)
+        else:
+            saved_ms = recorded.latency_ms
+            saved_tokens = (recorded.tokens_in or 0) + (recorded.tokens_out or 0)
         step.meta = {**recorded.meta, "reused_from": [recorded.run_id, recorded.idx],
-                     "saved_ms": recorded.latency_ms,
-                     "saved_tokens": (recorded.tokens_in or 0) + (recorded.tokens_out or 0)}
+                     "saved_ms": saved_ms, "saved_tokens": saved_tokens}
 
     def _execute(self, step: Step, execute) -> None:
         t0 = time.perf_counter()

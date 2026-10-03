@@ -91,6 +91,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   <h1><span>■</span> Black Box Inspector</h1>
   <nav aria-label="Views">
     <button data-view="overview" aria-current="page">Overview</button>
+    <button data-view="dataset">Dataset</button>
     <button data-view="runs">Runs</button>
     <button data-view="run">Run</button>
   </nav>
@@ -109,6 +110,11 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
     </div>
     <div class="card"><h2>Model choice (grouped cross-validation on train + val)</h2><div id="cv" class="tablewrap"></div></div>
     <div class="card"><h2>Latest logs</h2><pre class="lines" id="logs"></pre></div>
+  </section>
+
+  <!-- DATASET -->
+  <section id="view-dataset" class="view" hidden>
+    <div id="ds" style="display:grid; gap:14px"><div class="card empty">Loading the dataset (about 10 s the first time)…</div></div>
   </section>
 
   <!-- RUNS -->
@@ -169,7 +175,68 @@ function show(view) {
   document.querySelectorAll(".view").forEach((el) => { el.hidden = el.id !== `view-${view}`; });
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false"));
 }
-document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => { show(b.dataset.view); if (b.dataset.view === "runs") loadRuns(); }));
+document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
+  show(b.dataset.view);
+  if (b.dataset.view === "runs") loadRuns();
+  if (b.dataset.view === "dataset") loadDataset();
+}));
+
+/* ---------- dataset ---------- */
+const FAMILY = { qa: "QA", math: "Math", ops: "Shop", external: "Who&When" };
+function kvTable(obj, head = ["", "runs"]) {
+  const rows = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${esc(FAMILY[k] || k)}</td><td class="num">${esc(v)}</td></tr>`).join("");
+  return `<table><thead><tr><th>${esc(head[0])}</th><th>${esc(head[1])}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+async function loadDataset() {
+  const box = $("#ds");
+  try {
+    const d = await api("/api/dataset");
+    const s = d.summary, st = d.storage;
+    const splitRows = Object.keys(s.by_split).map((k) => `<tr><td>${esc(k)}</td><td class="num">${s.by_split[k]}</td><td class="num">${s.labelled_by_split[k] ?? 0}</td></tr>`).join("");
+    const health = Object.entries(d.health_by_family).map(([fam, h]) => {
+      const faults = Object.entries(h.faults || {}).map(([f, v]) => {
+        const ok = v.flip_pct >= 30 && v.flip_pct <= 90;
+        return `<tr><td>${esc(f)} <span class="note">${esc(d.mistakes[f] || "")}</span></td><td class="num">${v.runs}</td><td class="num">${v.failed}</td><td class="num">${v.recovered}</td><td class="num">${v.crashed}</td><td class="num ${ok ? "best" : ""}">${fmt(v.flip_pct, 1)}%</td></tr>`;
+      }).join("");
+      return `<div class="card"><h2>${esc(FAMILY[fam] || fam)} · ${h.runs} runs</h2>
+        <p class="note">Clean runs: ${h.clean} (passed ${h.clean_passed}, failed ${h.clean_failed}) · crashed ${h.crashed} · failures with a known guilty step ${h.labelled} · ${fmt(h.steps_mean, 1)} steps per run on average</p>
+        <div class="tablewrap"><table><thead><tr><th>Planted mistake</th><th>Runs</th><th>Broke the run</th><th>Agent recovered</th><th>Crashed</th><th>Break rate (target 30–90%)</th></tr></thead><tbody>${faults || `<tr><td colspan="6" class="empty">No planted mistakes in this family yet.</td></tr>`}</tbody></table></div></div>`;
+    }).join("");
+    const cards = Object.entries(d.model_report_card).map(([m, c]) => `<div class="card"><h2>Agent model report card · ${esc(m)}</h2>
+      <div class="stats">
+        <div class="stat"><b>${fmt(c.clean_pass_rate * 100, 0)}%</b><span>clean tasks passed (${c.clean_runs} runs)</span></div>
+        <div class="stat"><b>${fmt(c.planted_fail_rate * 100, 0)}%</b><span>planted mistakes that broke the run</span></div>
+        <div class="stat"><b>${fmt(c.mean_steps, 1)}</b><span>steps per run</span></div>
+        <div class="stat"><b>${esc(c.mean_tokens_per_clean_run)}</b><span>tokens per clean run</span></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="tablewrap">${kvTable(c.failures_by_mistake, ["Failures by planted mistake", "runs"])}</div>
+        <div class="tablewrap">${kvTable(c.guilty_step_position, ["Where the guilty step sits", "runs"])}</div>
+      </div></div>`).join("");
+    box.innerHTML = `
+      <div class="card"><h2>Totals</h2><div class="stats">
+        <div class="stat"><b>${s.runs}</b><span>recorded runs</span></div>
+        <div class="stat"><b>${s.labelled_failures}</b><span>failures with a known guilty step</span></div>
+        <div class="stat"><b>${s.natural_failures_unlabelled}</b><span>real failures not yet diagnosed</span></div>
+        <div class="stat"><b>${s.crashed}</b><span>crashed runs (our bug, never used as labels)</span></div>
+        <div class="stat"><b>${st.steps}</b><span>steps</span></div>
+        <div class="stat"><b>${fmt(st.save_point_dedup * 100, 0)}%</b><span>save-points de-duplicated (${st.save_points} → ${st.unique_save_points} files, ${st.blob_mb} MB)</span></div>
+      </div></div>
+      <div class="grid2">
+        <div class="card"><h2>Task families</h2><div class="tablewrap">${kvTable(s.by_family, ["Family", "runs"])}</div>
+          <ul class="plain note" style="margin-top:8px">${Object.entries(d.sources).map(([k, v]) => `<li><b>${esc(FAMILY[k] || k)}</b>: ${esc(v)}</li>`).join("")}</ul></div>
+        <div class="card"><h2>Test sets (split by question, never mixed)</h2><div class="tablewrap"><table><thead><tr><th>Set</th><th>Runs</th><th>Known guilty step</th></tr></thead><tbody>${splitRows}</tbody></table></div>
+          <p class="note">Kept out of training: ${esc(d.kept_out_of_training.join(", "))}.</p></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>How we know the guilty step</h2><div class="tablewrap">${kvTable(s.labelled_by_source, ["Source", "runs"])}</div>
+          <p class="note">injected = we planted the mistake and the run failed · verified = a real failure, cause proven by re-running with that step repaired.</p></div>
+        <div class="card"><h2>Recorded on</h2><div class="tablewrap">${kvTable(s.machines, ["Machine", "runs"])}</div></div>
+      </div>
+      ${health}
+      ${cards}`;
+  } catch (e) { box.innerHTML = `<div class="card err">${esc(e.message)}</div>`; }
+}
 
 /* ---------- overview ---------- */
 async function loadStatus() {
