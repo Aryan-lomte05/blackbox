@@ -63,6 +63,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8001")
     ap.add_argument("--skip-repair", action="store_true", help="skip GenAI repair (uses the rate-limited big model)")
+    ap.add_argument("--skip-lab", action="store_true", help="skip the Live Lab (several minutes)")
     args = ap.parse_args()
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
@@ -196,6 +197,45 @@ def main() -> int:
         ok = code == 200 and (body.get("repair") is not None or body["verification"]["verified_cause"] is None)
         record("★ investigate +repair", "model_finds_it", ok, s,
                f"repairs {body['repair']['passed']}/{body['repair']['tried']} passed" if ok and body.get("repair") else body if not ok else "no verified cause, no repair")
+
+    # UI platform endpoints
+    fr = examples(spec, "/api/runs/{run_id}/diagnosis", "get", "param", "run_id")
+    rid = next(iter(fr.values()))["value"] if fr else None
+    for path, check, label in (
+        ("/api/ui/overview", lambda b: b["kpis"]["runs"] > 0 and b["recent_runs"], "overview"),
+        (f"/api/runs/{rid}/graph", lambda b: b["nodes"] and all({"id", "position", "data"} <= set(n) for n in b["nodes"]), "graph"),
+        ("/api/atlas", lambda b: b["total_failures"] > 0 and b["patterns"], "atlas"),
+        (f"/api/runs/{rid}/diagnosis?model=ranker", lambda b: b.get("suspects") is not None, "diagnosis via ranker"),
+    ):
+        code, body, sec = call(B, "GET", path)
+        record("UI " + label, "-", code == 200 and check(body), sec, f"HTTP {code}")
+    for path, needle, label in ((f"/api/runs/{rid}/report", "case file", "report"),
+                                (f"/api/runs/{rid}/export-test", "def test_run_", "export-test")):
+        t = time.perf_counter()
+        with urllib.request.urlopen(B + path, timeout=120) as r:
+            body = r.read().decode()
+        record("UI " + label, "-", needle in body, time.perf_counter() - t, f"{len(body)} chars")
+
+    # Guardian: raise an incident from a failed example, then decide on it
+    code, inc, sec = call(B, "POST", f"/api/incidents/from-run/{rid}")
+    record("G3 raise incident", "model_finds_it", code == 200 and inc.get("incident_id"), sec,
+           f"{inc.get('severity')} {inc.get('title')}" if code == 200 else inc)
+    if code == 200:
+        code2, dec, sec2 = call(B, "POST", f"/api/incidents/{inc['incident_id']}/decision",
+                                {"approve": False, "by": "e2e", "note": "keep paused"})
+        record("G4 decision", "reject", code2 == 200 and dec.get("status") == "rejected", sec2, f"HTTP {code2}")
+
+    # Live Lab: one math question, streamed to the end
+    if not args.skip_lab:
+        code, body, sec = call(B, "POST", "/api/lab", {"question": "A bakery bakes 24 muffins per tray. It bakes 6 trays "
+                                                                   "and sells 97 muffins. How many muffins are left?",
+                                                       "mistake": "F6"})
+        job, js = wait_job(B, body["job_id"], limit=1800) if code == 200 else (None, 0)
+        stages = sorted({e.get("n") for e in (job or {}).get("events", []) if e.get("type") == "stage"})
+        res = (job or {}).get("result") or {}
+        record("★ Live Lab", "math F6", job is not None and res.get("planted") is not None, sec + js,
+               f"stages seen {stages[:3]}..{stages[-3:] if stages else []}; planted {res.get('planted')}; "
+               f"diagnosis hit {res.get('diagnosis_hit')}; verified {res.get('verified_cause')}" if res else (job or body))
 
     # Inspector page
     with urllib.request.urlopen(B + "/", timeout=30) as r:

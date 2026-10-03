@@ -1,0 +1,89 @@
+# HANDOFF: read this first in a new session
+
+State as of **4 Oct 2026, ~02:30 IST** (pitch: **4 Oct, 16:00**). Lead: Aryan (`Aryan-lomte05`).
+Repo: `Aryan-lomte05/Half_a_Byte_maharashtra_round` (private). Work on `dev`; `main` only at milestones.
+
+## 1. What Black Box is (one paragraph)
+A flight recorder for AI agents, shipped as a Python package. Record every step of an agent run with a
+save-point → warn live (step checker) → diagnose the guilty step (trained model) → **prove** it by
+re-running with only that step repaired (re-running only affected steps) → GenAI fixes tested by replay →
+cited report. Beyond the PS: **Guardian** (WhatsApp / email incidents for people running agents
+unattended, money-moving tools never re-run), **Live Lab** (type a question, plant a mistake live,
+watch 14 stages), Autopilot, MCP server, 3-line wrapper for any agent (proven on smolagents).
+Design: `SYSTEM.md`. Rules: `CLAUDE.md`. Ownership: `ASSIGNMENTS.md`. Evidence log: `AUDIT.md`.
+USP truth table: `docs/USP_STATUS.md`. UI contract: `docs/API_FOR_UI.md`. Mentor briefing:
+https://claude.ai/artifact/QqhsADSgwmMpyFc26sJaav (shared as anyone-with-link).
+
+## 2. Team (GitHub handles: never @mention first names)
+| Who | Handle | Owns | State |
+|---|---|---|---|
+| Aryan (lead) | `Aryan-lomte05` | core, recorder, replay, verify/repair/autopilot, API, Guardian, Lab, graph-feature model, integration | active |
+| Radhesh | `rad117` | agents, mistakes F1–F10, farm, splits, eval harness, dataset card | asked to farm balanced tool/search mistakes on his machine (Math 300–800, QA 400–2000) + F7–F10 on test tasks, and share shards |
+| Aditya | `02Aditya2323` | step checker (Laya cascade), GBM ranker, conformal, report | checker merged (#23), ranker merged via #33 (his authorship kept) |
+| Advay | unknown handle | web app (React; "grandest dashboard") | nothing pushed yet; everything he needs is in `docs/API_FOR_UI.md` + `fixtures/ui/` |
+
+## 3. Numbers (all reproducible from `data/`)
+- Data: **5,431 runs, 53,950 steps, 817 labelled failures**; save-points 80% de-duplicated.
+- Diagnosis (graph-feature model, CV-chosen; test sets used once), planted mistakes:
+  unseen questions Top-1 **0.607** [0.43, 0.79] / Top-3 **0.929** (n=28); Shop (never trained) Top-1
+  **0.652** / Top-3 0.768 (n=112). Baselines ≤ 0.25. GBM (Aditya): 0.448 / 0.621; Shop 0.025.
+- 90% suspect list: k=6 calibrated on `calib`; coverage 0.96 known / 0.91 Shop / 0.77 real.
+- **Honest gap:** real failures (nothing planted, cause proven by Verify, n=17): model Top-1 **0**;
+  real causes cluster at step 0 (the plan). Suspect policy = model top 2 + first decision → Top-3 0.65.
+- e2e: **58/58** `/docs` use cases passed (v1); v2 (adds UI endpoints, ranker, Guardian, Lab) was running.
+
+## 4. Running right now / in progress (check with `blackbox status`)
+- **Overnight pipeline** `scripts/overnight.sh` (started ~00:45): 1 Math farm ✅ (835 runs; F3 flips only
+  4.5% on Math: agent recovers) → **2 QA farm (search mistakes) running** → 3 Laya backfill on labelled
+  failures (`scripts/backfill_monitor.py`) → 4 retrain `gnn train --variant with_real_failures` (now with
+  checker features, n_features=37) → 5 dataset export. Logs: `data/logs/overnight_*.log`.
+- **e2e v2** on a test server at **port 8001**: `data/logs/e2e_docs_v2.log` (28 PASS so far, no FAIL).
+  Branch `aryan/e2e-v2` pushed, **PR not opened yet**: open it, merge after CI.
+- Labeller (real failures) was stopped (it used the OpenRouter quota). Resume with
+  `py -3 -m blackbox.replay.label_natural --limit 60 --repeats 1 --strong-model agent-local-14b --import blackbox.agents.builtin`
+  once the farm is done (the 14B is slow but free).
+
+## 5. Next steps (in order)
+1. When the overnight pipeline finishes: read `data/logs/overnight_retrain.log`; compare with the
+   numbers above (old model kept as `data/models/gnn_planted_only.pt`, `gnn_full_variant.pt`).
+   If worse, restore the better one. Re-run `scripts/export_ui_fixtures.py`; re-run e2e (incl. Lab).
+2. Merge Radhesh's shards (Drive → `data/shards/`): `py -3 -m blackbox.data.shards merge data/shards/`.
+   Retrain both models (ours: `gnn train`; Aditya's: `python -m blackbox.diagnosis.ranker`), compare.
+3. Calibrate the checker alarm on labelled steps (Aditya); then Autopilot on real runs (X1).
+4. Advay's UI: support him from `docs/API_FOR_UI.md`; keep the API stable.
+5. Pitch prep: demo script (Investigate → Lab → Guardian trader bot → atlas), rehearse, backup video.
+   Update the briefing artifact with final numbers.
+
+## 6. How to run things
+```bash
+pip install -e ".[ui,ml,agents,dev]" lightgbm shap        # this machine already has everything
+blackbox ui                      # :8000  (/docs dropdown demo, / inspector); restart after pulls
+blackbox lab "question"          # Live Lab (CLI); POST /api/lab streams the same 14 stages
+blackbox status --watch 5        # queue, jobs, GPU, logs, data, model
+blackbox demo | mcp | export-test <run> | models | runs --fail | show <run>
+py -3 examples/trader_bot.py --glitch      # Guardian demo (critical incident, outbox email/WhatsApp)
+py -3 examples/smolagents_demo.py          # 3-line integration on a third-party framework
+py -3 scripts/e2e_docs.py --base http://127.0.0.1:8001 [--skip-lab]
+py -3 -m pytest -q -m "not live"           # ~240 tests; CI runs the same on every PR
+```
+
+## 7. Gotchas learned the hard way (do not repeat)
+- **Never kill processes with an inline `python -c` that contains the target's name**: it matches and
+  kills itself (exit 15, happened 3×). Use `scratchpad/stop_port.py <port>` / `stopjobs.py` style
+  files, or match by listening port.
+- **Gate commits on the test exit code**, not `| tail` (a failing test was committed once).
+- **Capture the PR number from `gh pr create`** output; never assume it (merged a teammate's PR by
+  accident once).
+- **`gh pr merge --delete-branch` auto-closes PRs stacked on that branch** (closed #20 by accident).
+- OpenRouter keys are **free tier: 50 req/day/account, exhausted for 3 Oct**. Client now fails fast and
+  falls back (`fallback:` in `models.yaml`: agent-strong → local 14B, judge-large → local 7B).
+  $10 credit on OpenRouter = 1,000/day.
+- Tests must be **hermetic**: locally trained models (gnn.pt, ranker_A.pkl in `data/models/`) change
+  API results; tests stub `gnn.available` and hide `blackbox.diagnosis.predict`.
+- **Leak guard**: diagnosis features must never use cached/latency/tokens/meta/fault (replayed steps
+  differ in those). `tests/test_gnn.py` enforces it.
+- **Money safety**: tools in `money_moving_tools` never execute during any re-run (`dry_run_tools`).
+- `.gitignore` `data/` must stay anchored as `/data/` (once hid `blackbox/data/`).
+- Model binaries never go in git: weights live in the private release `data-2026-10-03`
+  (dataset, our model, Aditya's ranker).
+- Windows console: set `PYTHONIOENCODING=utf-8` for scripts that print symbols.
