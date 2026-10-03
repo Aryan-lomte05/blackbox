@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import os
 import uuid
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict
 
 from blackbox.agents.base import Task, get_agent, run_task
@@ -93,7 +94,28 @@ def _sse(job: Job) -> StreamingResponse:
 
 
 def create_app(store: Store | None = None) -> FastAPI:
-    app = FastAPI(title="Black Box", version="0.1.0")
+    app = FastAPI(
+        title="Black Box",
+        version="0.1.0",
+        summary="A flight recorder for AI agents.",
+        description=(
+            "Record every step of an agent run with a save-point, name the steps most likely to have caused a "
+            "failure, **prove** the cause by re-running with only that step repaired (re-running only what the "
+            "repair affects), and test GenAI fixes the same way.\n\n"
+            "* **Runs**: browse recorded runs and their steps (with save-points and who-used-what links).\n"
+            "* **Diagnosis**: the trained model's ranking of a failed run's steps.\n"
+            "* **Experiments**: replay, fork, verify, repair, cheaper-model advice (long jobs stream events).\n"
+            "* **Status**: what is running on the recording machine right now.\n\n"
+            "Inspector page: [/](/). Every number comes from recorded runs; nothing is filled in."
+        ),
+        openapi_tags=[
+            {"name": "Runs", "description": "Recorded runs, steps, save-points, comparison."},
+            {"name": "Diagnosis", "description": "Which step most likely caused a failure."},
+            {"name": "Experiments", "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."},
+            {"name": "Jobs", "description": "Server-sent event streams and results of background jobs."},
+            {"name": "Status", "description": "Machine, queue, data and model state."},
+        ],
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
@@ -115,7 +137,7 @@ def create_app(store: Store | None = None) -> FastAPI:
         except KeyError:
             raise HTTPException(404, f"no run {run_id!r}") from None
 
-    @app.get("/api/health")
+    @app.get("/api/health", tags=["Status"])
     def health() -> dict[str, Any]:
         try:
             models = sorted(providers.load_registry())
@@ -125,7 +147,7 @@ def create_app(store: Store | None = None) -> FastAPI:
                       for name, spec in providers.PROVIDERS.items()}
         return {"ok": True, "db": db().counts(), "models": models, "providers_configured": configured}
 
-    @app.get("/api/runs")
+    @app.get("/api/runs", tags=["Runs"])
     def list_runs(
         family: str | None = None,
         task_id: str | None = None,
@@ -133,22 +155,24 @@ def create_app(store: Store | None = None) -> FastAPI:
         split: str | None = None,
         fault: str | None = None,
         parent: str | None = None,
+        labelled: bool | None = None,
         limit: int = Query(50, le=500),
         offset: int = 0,
     ) -> dict:
         runs = db().list_runs(
             task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
+            has_label=labelled,
             success=None if outcome is None else outcome == "pass", limit=limit, offset=offset,
         )
         return {"runs": [r.model_dump(mode="json") for r in runs], "limit": limit, "offset": offset}
 
-    @app.get("/api/runs/{run_id}")
+    @app.get("/api/runs/{run_id}", tags=["Runs"])
     def get_run(run_id: str) -> dict:
         tr = load(run_id)
         return {"run": tr.run.model_dump(mode="json"), "steps": [_step_summary(s) for s in tr.steps],
                 "edges": _edges(tr.steps)}
 
-    @app.get("/api/runs/{run_id}/steps/{idx}")
+    @app.get("/api/runs/{run_id}/steps/{idx}", tags=["Runs"])
     def get_step(run_id: str, idx: int) -> dict:
         tr = load(run_id)
         if not 0 <= idx < len(tr.steps):
@@ -159,14 +183,14 @@ def create_app(store: Store | None = None) -> FastAPI:
             state = db().get_blob(step.state_hash_after)
         return {"step": step.model_dump(mode="json"), "state_after": state}
 
-    @app.post("/api/runs/{run_id}/replay")
+    @app.post("/api/runs/{run_id}/replay", tags=["Experiments"])
     def replay(run_id: str) -> dict:
         child = replay_trace(load(run_id))
         if child.run.status == "crashed":
             raise HTTPException(500, child.run.error)
         return {"run": child.run.model_dump(mode="json"), "savings": savings(child)}
 
-    @app.post("/api/runs/{run_id}/fork")
+    @app.post("/api/runs/{run_id}/fork", tags=["Experiments"])
     def fork(run_id: str, body: ForkRequest) -> dict:
         parent = load(run_id)
         try:
@@ -179,11 +203,11 @@ def create_app(store: Store | None = None) -> FastAPI:
                 "savings": savings(child),
                 "outcome": child.run.outcome.model_dump(mode="json") if child.run.outcome else None}
 
-    @app.get("/api/runs/{run_id}/diagnosis")
+    @app.get("/api/runs/{run_id}/diagnosis", tags=["Diagnosis"])
     def get_diagnosis(run_id: str) -> dict:
         return diagnose(load(run_id))
 
-    @app.post("/api/runs")
+    @app.post("/api/runs", tags=["Experiments"])
     def start_run(body: LiveRunRequest) -> dict:
         try:
             agent = get_agent(body.agent)
@@ -216,14 +240,14 @@ def create_app(store: Store | None = None) -> FastAPI:
         run_jobs[run_id] = job.job_id
         return {"run_id": run_id, "job_id": job.job_id}
 
-    @app.get("/api/runs/{run_id}/events")
+    @app.get("/api/runs/{run_id}/events", tags=["Jobs"])
     def run_events(run_id: str):
         job = jobs.get(run_jobs.get(run_id, ""))
         if job is None:
             raise HTTPException(404, f"no live job for run {run_id}")
         return _sse(job)
 
-    @app.post("/api/runs/{run_id}/verify")
+    @app.post("/api/runs/{run_id}/verify", tags=["Experiments"])
     def start_verify(run_id: str, body: VerifyRequest) -> dict:
         from blackbox.replay.verify import verify
 
@@ -235,7 +259,7 @@ def create_app(store: Store | None = None) -> FastAPI:
                                                      on_event=j.emit))
         return {"job_id": job.job_id, "suspects": suspects}
 
-    @app.post("/api/runs/{run_id}/repair")
+    @app.post("/api/runs/{run_id}/repair", tags=["Experiments"])
     def start_repair(run_id: str, body: RepairRequest) -> dict:
         from blackbox.replay.repair import repair
 
@@ -244,7 +268,7 @@ def create_app(store: Store | None = None) -> FastAPI:
                                                      evidence=body.evidence, on_event=j.emit))
         return {"job_id": job.job_id}
 
-    @app.post("/api/runs/{run_id}/advise")
+    @app.post("/api/runs/{run_id}/advise", tags=["Experiments"])
     def start_advise(run_id: str, cheaper_model: str = "agent-local") -> dict:
         from blackbox.replay.advisor import advise
 
@@ -254,14 +278,14 @@ def create_app(store: Store | None = None) -> FastAPI:
         job = jobs.start("advise", lambda j: advise(trace, cheaper_model, store=db(), on_event=j.emit))
         return {"job_id": job.job_id}
 
-    @app.get("/api/jobs/{job_id}/events")
+    @app.get("/api/jobs/{job_id}/events", tags=["Jobs"])
     def job_events(job_id: str):
         job = jobs.get(job_id)
         if job is None:
             raise HTTPException(404, f"no job {job_id}")
         return _sse(job)
 
-    @app.get("/api/jobs/{job_id}")
+    @app.get("/api/jobs/{job_id}", tags=["Jobs"])
     def job_status(job_id: str) -> dict:
         job = jobs.get(job_id)
         if job is None:
@@ -269,7 +293,18 @@ def create_app(store: Store | None = None) -> FastAPI:
         return {"job_id": job.job_id, "kind": job.kind, "finished": job.finished, "n_events": len(job.events),
                 "result": job.result}
 
-    @app.get("/api/compare")
+    @app.get("/api/status", tags=["Status"])
+    def status() -> dict:
+        """Queue, running jobs, GPU/Ollama, logs, data totals, model metrics and the latest eval report."""
+        from blackbox.status import as_json
+
+        return as_json(db())
+
+    @app.get("/", include_in_schema=False)
+    def inspector():
+        return FileResponse(Path(__file__).parent / "static" / "inspector.html", media_type="text/html")
+
+    @app.get("/api/compare", tags=["Runs"])
     def compare(a: str, b: str) -> dict:
         return compare_traces(load(a), load(b))
 

@@ -136,10 +136,14 @@ class Store:
         split: str | None = None,
         fault_type: str | None = None,
         parent_run_id: str | None = None,
+        has_label: bool | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Run]:
         where, args = [], []
+        if has_label is not None:
+            where.append("has_label = ?")
+            args.append(int(has_label))
         for col, val in (
             ("task_family", task_family), ("task_id", task_id), ("split", split),
             ("fault_type", fault_type), ("parent_run_id", parent_run_id),

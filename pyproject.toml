@@ -32,6 +32,9 @@ blackbox = "blackbox.cli:main"
 [tool.setuptools.packages.find]
 include = ["blackbox*"]
 
+[tool.setuptools.package-data]
+"blackbox.api" = ["static/*.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["live: hits a real provider; needs keys (deselect with -m 'not live')"]

@@ -177,3 +177,25 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def as_json(store: Store) -> dict:
+    """The same live view as `blackbox status`, structured for the inspector page."""
+    queue = json.loads(QUEUE.read_text(encoding="utf-8")) if QUEUE.exists() else []
+    metrics = {}
+    for name in ("gnn_metrics.json", "gnn_cv.json"):
+        p = DEFAULT_DIR / "models" / name
+        if p.exists():
+            metrics[name.removesuffix(".json")] = json.loads(p.read_text(encoding="utf-8"))
+    report = DEFAULT_DIR / "reports" / "latest.json"
+    return {
+        "time": datetime.now().isoformat(timespec="seconds"),
+        "queue": queue,
+        "running": [l.strip() for l in processes_section()],
+        "machine": [l.strip() for l in gpu_section()],
+        "logs": [l.strip() for l in logs_section()],
+        "data": [l.strip() for l in data_section(store)],
+        "counts": store.counts(),
+        "metrics": metrics,
+        "report": json.loads(report.read_text(encoding="utf-8")) if report.exists() else None,
+    }
