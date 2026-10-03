@@ -329,6 +329,28 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
             state = db().get_blob(step.state_hash_after)
         return {"step": step.model_dump(mode="json"), "state_after": state}
 
+    @app.post("/api/import/{fmt}", tags=["Runs"],
+              summary="★ Import traces your agent already exports (OpenTelemetry or Langfuse JSON), then diagnose them")
+    def import_traces(fmt: Literal["otel", "langfuse"],
+                      body: Any = Body(..., description="the export file's JSON: OTLP spans, or a Langfuse trace"),
+                      failed: bool | None = Query(None, description="mark as failed when the export has no verdict")) -> dict:
+        """No code change in the agent. Imported runs have no save-points, so they support diagnosis, fingerprints
+        and the atlas, not replay."""
+        from blackbox.data.importers.external import IMPORTERS
+
+        traces = IMPORTERS[fmt](body, failed=failed)
+        if not traces:
+            raise HTTPException(400, "no agent steps found in this export")
+        store = db()
+        out = []
+        for tr in traces:
+            store.save_trace(tr)
+            is_failed = tr.run.outcome is not None and not tr.run.outcome.success
+            out.append({"run_id": tr.run.run_id, "agent": tr.run.agent, "steps": len(tr.steps),
+                        "outcome": None if tr.run.outcome is None else ("pass" if tr.run.outcome.success else "fail"),
+                        "suspects": diagnose(tr).get("suspects") if is_failed else None})
+        return {"imported": out}
+
     @app.get("/api/runs/{run_id}/similar", tags=["Diagnosis"],
              summary="★ Seen this before? Failure fingerprint, look-alike past failures, novelty, known fixes")
     def get_similar(run_id: str = PathParam(..., openapi_examples=failed or None), k: int = Query(5, ge=1, le=50)) -> dict:

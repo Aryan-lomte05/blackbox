@@ -15,7 +15,7 @@ Model Context Protocol `2025-06-18` over stdio (newline-delimited JSON-RPC 2.0).
 
 ## Capabilities
 
-### Tools (27)
+### Tools (28)
 
 | Category | Tool | What it does | Cost |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Model Context Protocol `2025-06-18` over stdio (newline-delimited JSON-RPC 2.0).
 | guardian | `decide_incident` | approve or keep paused a money-moving retry (recorded, final) | instant |
 | developer | `export_test` | failure → pytest regression test (replays, 0 model calls) | instant |
 | developer | `instrument_agent` | reads your agent file; says which lines to change to record it | instant |
+| developer | `import_traces` | import OpenTelemetry / Langfuse exports and diagnose the failed runs (no agent code change) | seconds |
 | developer | `status` | jobs, GPU, data totals, model results on this machine | instant |
 
 ### Resources
