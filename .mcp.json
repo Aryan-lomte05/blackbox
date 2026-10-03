@@ -3,7 +3,7 @@
     "blackbox": {
       "type": "stdio",
       "command": "py",
-      "args": ["-3", "-m", "blackbox.mcp_server"],
+      "args": ["-3", "-m", "blackbox.mcp"],
       "env": {"PYTHONIOENCODING": "utf-8", "USE_TF": "0", "TRANSFORMERS_NO_TF": "1"}
     }
   }
