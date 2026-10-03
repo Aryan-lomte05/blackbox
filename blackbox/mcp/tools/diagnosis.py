@@ -83,6 +83,26 @@ def causal_report(run_id: str, suspects: list[int] | None = None) -> str:
     return rep["summary"] + ("\n" + paths if paths else "")
 
 
+@tool("similar_failures", "Have we seen this failure before? Its fingerprint, the most similar past failures and "
+      "what caused them, whether it is a NOVEL kind of failure, and fixes already approved for look-alikes.",
+      category="diagnosis", properties={**RUN_ID, "k": {"type": "integer", "default": 5}}, required=("run_id",))
+def similar_failures(run_id: str, k: int = 5) -> str:
+    from blackbox.diagnosis.fingerprint import similar
+
+    tr = store().load_trace(run_id)
+    rep = similar(store(), tr, None if tr.run.label else _diagnose(tr), k=int(k))
+    fp = rep["fingerprint"]
+    out = [f"Fingerprint {fp['id']}: {', '.join(fp['tokens'])}",
+           f"{rep['same_fingerprint']} of {rep['library_size']} labelled failures share it"
+           + (f" (causes: {rep['same_fingerprint_causes']})" if rep["same_fingerprint"] else "") + ".",
+           "NOVEL: nothing in the library looks like this failure." if rep["novel"]
+           else f"Closest similarity {rep['best_similarity']}."]
+    out += [f"  {c['run_id']} sim {c['similarity']} cause step {c['cause']} ({c['fault'] or c['source']}, {c['family']})"
+            for c in rep["closest"]]
+    out += [f"Known fix (approved, fixed {f['fixed']}/{f['of']}): {f['rule'] or f['model']}" for f in rep["known_fixes"]]
+    return "\n".join(out)
+
+
 def _blob(s, digest: str | None):
     return s.get_blob(digest) if digest and s.has_blob(digest) else None
 

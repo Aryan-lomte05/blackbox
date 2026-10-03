@@ -4,8 +4,8 @@
     "2. We planted F3 (tool returned nothing) at step 4, so the true guilty step is 4.",
     "3. The diagnosis model named steps [4, 12, 0] as the top suspects (gnn). The true guilty step is ranked first.",
     "4. Verify re-ran the run with one suspect repaired at a time and PROVED step 4 is the cause. That matches the known guilty step.",
-    "5. Those experiments re-ran 20 steps in total and re-used 34 from the recording.",
-    "6. Fixed run 2bbf825e27a442e8 answers 14 (first difference at aligned step 4; outcome flipped: True)."
+    "5. Those experiments re-ran 13 steps in total and re-used 41 from the recording.",
+    "6. Fixed run 3d4dc400de8e4980 answers 14 (first difference at aligned step 4; outcome flipped: True)."
   ],
   "case": {
     "run_id": "37452fc329e1498f",
@@ -29,7 +29,7 @@
   },
   "diagnosis": {
     "source": "gnn",
-    "model": "gnn@0e314b80",
+    "model": "gnn@35f3e605",
     "top3": [
       4,
       12,
@@ -38,27 +38,27 @@
     "scores": [
       {
         "idx": 4,
-        "p": 0.9839,
+        "p": 0.7586,
         "rank": 1
       },
       {
         "idx": 12,
-        "p": 0.0124,
+        "p": 0.1988,
         "rank": 2
       },
       {
-        "idx": 2,
-        "p": 0.0017,
+        "idx": 0,
+        "p": 0.0141,
         "rank": 3
       },
       {
-        "idx": 0,
-        "p": 0.0009,
+        "idx": 2,
+        "p": 0.0124,
         "rank": 4
       },
       {
         "idx": 6,
-        "p": 0.0008,
+        "p": 0.008,
         "rank": 5
       }
     ],
@@ -80,10 +80,10 @@
             "at_step": 4,
             "passed": "1/1",
             "re_ran": [
-              9
+              1
             ],
             "re_used": [
-              4
+              13
             ]
           },
           {
@@ -91,10 +91,10 @@
             "at_step": 4,
             "passed": "1/1",
             "re_ran": [
-              9
+              1
             ],
             "re_used": [
-              4
+              13
             ]
           }
         ]
@@ -113,7 +113,7 @@
               1
             ],
             "re_used": [
-              13
+              12
             ]
           }
         ]
@@ -129,20 +129,20 @@
             "at_step": 0,
             "passed": "0/1",
             "re_ran": [
-              1
+              10
             ],
             "re_used": [
-              13
+              3
             ]
           }
         ]
       }
     ],
-    "steps_re_run_total": 20,
-    "steps_re_used_total": 34
+    "steps_re_run_total": 13,
+    "steps_re_used_total": 41
   },
   "comparison": {
-    "fixed_run_id": "2bbf825e27a442e8",
+    "fixed_run_id": "3d4dc400de8e4980",
     "fixed_answer": "14",
     "first_difference_at": 4,
     "pairs_changed": 10,
@@ -299,5 +299,5 @@
       "output": "\"9\""
     }
   ],
-  "seconds": 26.6
+  "seconds": 12.4
 }

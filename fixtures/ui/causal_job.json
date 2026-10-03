@@ -1,0 +1,360 @@
+{
+  "start": {
+    "job_id": "45040d3e36c1",
+    "suspects": [
+      4,
+      12,
+      0
+    ],
+    "next": "GET /api/jobs/45040d3e36c1/events"
+  },
+  "events": [
+    {
+      "type": "attempt",
+      "step": 4,
+      "strategy": "twin",
+      "attempt": 1,
+      "seq": 0,
+      "t": 1791061927.139
+    },
+    {
+      "type": "result",
+      "step": 4,
+      "strategy": "twin",
+      "run_id": "c994c7786503491a",
+      "passed": true,
+      "status": "done",
+      "savings": {
+        "steps_total": 14,
+        "steps_executed": 1,
+        "steps_reused": 13,
+        "tokens_saved": 2549,
+        "seconds_saved": 10.922
+      },
+      "seq": 1,
+      "t": 1791061927.179
+    },
+    {
+      "type": "attempt",
+      "step": 4,
+      "strategy": "rerun",
+      "attempt": 1,
+      "seq": 2,
+      "t": 1791061927.179
+    },
+    {
+      "type": "result",
+      "step": 4,
+      "strategy": "rerun",
+      "run_id": "0038e5530da743a0",
+      "passed": true,
+      "status": "done",
+      "savings": {
+        "steps_total": 14,
+        "steps_executed": 1,
+        "steps_reused": 13,
+        "tokens_saved": 2549,
+        "seconds_saved": 10.922
+      },
+      "seq": 3,
+      "t": 1791061927.227
+    },
+    {
+      "type": "verdict",
+      "step": 4,
+      "cause_step": 4,
+      "verdict": "verified",
+      "causal_effect": 1.0,
+      "flaky": false,
+      "seq": 4,
+      "t": 1791061927.227
+    },
+    {
+      "type": "attempt",
+      "step": 12,
+      "strategy": "rerun",
+      "attempt": 1,
+      "seq": 5,
+      "t": 1791061927.227
+    },
+    {
+      "type": "result",
+      "step": 12,
+      "strategy": "rerun",
+      "run_id": "bfd2e9444ba84123",
+      "passed": false,
+      "status": "done",
+      "savings": {
+        "steps_total": 14,
+        "steps_executed": 1,
+        "steps_reused": 12,
+        "tokens_saved": 2270,
+        "seconds_saved": 9.55
+      },
+      "seq": 6,
+      "t": 1791061927.679
+    },
+    {
+      "type": "verdict",
+      "step": 12,
+      "cause_step": null,
+      "verdict": "not the cause",
+      "causal_effect": 0.0,
+      "flaky": false,
+      "seq": 7,
+      "t": 1791061927.68
+    },
+    {
+      "type": "attempt",
+      "step": 0,
+      "strategy": "rerun",
+      "attempt": 1,
+      "seq": 8,
+      "t": 1791061927.716
+    },
+    {
+      "type": "result",
+      "step": 0,
+      "strategy": "rerun",
+      "run_id": "07690a6e77644a3e",
+      "passed": false,
+      "status": "done",
+      "savings": {
+        "steps_total": 14,
+        "steps_executed": 10,
+        "steps_reused": 3,
+        "tokens_saved": 0,
+        "seconds_saved": 0.0
+      },
+      "seq": 9,
+      "t": 1791061934.352
+    },
+    {
+      "type": "verdict",
+      "step": 0,
+      "cause_step": null,
+      "verdict": "not the cause",
+      "causal_effect": 0.0,
+      "flaky": false,
+      "seq": 10,
+      "t": 1791061934.353
+    },
+    {
+      "type": "sufficiency",
+      "step": 4,
+      "sufficient": false,
+      "run": "bc0b36507f1b4144",
+      "into": "a94b964728bd42f8",
+      "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed",
+      "seq": 11,
+      "t": 1791061937.668
+    },
+    {
+      "type": "sufficiency",
+      "step": 12,
+      "sufficient": true,
+      "run": "fcf46358d347416f",
+      "into": "a94b964728bd42f8",
+      "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed",
+      "seq": 12,
+      "t": 1791061937.747
+    },
+    {
+      "type": "sufficiency",
+      "step": 0,
+      "sufficient": false,
+      "note": "the passing run did exactly the same here",
+      "seq": 13,
+      "t": 1791061937.778
+    },
+    {
+      "type": "done",
+      "summary": "Step 4 (tool:calculator): contributing cause (needed, not enough alone). Step 12 (llm:agent-local-7b): sufficient but not necessary (the run also fails another way). Step 0 (llm:agent-local-7b): not a cause. 2 verified ways to recover. Blast radius of step 4: 9 of 9 later steps, including the answer (severity high).",
+      "seq": 14,
+      "t": 1791061937.778
+    },
+    {
+      "type": "done",
+      "result": {
+        "run_id": "37452fc329e1498f",
+        "cause": 4,
+        "steps": [
+          {
+            "step": 4,
+            "kind": "tool",
+            "name": "calculator",
+            "necessary": true,
+            "sufficient": false,
+            "sufficiency": {
+              "sufficient": false,
+              "run": "bc0b36507f1b4144",
+              "into": "a94b964728bd42f8",
+              "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed"
+            },
+            "causal_effect": 1.0,
+            "verdict": "contributing cause (needed, not enough alone)"
+          },
+          {
+            "step": 12,
+            "kind": "llm",
+            "name": "agent-local-7b",
+            "necessary": false,
+            "sufficient": true,
+            "sufficiency": {
+              "sufficient": true,
+              "run": "fcf46358d347416f",
+              "into": "a94b964728bd42f8",
+              "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed"
+            },
+            "causal_effect": 0.0,
+            "verdict": "sufficient but not necessary (the run also fails another way)"
+          },
+          {
+            "step": 0,
+            "kind": "llm",
+            "name": "agent-local-7b",
+            "necessary": false,
+            "sufficient": false,
+            "sufficiency": {
+              "sufficient": false,
+              "note": "the passing run did exactly the same here"
+            },
+            "causal_effect": 0.0,
+            "verdict": "not a cause"
+          }
+        ],
+        "joint": [],
+        "recovery_paths": [
+          {
+            "step": 4,
+            "how": "twin",
+            "run": "c994c7786503491a",
+            "change": {
+              "kind": "output",
+              "value": {
+                "result": 32
+              },
+              "note": "from passing run 1b364ba77f4f4953 step 4"
+            }
+          },
+          {
+            "step": 4,
+            "how": "rerun",
+            "run": "0038e5530da743a0",
+            "change": null
+          }
+        ],
+        "blast_radius": {
+          "contaminated": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "of_later_steps": 9,
+          "reaches_answer": true,
+          "money_moving_steps": [],
+          "severity": "high"
+        },
+        "reference_run": "a94b964728bd42f8",
+        "summary": "Step 4 (tool:calculator): contributing cause (needed, not enough alone). Step 12 (llm:agent-local-7b): sufficient but not necessary (the run also fails another way). Step 0 (llm:agent-local-7b): not a cause. 2 verified ways to recover. Blast radius of step 4: 9 of 9 later steps, including the answer (severity high)."
+      },
+      "seq": 15,
+      "t": 1791061937.778
+    }
+  ],
+  "result": {
+    "run_id": "37452fc329e1498f",
+    "cause": 4,
+    "steps": [
+      {
+        "step": 4,
+        "kind": "tool",
+        "name": "calculator",
+        "necessary": true,
+        "sufficient": false,
+        "sufficiency": {
+          "sufficient": false,
+          "run": "bc0b36507f1b4144",
+          "into": "a94b964728bd42f8",
+          "note": "pasted into step 4 of passing run a94b964728bd42f8: it still passed"
+        },
+        "causal_effect": 1.0,
+        "verdict": "contributing cause (needed, not enough alone)"
+      },
+      {
+        "step": 12,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "necessary": false,
+        "sufficient": true,
+        "sufficiency": {
+          "sufficient": true,
+          "run": "fcf46358d347416f",
+          "into": "a94b964728bd42f8",
+          "note": "pasted into step 12 of passing run a94b964728bd42f8: it failed"
+        },
+        "causal_effect": 0.0,
+        "verdict": "sufficient but not necessary (the run also fails another way)"
+      },
+      {
+        "step": 0,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "necessary": false,
+        "sufficient": false,
+        "sufficiency": {
+          "sufficient": false,
+          "note": "the passing run did exactly the same here"
+        },
+        "causal_effect": 0.0,
+        "verdict": "not a cause"
+      }
+    ],
+    "joint": [],
+    "recovery_paths": [
+      {
+        "step": 4,
+        "how": "twin",
+        "run": "c994c7786503491a",
+        "change": {
+          "kind": "output",
+          "value": {
+            "result": 32
+          },
+          "note": "from passing run 1b364ba77f4f4953 step 4"
+        }
+      },
+      {
+        "step": 4,
+        "how": "rerun",
+        "run": "0038e5530da743a0",
+        "change": null
+      }
+    ],
+    "blast_radius": {
+      "contaminated": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "of_later_steps": 9,
+      "reaches_answer": true,
+      "money_moving_steps": [],
+      "severity": "high"
+    },
+    "reference_run": "a94b964728bd42f8",
+    "summary": "Step 4 (tool:calculator): contributing cause (needed, not enough alone). Step 12 (llm:agent-local-7b): sufficient but not necessary (the run also fails another way). Step 0 (llm:agent-local-7b): not a cause. 2 verified ways to recover. Blast radius of step 4: 9 of 9 later steps, including the answer (severity high)."
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "start": {
+    "job_id": "a3137f899f5a",
+    "next": "GET /api/jobs/a3137f899f5a/events to stream it"
+  },
+  "events": [
+    {
+      "type": "rule",
+      "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+      "seq": 0,
+      "t": 1791061939.211
+    },
+    {
+      "type": "fleet",
+      "runs": 4,
+      "seq": 1,
+      "t": 1791061939.35
+    },
+    {
+      "type": "run",
+      "n": 1,
+      "of": 4,
+      "run_id": "37452fc329e1498f",
+      "verdict": "still failing",
+      "new_run": "3b12752e5ec94bfe",
+      "seq": 2,
+      "t": 1791061942.673
+    },
+    {
+      "type": "run",
+      "n": 2,
+      "of": 4,
+      "run_id": "570714cc73a247de",
+      "verdict": "still failing",
+      "new_run": "a12b84c033ad468d",
+      "seq": 3,
+      "t": 1791061947.705
+    },
+    {
+      "type": "run",
+      "n": 3,
+      "of": 4,
+      "run_id": "9609d794c0a84761",
+      "verdict": "fixed",
+      "new_run": "f34fb797f8064443",
+      "seq": 4,
+      "t": 1791061950.741
+    },
+    {
+      "type": "run",
+      "n": 4,
+      "of": 4,
+      "run_id": "316f79e907cd485e",
+      "verdict": "held",
+      "new_run": "17e553979db74d0e",
+      "seq": 5,
+      "t": 1791061953.589
+    },
+    {
+      "type": "done",
+      "counts": {
+        "fixed": 1,
+        "still failing": 2,
+        "regression": 0,
+        "held": 1,
+        "crashed": 0
+      },
+      "decision": "APPROVE",
+      "why": "it fixes 1 of 3 failures and breaks none of 1 passing runs",
+      "seq": 6,
+      "t": 1791061953.589
+    },
+    {
+      "type": "done",
+      "result": {
+        "change": {
+          "instruction": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+          "model": null
+        },
+        "runs": 4,
+        "counts": {
+          "fixed": 1,
+          "still failing": 2,
+          "regression": 0,
+          "held": 1,
+          "crashed": 0
+        },
+        "failures_tested": 3,
+        "passes_tested": 1,
+        "fix_rate": 0.333,
+        "failure_rate_before": 0.75,
+        "failure_rate_after": 0.5,
+        "decision": "APPROVE",
+        "why": "it fixes 1 of 3 failures and breaks none of 1 passing runs",
+        "rows": [
+          {
+            "run_id": "37452fc329e1498f",
+            "family": "math",
+            "before": false,
+            "after": false,
+            "verdict": "still failing",
+            "new_run": "3b12752e5ec94bfe",
+            "answer": "28",
+            "savings": {
+              "steps_total": 14,
+              "steps_executed": 8,
+              "steps_reused": 5,
+              "tokens_saved": 854,
+              "seconds_saved": 5.753
+            }
+          },
+          {
+            "run_id": "570714cc73a247de",
+            "family": "math",
+            "before": false,
+            "after": false,
+            "verdict": "still failing",
+            "new_run": "a12b84c033ad468d",
+            "answer": "300",
+            "savings": {
+              "steps_total": 14,
+              "steps_executed": 9,
+              "steps_reused": 4,
+              "tokens_saved": 699,
+              "seconds_saved": 4.993
+            }
+          },
+          {
+            "run_id": "9609d794c0a84761",
+            "family": "math",
+            "before": false,
+            "after": true,
+            "verdict": "fixed",
+            "new_run": "f34fb797f8064443",
+            "answer": "2",
+            "savings": {
+              "steps_total": 10,
+              "steps_executed": 7,
+              "steps_reused": 7,
+              "tokens_saved": 937,
+              "seconds_saved": 5.02
+            }
+          },
+          {
+            "run_id": "316f79e907cd485e",
+            "family": "math",
+            "before": true,
+            "after": true,
+            "verdict": "held",
+            "new_run": "17e553979db74d0e",
+            "answer": "22",
+            "savings": {
+              "steps_total": 6,
+              "steps_executed": 4,
+              "steps_reused": 2,
+              "tokens_saved": 0,
+              "seconds_saved": 0.0
+            }
+          }
+        ],
+        "source_run": "37452fc329e1498f",
+        "saved_as": "37452fc329e1498f-7c60f4.json"
+      },
+      "seq": 7,
+      "t": 1791061953.6
+    }
+  ],
+  "result": {
+    "change": {
+      "instruction": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+      "model": null
+    },
+    "runs": 4,
+    "counts": {
+      "fixed": 1,
+      "still failing": 2,
+      "regression": 0,
+      "held": 1,
+      "crashed": 0
+    },
+    "failures_tested": 3,
+    "passes_tested": 1,
+    "fix_rate": 0.333,
+    "failure_rate_before": 0.75,
+    "failure_rate_after": 0.5,
+    "decision": "APPROVE",
+    "why": "it fixes 1 of 3 failures and breaks none of 1 passing runs",
+    "rows": [
+      {
+        "run_id": "37452fc329e1498f",
+        "family": "math",
+        "before": false,
+        "after": false,
+        "verdict": "still failing",
+        "new_run": "3b12752e5ec94bfe",
+        "answer": "28",
+        "savings": {
+          "steps_total": 14,
+          "steps_executed": 8,
+          "steps_reused": 5,
+          "tokens_saved": 854,
+          "seconds_saved": 5.753
+        }
+      },
+      {
+        "run_id": "570714cc73a247de",
+        "family": "math",
+        "before": false,
+        "after": false,
+        "verdict": "still failing",
+        "new_run": "a12b84c033ad468d",
+        "answer": "300",
+        "savings": {
+          "steps_total": 14,
+          "steps_executed": 9,
+          "steps_reused": 4,
+          "tokens_saved": 699,
+          "seconds_saved": 4.993
+        }
+      },
+      {
+        "run_id": "9609d794c0a84761",
+        "family": "math",
+        "before": false,
+        "after": true,
+        "verdict": "fixed",
+        "new_run": "f34fb797f8064443",
+        "answer": "2",
+        "savings": {
+          "steps_total": 10,
+          "steps_executed": 7,
+          "steps_reused": 7,
+          "tokens_saved": 937,
+          "seconds_saved": 5.02
+        }
+      },
+      {
+        "run_id": "316f79e907cd485e",
+        "family": "math",
+        "before": true,
+        "after": true,
+        "verdict": "held",
+        "new_run": "17e553979db74d0e",
+        "answer": "22",
+        "savings": {
+          "steps_total": 6,
+          "steps_executed": 4,
+          "steps_reused": 2,
+          "tokens_saved": 0,
+          "seconds_saved": 0.0
+        }
+      }
+    ],
+    "source_run": "37452fc329e1498f",
+    "saved_as": "37452fc329e1498f-7c60f4.json"
+  }
+}

@@ -187,4 +187,8 @@ def one_fix_for_many(store: Store, run_id: str, *, rule: str | None = None, n_fa
     emit({"type": "fleet", "runs": len(ids)})
     out = fleet_test(store, ids, instruction=rule, on_event=on_event)
     out["source_run"] = run_id
+    from blackbox.diagnosis.fingerprint import save_fleet_report
+
+    # remembered under the failure's fingerprint: an APPROVED rule is offered for look-alike failures later
+    out["saved_as"] = save_fleet_report(store, out, tr).name
     return out

@@ -35,10 +35,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": 3,
-        "suspect_p": 0.0009,
+        "suspect_p": 0.0141,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.5236,
+          "consistent": 0.498,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -60,10 +65,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0002,
+        "suspect_p": 0.0063,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.4661,
+          "consistent": 0.3528,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -85,10 +95,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0017,
+        "suspect_p": 0.0124,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.8493,
+          "consistent": 0.7937,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -110,10 +125,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0008,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.5025,
+          "consistent": 0.3872,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -135,10 +155,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": 1,
-        "suspect_p": 0.9839,
+        "suspect_p": 0.7586,
         "is_guilty": true,
         "is_planted": true,
-        "checker": null
+        "checker": {
+          "on_track": 0.8543,
+          "consistent": 0.7478,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -160,10 +185,15 @@
         "latency_ms": 820.84,
         "tokens": 324,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0002,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.7288,
+          "consistent": 0.6627,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -185,10 +215,15 @@
         "latency_ms": 0.0,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0008,
+        "suspect_p": 0.008,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.7981,
+          "consistent": 0.5801,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -210,10 +245,15 @@
         "latency_ms": 902.51,
         "tokens": 344,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0001,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.6831,
+          "consistent": 0.5505,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -235,10 +275,15 @@
         "latency_ms": 0.21,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0005,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.7865,
+          "consistent": 0.5603,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -260,10 +305,15 @@
         "latency_ms": 1057.63,
         "tokens": 364,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0001,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.6933,
+          "consistent": 0.6036,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -285,10 +335,15 @@
         "latency_ms": 0.21,
         "tokens": null,
         "suspect_rank": null,
-        "suspect_p": 0.0,
+        "suspect_p": 0.0003,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.7788,
+          "consistent": 0.5492,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -313,7 +368,12 @@
         "suspect_p": 0.0,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.6953,
+          "consistent": 0.5637,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {
@@ -335,10 +395,15 @@
         "latency_ms": 505.79,
         "tokens": 199,
         "suspect_rank": 2,
-        "suspect_p": 0.0124,
+        "suspect_p": 0.1988,
         "is_guilty": false,
         "is_planted": false,
-        "checker": null
+        "checker": {
+          "on_track": 0.2792,
+          "consistent": 0.1873,
+          "alarm": false,
+          "tier": "laya"
+        }
       }
     },
     {

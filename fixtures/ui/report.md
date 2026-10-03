@@ -9,11 +9,11 @@
 
 ## Diagnosis
 Top suspects: [4, 12, 0] (gnn).
-- step 4: p = 0.9839
-- step 12: p = 0.0124
-- step 2: p = 0.0017
-- step 0: p = 0.0009
-- step 6: p = 0.0008
+- step 4: p = 0.7586
+- step 12: p = 0.1988
+- step 0: p = 0.0141
+- step 2: p = 0.0124
+- step 6: p = 0.008
 
 ## Timeline
 

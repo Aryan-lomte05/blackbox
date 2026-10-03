@@ -329,6 +329,18 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
             state = db().get_blob(step.state_hash_after)
         return {"step": step.model_dump(mode="json"), "state_after": state}
 
+    @app.get("/api/runs/{run_id}/similar", tags=["Diagnosis"],
+             summary="★ Seen this before? Failure fingerprint, look-alike past failures, novelty, known fixes")
+    def get_similar(run_id: str = PathParam(..., openapi_examples=failed or None), k: int = Query(5, ge=1, le=50)) -> dict:
+        """The failure's fingerprint (where the cause sits, what it looked like, how far it spread); the k most similar
+        labelled failures; how many share the exact fingerprint and what caused them; `novel` when nothing in the
+        library looks like it; rules the fleet firewall APPROVED for look-alike failures. Instant (cached library)."""
+        from blackbox.diagnosis.fingerprint import similar
+
+        trace = load(run_id)
+        failed_run = trace.run.outcome is not None and not trace.run.outcome.success
+        return similar(db(), trace, diagnose(trace) if failed_run and not trace.run.label else None, k=k)
+
     @app.get("/api/runs/{run_id}/diagnosis", tags=["Diagnosis"], summary="3 · Diagnose: rank the steps of a failed run")
     def get_diagnosis(run_id: str = PathParam(..., openapi_examples=failed or None),
                       model: Literal["graph", "ranker"] | None = Query(None, description=
