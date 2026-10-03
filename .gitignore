@@ -27,5 +27,3 @@ Thumbs.db
 .vscode/
 .idea/
 
-# not published: code from another project, shared with the team separately
-reference/

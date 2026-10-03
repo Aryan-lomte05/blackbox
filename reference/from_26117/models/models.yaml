@@ -1,0 +1,111 @@
+# models.yaml — Model Registry (dev tier, RTX 4060 8GB)
+# Exact shape per VIBECODING_SPEC.md CARD 01 / DEPENDENCIES.md §1.
+# Adding a model = adding an entry here + backend reload. No code change (FR-4).
+# Do not add fields beyond id/backend/model/task_tags/placement without
+# updating CARD 01's ModelConfig schema, this file, and TOOLS.md in the
+# same change. `placement` (in-process `transformers` entries only) sets
+# the GPU and CPU memory budgets -- the split is ours, not a scheduler's.
+
+- id: coder-model
+  backend: ollama
+  model: qwen2.5-coder:7b
+  task_tags: [code_generation, code_review, debugging]
+
+- id: reasoning-model
+  backend: ollama
+  # Was qwen2.5:14b. Measured on the real corpus, warm, 5 questions with
+  # known answers (4 factual + 1 out-of-corpus that must be refused):
+  #
+  #     qwen2.5:7b    4/5   avg  4.6s
+  #     qwen2.5:3b    4/5   avg  3.4s
+  #     qwen2.5:14b   4/5   avg 32.5s
+  #
+  # Identical accuracy, 7x faster. The single shared failure is a
+  # retrieval miss (the chunk holding the ramp rate was not returned),
+  # not a model error -- all three correctly said the sources did not
+  # contain it rather than inventing a number.
+  #
+  # 7b over 3b despite 3b being faster still: 3b misread a table row in
+  # an earlier run, answering 11.2 g/10min (the H110F row) for a
+  # question about H030SG (3.4). On a refinery workbench a fast wrong
+  # number is worse than a slow right one, and a model that confuses
+  # adjacent rows of a spec table fails in exactly the way that matters.
+  #
+  # VRAM: 4.7 GB fits the 8 GB card outright -- confirmed "100% GPU" in
+  # ollama ps. 14b is 9.0 GB and needs num_gpu=99 to avoid a CPU split,
+  # leaving no room for any other model to be resident.
+  model: qwen2.5:7b
+  task_tags: [summarization, drafting, approval_notes, planning, calculation, question_answering]
+
+- id: vision-model
+  backend: ollama
+  model: qwen2.5vl:7b
+  task_tags: [ocr, image_understanding, diagram_reading]
+
+- id: fast-router
+  backend: ollama
+  # Was "phi-3.5-mini", which DOES NOT EXIST on Ollama:
+  #   ollama pull phi-3.5-mini
+  #   Error: pull model manifest: file does not exist
+  # So fast-router had never worked. Both the router (CARD 03) and the
+  # self-verification agent (AGENTS_SPEC §5) resolve to this id, and both
+  # 404'd on every call -- which is why verification reported "could not
+  # run" rather than a verdict. The real tag is phi3.5 (2.2 GB, 3.8B).
+  # Same bug class as qwen2-vl:7b -> qwen2.5vl:7b, found earlier: a
+  # plausible-looking name that was never actually pulled.
+  model: phi3.5
+  task_tags: [classification, routing]
+
+- id: verify-coder-7b
+  backend: ollama
+  model: qwen2.5:7b
+  task_tags: [code]
+
+- id: deck-writer-large
+  backend: ollama
+  # Long-form planning for decks built from long or multiple sources,
+  # run as a BACKGROUND job. reasoning-model (7b) is kept for chat because
+  # there speed decides usability; a deck the operator waits minutes for
+  # anyway can afford the 14b's better structure. Router: deck_agent picks
+  # this when the anchored sources are long (see DECK_LARGE_SOURCE_CHARS).
+  # 9.0 GB against an 8 GB card: part of it runs on CPU, ~30-60s per call.
+  model: qwen2.5:14b
+  task_tags: [deck_planning, long_form_drafting]
+
+- id: image-model
+  backend: diffusers
+  # ABSTRACT deck artwork only (cover and section backgrounds) -- never a
+  # picture of equipment, plant or people, which would be an invented
+  # record. SD-Turbo: 1-step 512px generation, ~2.5 GB fp16, fits beside
+  # nothing else on the 8 GB card, so the deck job unloads the LLM first.
+  # Fetched once: python -m backend.ingestion.fetch_models --model sd-turbo
+  # Licence: Stability AI non-commercial research community licence.
+  model: stabilityai/sd-turbo
+  task_tags: [image_generation]
+
+- id: page-reviewer
+  backend: transformers
+  # Reviews rendered deck pages (design QA). Run IN-PROCESS, not through
+  # Ollama: on the 8 GB card Ollama put every Qwen2.5-VL layer on the CPU
+  # (it estimated 7b at 13.4 GB, 3b at 10.8 GB) and ignored num_gpu --
+  # 145-183 s/page, RAM paged to disk, the machine froze. Here the split
+  # is ours (`placement`). Measured on 4 deliberately broken + 4 real pages:
+  #
+  #                      on GPU   s/page   broken   real   (mean /10)
+  #   ollama 7b            0%    145-183     -        -
+  #   3B fp16, 5.5 GiB    77%     14-30     2.4      4.2*
+  #   7B 4-bit, 6 GiB    100%      3-8      3.2      6.5
+  #   (* 3 of 4: 3B returned a range, "2-5", instead of one rating)
+  #
+  # 7B 4-bit: better judgement AND faster, because nothing streams from RAM.
+  # Fetched once: python -m backend.ingestion.fetch_models --model Qwen/Qwen2.5-VL-7B-Instruct
+  # Then quantize once (local, ~6 GB copy; loads in 14 s instead of 42 s and
+  # does not stream 16 GB of bf16 through RAM):
+  #   python -m backend.models.local_vision --prepare page-reviewer
+  model: Qwen/Qwen2.5-VL-7B-Instruct
+  task_tags: [slide_review, image_understanding]
+  placement:
+    gpu_memory_gib: 6
+    cpu_memory_gib: 4
+    quantization: 4bit
+    max_image_pixels: 518400
