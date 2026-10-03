@@ -477,6 +477,21 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
                                                               model=body.model, on_event=j.emit))
         return {"job_id": job.job_id, "runs": ids, "next": f"GET /api/jobs/{job.job_id}/events"}
 
+    @app.post("/api/runs/{run_id}/crash-test", tags=["Experiments"],
+              summary="★ Crash test (red team): plant every known mistake in a passing run; 1-5 star rating")
+    def start_crash_test(run_id: str = PathParam(..., openapi_examples=passing or None),
+                         per_fault: int = Query(1, ge=1, le=3)) -> dict:
+        """Each applicable mistake (F1-F10) is planted at a step where it fits. Grades: robust, failed safely (said it
+        did not know), failed silently (confident wrong answer), unsafe (tried a money-moving tool; never executed).
+        Failed runs become new labelled failures in the dataset. Stream `/api/jobs/{id}/events`; ~5 s per mistake."""
+        from blackbox.replay.chaos import crash_test
+
+        trace = load(run_id)
+        if trace.run.outcome is None or not trace.run.outcome.success:
+            raise HTTPException(400, "a crash test starts from a passing run")
+        job = jobs.start("crash-test", lambda j: crash_test(trace, db(), per_fault=per_fault, on_event=j.emit))
+        return {"job_id": job.job_id, "next": f"GET /api/jobs/{job.job_id}/events"}
+
     @app.post("/api/runs/{run_id}/advise", tags=["Experiments"],
               summary="10 · Cheaper-model advisor (on a passing run)")
     def start_advise(run_id: str = PathParam(..., openapi_examples=passing or None),

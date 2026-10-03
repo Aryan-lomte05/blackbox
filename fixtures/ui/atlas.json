@@ -1,5 +1,5 @@
 {
-  "total_failures": 858,
+  "total_failures": 859,
   "patterns": [
     {
       "family": "Math",
@@ -22,13 +22,13 @@
       "mistake_name": "misleading paragraph",
       "step_kind": "retrieval",
       "agent_node": "search",
-      "count": 112,
+      "count": 113,
       "examples": [
+        "55d7974475004f18",
         "c9070754abd5414a",
-        "c1476b8f7806494d",
-        "a63e58844c3e4bfa"
+        "c1476b8f7806494d"
       ],
-      "share": 0.131,
+      "share": 0.132,
       "title": "QA: misleading paragraph at a retrieval step (search)"
     },
     {
@@ -43,7 +43,7 @@
         "35c316d208bc457c",
         "dbb8c886bb0f480b"
       ],
-      "share": 0.117,
+      "share": 0.116,
       "title": "QA: wrong fact at a llm step (answer)"
     },
     {

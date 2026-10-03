@@ -18,7 +18,7 @@
   "same_fingerprint_causes": {
     "F3": 14
   },
-  "library_size": 858,
+  "library_size": 859,
   "closest": [
     {
       "run_id": "570714cc73a247de",
@@ -68,5 +68,14 @@
   ],
   "best_similarity": 1.0,
   "novel": false,
-  "known_fixes": []
+  "known_fixes": [
+    {
+      "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+      "model": null,
+      "fixed": 1,
+      "of": 3,
+      "similarity": 1.0,
+      "report": "37452fc329e1498f-7c60f4.json"
+    }
+  ]
 }

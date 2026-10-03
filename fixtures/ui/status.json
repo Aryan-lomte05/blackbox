@@ -1,5 +1,5 @@
 {
-  "time": "2026-10-04T02:41:36",
+  "time": "2026-10-04T02:51:19",
   "queue": [
     {
       "name": "Farm QA (150 tasks, qwen2.5:7b)",
@@ -88,30 +88,35 @@
     },
     {
       "name": "Overnight 4: retrain diagnosis model (CV-chosen variant) + evaluate",
-      "state": "running",
-      "note": "log: data/logs/overnight_retrain.log"
+      "state": "done",
+      "note": "test_known by mistake type: F1 0.11 (n=9), F2 0.40 (n=5), F3 1.00 (n=5), F4 0.69 (n=13), F5 0.00 (n=2), F6 0.70 (n=33)\r \r saved data\\models\\gnn.pt and data\\models\\gnn_metrics.json (982s)\r "
+    },
+    {
+      "name": "Overnight 5: dataset export for the team",
+      "state": "done",
+      "note": "5629 runs, 859 labelled failures, 35303 save-points -> data/dataset/blackbox-3k\r "
     }
   ],
   "running": [
-    "pid   3172    320 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui",
-    "pid  40052     16 min  cpu 109.0%  ram  0.2 GB  blackbox.diagnosis.gnn train --variant with_real_failures",
-    "pid  31068     65 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui --port 8001"
+    "pid   3172    330 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui",
+    "pid  31068     75 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui --port 8001"
   ],
   "machine": [
-    "GPU NVIDIA GeForce RTX 4060 Laptop GPU: 39% busy, 5.4/8.0 GB",
+    "GPU NVIDIA GeForce RTX 4060 Laptop GPU: 0% busy, 4.7/8.0 GB",
     "Ollama loaded: qwen2.5:7b (5.1 GB on GPU)"
   ],
   "logs": [
-    "export_fixtures.log           20s ago  ModuleNotFoundError: No module named 'blackbox.diagnosis.fingerprint'",
-    "overnight_retrain.log         14m ago  5618 runs (514 labelled failures in train, 70 in val) on cuda; featurised in 115s",
-    "overnight_backfill.log        16m ago  done: 854 runs, 7354 steps checked, 0 skipped, 2210 s",
-    "e2e_docs_v2.log               51m ago  62/66 passed -> data\\reports\\e2e_docs.md",
-    "ui_8001.log                   51m ago  INFO:     127.0.0.1:54315 - \"GET / HTTP/1.1\" 200 OK",
-    "overnight_farm_qa.log         53m ago  shard: data\\shards\\aryan-4060_20261003T201811Z.jsonl.gz",
-    "overnight_farm_math.log       93m ago  shard: data\\shards\\aryan-4060_20261003T193728Z.jsonl.gz",
+    "overnight_export.log           8m ago  5629 runs, 859 labelled failures, 35303 save-points -> data/dataset/blackbox-3k",
+    "overnight_retrain.log          9m ago  saved data\\models\\gnn.pt and data\\models\\gnn_metrics.json (982s)",
+    "export_fixtures.log           10m ago  ModuleNotFoundError: No module named 'blackbox.diagnosis.fingerprint'",
+    "overnight_backfill.log        26m ago  done: 854 runs, 7354 steps checked, 0 skipped, 2210 s",
+    "e2e_docs_v2.log               61m ago  62/66 passed -> data\\reports\\e2e_docs.md",
+    "ui_8001.log                   61m ago  INFO:     127.0.0.1:54315 - \"GET / HTTP/1.1\" 200 OK",
+    "overnight_farm_qa.log         62m ago  shard: data\\shards\\aryan-4060_20261003T201811Z.jsonl.gz",
+    "overnight_farm_math.log      103m ago  shard: data\\shards\\aryan-4060_20261003T193728Z.jsonl.gz",
     "overnight.log                  2h ago  (empty: output may be buffered)",
     "lab_qa.log                     2h ago  lab exit 0",
-    "label_natural_aryan_2.log      2h ago  77c7d7139eb4430f: cause = step 0",
+    "label_natural_aryan_2.log      3h ago  77c7d7139eb4430f: cause = step 0",
     "label_natural_aryan.log        4h ago  {\"tried\": 40, \"labelled\": 17, \"bad_luck\": 3, \"unresolved\": 20, \"errors\": 0}",
     "e2e_docs.log                   4h ago  58/58 passed -> data\\reports\\e2e_docs.md",
     "ui.log                         5h ago  INFO:     127.0.0.1:55148 - \"POST /api/investigate/model_finds_it HTTP/1.1\" 200 OK",
@@ -121,18 +126,18 @@
     "farm_qa_aryan.log              8h ago  shard: data\\shards\\aryan-4060_20261003T125624Z.jsonl.gz"
   ],
   "data": [
-    "runs 5633  (math 3343, ops 848, qa 1429, smolagents 4, trading 9)   steps 55882",
-    "labelled failures 858  (by source: {'injected': 814, 'verified': 44})",
-    "labelled by split: {'calib': 76, 'test_known': 71, 'test_new_tasks': 123, 'train': 514, 'val': 70, None: 4}",
-    "save-points 55882 stored as 11161 files (80% de-duplicated)"
+    "runs 5653  (math 3357, ops 848, qa 1435, smolagents 4, trading 9)   steps 56122",
+    "labelled failures 859  (by source: {'injected': 815, 'verified': 44})",
+    "labelled by split: {'calib': 76, 'test_known': 71, 'test_new_tasks': 123, 'train': 515, 'val': 70, None: 4}",
+    "save-points 56122 stored as 11190 files (80% de-duplicated)"
   ],
   "counts": {
-    "runs": 5633,
-    "steps": 55882,
-    "labelled_failures": 858,
-    "save_points": 55882,
-    "unique_save_points": 11161,
-    "blob_mb": 10.33
+    "runs": 5653,
+    "steps": 56122,
+    "labelled_failures": 859,
+    "save_points": 56122,
+    "unique_save_points": 11190,
+    "blob_mb": 10.35
   },
   "metrics": {
     "gnn_metrics": {
@@ -144,6 +149,7 @@
         "text_dim": 64,
         "graph_features": true,
         "verified_weight": 5.0,
+        "n_features": 37,
         "edge_types": [],
         "aux_weight": 0.3,
         "lr": 0.002,
@@ -154,66 +160,67 @@
         "seeds": 5
       },
       "variant": "with_real_failures",
-      "model": "gnn@0e314b80",
+      "model": "gnn@35f3e605",
       "data": {
-        "calib|unlabelled": 179,
-        "calib|labelled": 29,
-        "test_known|unlabelled": 335,
-        "test_known|labelled": 30,
-        "test_new_tasks|unlabelled": 685,
+        "calib|unlabelled": 375,
+        "calib|labelled": 76,
+        "test_known|unlabelled": 594,
+        "test_known|labelled": 71,
+        "test_new_tasks|unlabelled": 721,
         "test_new_tasks|labelled": 123,
-        "train|unlabelled": 1254,
-        "train|labelled": 204,
-        "val|unlabelled": 112,
-        "val|labelled": 34,
-        "None|unlabelled": 71
+        "train|unlabelled": 2683,
+        "train|labelled": 514,
+        "val|unlabelled": 291,
+        "val|labelled": 70,
+        "None|unlabelled": 96,
+        "None|labelled": 4
       },
       "device": "cuda",
       "splits": {
         "val": {
-          "n": 33,
+          "n": 66,
           "top1": 0.6061,
           "top1_ci95": [
-            0.4242,
-            0.7576
+            0.4848,
+            0.7273
           ],
-          "top3": 0.8788,
+          "top3": 0.8485,
           "top3_ci95": [
             0.7576,
-            0.9697
+            0.9242
           ],
-          "pm1": 0.6364,
-          "mrr": 0.7561
+          "pm1": 0.6818,
+          "mrr": 0.7392
         },
         "test_known": {
-          "n": 28,
-          "top1": 0.6071,
+          "n": 67,
+          "top1": 0.597,
           "top1_ci95": [
-            0.4286,
-            0.7857
+            0.4776,
+            0.7015
           ],
-          "top3": 0.9286,
+          "top3": 0.8209,
           "top3_ci95": [
-            0.8214,
-            1.0
+            0.7313,
+            0.9104
           ],
-          "pm1": 0.6786,
-          "mrr": 0.767
+          "pm1": 0.6567,
+          "mrr": 0.7408
         },
         "test_new_tasks": {
           "n": 112,
-          "top1": 0.6518,
+          "top1": 0.6339,
           "top1_ci95": [
-            0.5625,
-            0.7321
+            0.5446,
+            0.7143
           ],
-          "top3": 0.7679,
+          "top3": 0.7946,
           "top3_ci95": [
-            0.6875,
-            0.8482
+            0.7143,
+            0.8661
           ],
-          "pm1": 0.6875,
-          "mrr": 0.7361
+          "pm1": 0.6696,
+          "mrr": 0.7314
         },
         "test_natural": {
           "n": 17,
@@ -225,45 +232,45 @@
           "top3": 0.2353,
           "top3_ci95": [
             0.0588,
-            0.4706
+            0.4118
           ],
           "pm1": 0.5294,
-          "mrr": 0.2191
+          "mrr": 0.2271
         }
       },
       "by_fault": {
         "F1": {
-          "n": 2,
-          "top1": 0.0,
+          "n": 9,
+          "top1": 0.1111,
           "top1_ci95": [
             0.0,
-            0.0
+            0.3333
           ],
-          "top3": 1.0,
+          "top3": 0.7778,
           "top3_ci95": [
-            1.0,
+            0.4444,
             1.0
           ],
-          "pm1": 0.0,
-          "mrr": 0.3333
+          "pm1": 0.2222,
+          "mrr": 0.4944
         },
         "F2": {
-          "n": 3,
-          "top1": 0.0,
+          "n": 5,
+          "top1": 0.4,
           "top1_ci95": [
             0.0,
-            0.0
+            0.8
           ],
-          "top3": 1.0,
+          "top3": 0.8,
           "top3_ci95": [
-            1.0,
+            0.4,
             1.0
           ],
-          "pm1": 0.0,
-          "mrr": 0.5
+          "pm1": 0.4,
+          "mrr": 0.6167
         },
         "F3": {
-          "n": 4,
+          "n": 5,
           "top1": 1.0,
           "top1_ci95": [
             1.0,
@@ -278,154 +285,154 @@
           "mrr": 1.0
         },
         "F4": {
-          "n": 4,
-          "top1": 0.75,
+          "n": 13,
+          "top1": 0.6923,
           "top1_ci95": [
-            0.25,
-            1.0
+            0.4615,
+            0.9231
           ],
-          "top3": 1.0,
+          "top3": 0.8462,
           "top3_ci95": [
-            1.0,
+            0.6154,
             1.0
           ],
-          "pm1": 0.75,
-          "mrr": 0.875
+          "pm1": 0.6923,
+          "mrr": 0.8077
         },
         "F5": {
-          "n": 1,
+          "n": 2,
           "top1": 0.0,
           "top1_ci95": [
-            null,
-            null
+            0.0,
+            0.0
           ],
-          "top3": 0.0,
+          "top3": 0.5,
           "top3_ci95": [
-            null,
-            null
-          ],
-          "pm1": 0.0,
-          "mrr": 0.1667
-        },
-        "F6": {
-          "n": 14,
-          "top1": 0.7143,
-          "top1_ci95": [
-            0.5,
-            0.9286
-          ],
-          "top3": 0.9286,
-          "top3_ci95": [
-            0.7857,
+            0.0,
             1.0
           ],
-          "pm1": 0.8571,
-          "mrr": 0.8316
+          "pm1": 0.0,
+          "mrr": 0.3125
+        },
+        "F6": {
+          "n": 33,
+          "top1": 0.697,
+          "top1_ci95": [
+            0.5152,
+            0.8485
+          ],
+          "top3": 0.8182,
+          "top3_ci95": [
+            0.697,
+            0.9394
+          ],
+          "pm1": 0.7879,
+          "mrr": 0.7872
         }
       },
       "baselines": {
         "val": {
           "last_model_call": {
-            "n": 33,
-            "top1": 0.2727,
+            "n": 66,
+            "top1": 0.3636,
             "top1_ci95": [
-              0.1212,
-              0.4242
-            ],
-            "top3": 0.3939,
-            "top3_ci95": [
               0.2424,
+              0.4848
+            ],
+            "top3": 0.4242,
+            "top3_ci95": [
+              0.303,
               0.5455
             ],
-            "pm1": 0.3333,
-            "mrr": 0.4036
+            "pm1": 0.3939,
+            "mrr": 0.4671
           },
           "first_model_call": {
-            "n": 33,
-            "top1": 0.0303,
+            "n": 66,
+            "top1": 0.0152,
             "top1_ci95": [
               0.0,
-              0.0909
+              0.0455
             ],
             "top3": 0.1818,
             "top3_ci95": [
-              0.0606,
-              0.303
+              0.0909,
+              0.2727
             ],
             "pm1": 0.1818,
-            "mrr": 0.2297
+            "mrr": 0.2255
           },
           "fallback_order": {
-            "n": 33,
-            "top1": 0.2727,
+            "n": 66,
+            "top1": 0.3485,
             "top1_ci95": [
-              0.1212,
-              0.4242
+              0.2273,
+              0.4697
             ],
-            "top3": 0.3939,
+            "top3": 0.4242,
             "top3_ci95": [
-              0.2424,
+              0.303,
               0.5455
             ],
-            "pm1": 0.3333,
-            "mrr": 0.4036
+            "pm1": 0.3788,
+            "mrr": 0.4595
           },
           "random": {
-            "n": 33,
-            "top1": 0.1233,
-            "top3": 0.3698
+            "n": 66,
+            "top1": 0.1209,
+            "top3": 0.3626
           }
         },
         "test_known": {
           "last_model_call": {
-            "n": 28,
-            "top1": 0.25,
+            "n": 67,
+            "top1": 0.2537,
             "top1_ci95": [
-              0.1071,
-              0.4286
+              0.1493,
+              0.3582
             ],
-            "top3": 0.3214,
+            "top3": 0.3284,
             "top3_ci95": [
-              0.1429,
-              0.5
+              0.2239,
+              0.4478
             ],
-            "pm1": 0.25,
-            "mrr": 0.3738
+            "pm1": 0.2687,
+            "mrr": 0.3812
           },
           "first_model_call": {
-            "n": 28,
-            "top1": 0.0357,
+            "n": 67,
+            "top1": 0.0149,
             "top1_ci95": [
               0.0,
-              0.1071
+              0.0448
             ],
-            "top3": 0.1429,
+            "top3": 0.1791,
             "top3_ci95": [
-              0.0357,
-              0.2857
+              0.0896,
+              0.2836
             ],
-            "pm1": 0.2143,
-            "mrr": 0.2263
+            "pm1": 0.2537,
+            "mrr": 0.2281
           },
           "fallback_order": {
-            "n": 28,
-            "top1": 0.25,
+            "n": 67,
+            "top1": 0.2537,
             "top1_ci95": [
-              0.1071,
-              0.4286
+              0.1493,
+              0.3582
             ],
-            "top3": 0.3214,
+            "top3": 0.3284,
             "top3_ci95": [
-              0.1429,
-              0.5
+              0.2239,
+              0.4478
             ],
-            "pm1": 0.25,
-            "mrr": 0.3738
+            "pm1": 0.2687,
+            "mrr": 0.3812
           },
           "random": {
-            "n": 28,
-            "top1": 0.1141,
-            "top3": 0.3422
+            "n": 67,
+            "top1": 0.1228,
+            "top3": 0.3685
           }
         },
         "test_new_tasks": {
@@ -533,51 +540,57 @@
           }
         }
       },
+      "suspect_set_90": {
+        "k": 5,
+        "target": 0.9,
+        "n_calib": 74,
+        "coverage_on_calib": 0.932
+      },
       "policy_model_plus_first_decision": {
         "val": {
-          "n": 33,
+          "n": 66,
           "top1": 0.6061,
           "top1_ci95": [
-            0.4242,
-            0.7576
+            0.4848,
+            0.7273
           ],
-          "top3": 0.8485,
+          "top3": 0.8182,
           "top3_ci95": [
-            0.7265,
-            0.9697
+            0.7121,
+            0.9091
           ],
-          "pm1": 0.6364,
-          "mrr": 0.7521
+          "pm1": 0.6818,
+          "mrr": 0.7334
         },
         "test_known": {
-          "n": 28,
-          "top1": 0.6071,
+          "n": 67,
+          "top1": 0.597,
           "top1_ci95": [
-            0.4286,
-            0.7857
+            0.4776,
+            0.7015
           ],
-          "top3": 0.8571,
+          "top3": 0.791,
           "top3_ci95": [
-            0.7143,
-            0.9643
+            0.6866,
+            0.8806
           ],
-          "pm1": 0.6786,
-          "mrr": 0.7611
+          "pm1": 0.6567,
+          "mrr": 0.7339
         },
         "test_new_tasks": {
           "n": 112,
-          "top1": 0.6518,
+          "top1": 0.6339,
           "top1_ci95": [
-            0.5625,
-            0.7321
+            0.5446,
+            0.7143
           ],
-          "top3": 0.6964,
+          "top3": 0.7143,
           "top3_ci95": [
-            0.6158,
-            0.7768
+            0.625,
+            0.7946
           ],
-          "pm1": 0.6875,
-          "mrr": 0.7263
+          "pm1": 0.6696,
+          "mrr": 0.7223
         },
         "test_natural": {
           "n": 17,
@@ -592,30 +605,24 @@
             0.8824
           ],
           "pm1": 0.5294,
-          "mrr": 0.2681
+          "mrr": 0.2673
         }
-      },
-      "suspect_set_90": {
-        "k": 5,
-        "target": 0.9,
-        "n_calib": 29,
-        "coverage_on_calib": 0.931
       },
       "suspect_set_90_coverage": {
         "val": {
           "k": 5,
-          "n": 33,
+          "n": 66,
           "coverage": 0.939
         },
         "test_known": {
           "k": 5,
-          "n": 28,
-          "coverage": 0.929
+          "n": 67,
+          "coverage": 0.94
         },
         "test_new_tasks": {
           "k": 5,
           "n": 112,
-          "coverage": 0.875
+          "coverage": 0.884
         },
         "test_natural": {
           "k": 5,

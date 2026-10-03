@@ -1,20 +1,20 @@
 {
   "start": {
-    "job_id": "a3137f899f5a",
-    "next": "GET /api/jobs/a3137f899f5a/events to stream it"
+    "job_id": "bbcd2bd0e9af",
+    "next": "GET /api/jobs/bbcd2bd0e9af/events to stream it"
   },
   "events": [
     {
       "type": "rule",
       "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
       "seq": 0,
-      "t": 1791061939.211
+      "t": 1791062654.917
     },
     {
       "type": "fleet",
       "runs": 4,
       "seq": 1,
-      "t": 1791061939.35
+      "t": 1791062656.258
     },
     {
       "type": "run",
@@ -22,9 +22,9 @@
       "of": 4,
       "run_id": "37452fc329e1498f",
       "verdict": "still failing",
-      "new_run": "3b12752e5ec94bfe",
+      "new_run": "f52d6bb28f254ed5",
       "seq": 2,
-      "t": 1791061942.673
+      "t": 1791062659.599
     },
     {
       "type": "run",
@@ -32,9 +32,9 @@
       "of": 4,
       "run_id": "570714cc73a247de",
       "verdict": "still failing",
-      "new_run": "a12b84c033ad468d",
+      "new_run": "f27cb4825b8c4f76",
       "seq": 3,
-      "t": 1791061947.705
+      "t": 1791062664.526
     },
     {
       "type": "run",
@@ -42,9 +42,9 @@
       "of": 4,
       "run_id": "9609d794c0a84761",
       "verdict": "fixed",
-      "new_run": "f34fb797f8064443",
+      "new_run": "771f45836f9341b4",
       "seq": 4,
-      "t": 1791061950.741
+      "t": 1791062667.477
     },
     {
       "type": "run",
@@ -52,9 +52,9 @@
       "of": 4,
       "run_id": "316f79e907cd485e",
       "verdict": "held",
-      "new_run": "17e553979db74d0e",
+      "new_run": "4f1c3f93846b4b5c",
       "seq": 5,
-      "t": 1791061953.589
+      "t": 1791062670.387
     },
     {
       "type": "done",
@@ -68,7 +68,7 @@
       "decision": "APPROVE",
       "why": "it fixes 1 of 3 failures and breaks none of 1 passing runs",
       "seq": 6,
-      "t": 1791061953.589
+      "t": 1791062670.388
     },
     {
       "type": "done",
@@ -99,7 +99,7 @@
             "before": false,
             "after": false,
             "verdict": "still failing",
-            "new_run": "3b12752e5ec94bfe",
+            "new_run": "f52d6bb28f254ed5",
             "answer": "28",
             "savings": {
               "steps_total": 14,
@@ -115,8 +115,8 @@
             "before": false,
             "after": false,
             "verdict": "still failing",
-            "new_run": "a12b84c033ad468d",
-            "answer": "300",
+            "new_run": "f27cb4825b8c4f76",
+            "answer": "30",
             "savings": {
               "steps_total": 14,
               "steps_executed": 9,
@@ -131,7 +131,7 @@
             "before": false,
             "after": true,
             "verdict": "fixed",
-            "new_run": "f34fb797f8064443",
+            "new_run": "771f45836f9341b4",
             "answer": "2",
             "savings": {
               "steps_total": 10,
@@ -147,7 +147,7 @@
             "before": true,
             "after": true,
             "verdict": "held",
-            "new_run": "17e553979db74d0e",
+            "new_run": "4f1c3f93846b4b5c",
             "answer": "22",
             "savings": {
               "steps_total": 6,
@@ -162,7 +162,7 @@
         "saved_as": "37452fc329e1498f-7c60f4.json"
       },
       "seq": 7,
-      "t": 1791061953.6
+      "t": 1791062670.395
     }
   ],
   "result": {
@@ -192,7 +192,7 @@
         "before": false,
         "after": false,
         "verdict": "still failing",
-        "new_run": "3b12752e5ec94bfe",
+        "new_run": "f52d6bb28f254ed5",
         "answer": "28",
         "savings": {
           "steps_total": 14,
@@ -208,8 +208,8 @@
         "before": false,
         "after": false,
         "verdict": "still failing",
-        "new_run": "a12b84c033ad468d",
-        "answer": "300",
+        "new_run": "f27cb4825b8c4f76",
+        "answer": "30",
         "savings": {
           "steps_total": 14,
           "steps_executed": 9,
@@ -224,7 +224,7 @@
         "before": false,
         "after": true,
         "verdict": "fixed",
-        "new_run": "f34fb797f8064443",
+        "new_run": "771f45836f9341b4",
         "answer": "2",
         "savings": {
           "steps_total": 10,
@@ -240,7 +240,7 @@
         "before": true,
         "after": true,
         "verdict": "held",
-        "new_run": "17e553979db74d0e",
+        "new_run": "4f1c3f93846b4b5c",
         "answer": "22",
         "savings": {
           "steps_total": 6,

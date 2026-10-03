@@ -102,6 +102,20 @@ def _export_test(args) -> int:
     return 0
 
 
+def cmd_crash_test(args) -> int:
+    import blackbox.agents.builtin  # noqa: F401
+    from blackbox.replay.chaos import crash_test, format_report
+
+    store = Store(args.data)
+
+    def show(e: dict) -> None:
+        if e.get("type") == "test":
+            print(f"  {e['n']}/{e['of']} {e['fault']} at step {e['step']}: {e['verdict']}", flush=True)
+
+    print(format_report(crash_test(store.load_trace(args.run_id), store, per_fault=args.per_fault, on_event=show)))
+    return 0
+
+
 def cmd_fleet(args) -> int:
     import blackbox.agents.builtin  # noqa: F401
     from blackbox.replay.fleet import fleet_test, format_report, one_fix_for_many, similar_runs
@@ -161,6 +175,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("lab", help="Live Lab: type a question, plant a mistake live, watch the investigation")
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
+
+    s = sub.add_parser("crash-test", help="red team a passing run: plant every known mistake, 1-5 star rating")
+    s.add_argument("run_id")
+    s.add_argument("--per-fault", type=int, default=1)
+    s.set_defaults(fn=cmd_crash_test)
 
     s = sub.add_parser("fleet", help="one fix for many: test a rule (or a GenAI-written one) on similar failures + passing runs")
     s.add_argument("run_id")

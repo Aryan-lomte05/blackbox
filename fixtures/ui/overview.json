@@ -1,33 +1,33 @@
 {
   "kpis": {
-    "runs": 5633,
-    "steps": 55882,
-    "labelled_failures": 858,
-    "save_point_dedup": 0.8,
+    "runs": 5653,
+    "steps": 56122,
+    "labelled_failures": 859,
+    "save_point_dedup": 0.801,
     "open_incidents": 8,
     "critical_incidents": 5
   },
   "model": {
-    "name": "gnn@0e314b80",
+    "name": "gnn@35f3e605",
     "variant": "with_real_failures",
     "results": {
       "test_known": {
-        "n": 28,
-        "top1": 0.6071,
+        "n": 67,
+        "top1": 0.597,
         "top1_ci95": [
-          0.4286,
-          0.7857
+          0.4776,
+          0.7015
         ],
-        "top3": 0.9286
+        "top3": 0.8209
       },
       "test_new_tasks": {
         "n": 112,
-        "top1": 0.6518,
+        "top1": 0.6339,
         "top1_ci95": [
-          0.5625,
-          0.7321
+          0.5446,
+          0.7143
         ],
-        "top3": 0.7679
+        "top3": 0.7946
       },
       "test_natural": {
         "n": 17,
@@ -41,49 +41,49 @@
     },
     "policy": {
       "val": {
-        "n": 33,
+        "n": 66,
         "top1": 0.6061,
         "top1_ci95": [
-          0.4242,
-          0.7576
+          0.4848,
+          0.7273
         ],
-        "top3": 0.8485,
+        "top3": 0.8182,
         "top3_ci95": [
-          0.7265,
-          0.9697
+          0.7121,
+          0.9091
         ],
-        "pm1": 0.6364,
-        "mrr": 0.7521
+        "pm1": 0.6818,
+        "mrr": 0.7334
       },
       "test_known": {
-        "n": 28,
-        "top1": 0.6071,
+        "n": 67,
+        "top1": 0.597,
         "top1_ci95": [
-          0.4286,
-          0.7857
+          0.4776,
+          0.7015
         ],
-        "top3": 0.8571,
+        "top3": 0.791,
         "top3_ci95": [
-          0.7143,
-          0.9643
+          0.6866,
+          0.8806
         ],
-        "pm1": 0.6786,
-        "mrr": 0.7611
+        "pm1": 0.6567,
+        "mrr": 0.7339
       },
       "test_new_tasks": {
         "n": 112,
-        "top1": 0.6518,
+        "top1": 0.6339,
         "top1_ci95": [
-          0.5625,
-          0.7321
+          0.5446,
+          0.7143
         ],
-        "top3": 0.6964,
+        "top3": 0.7143,
         "top3_ci95": [
-          0.6158,
-          0.7768
+          0.625,
+          0.7946
         ],
-        "pm1": 0.6875,
-        "mrr": 0.7263
+        "pm1": 0.6696,
+        "mrr": 0.7223
       },
       "test_natural": {
         "n": 17,
@@ -98,205 +98,221 @@
           0.8824
         ],
         "pm1": 0.5294,
-        "mrr": 0.2681
+        "mrr": 0.2673
       }
     }
   },
   "recent_runs": [
     {
-      "run_id": "80fdb89e4ad64204",
-      "family": "math",
-      "family_label": "Math",
-      "task_id": "math-1066",
-      "agent": "math_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 14,
-      "split": "test_known",
-      "created_at": "2026-10-03T21:11:13.022488+00:00",
-      "parent_run_id": "37452fc329e1498f"
-    },
-    {
-      "run_id": "0718e426897a4214",
-      "family": "math",
-      "family_label": "Math",
-      "task_id": "math-1066",
-      "agent": "math_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 14,
-      "split": "test_known",
-      "created_at": "2026-10-03T21:10:53.807154+00:00",
-      "parent_run_id": "37452fc329e1498f"
-    },
-    {
-      "run_id": "8b60746dbf08457e",
-      "family": "math",
-      "family_label": "Math",
-      "task_id": "math-1066",
-      "agent": "math_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 14,
-      "split": "test_known",
-      "created_at": "2026-10-03T21:10:53.765420+00:00",
-      "parent_run_id": "37452fc329e1498f"
-    },
-    {
-      "run_id": "0dca0e0bfc6844f4",
-      "family": "math",
-      "family_label": "Math",
-      "task_id": "math-1066",
-      "agent": "math_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 14,
-      "split": "test_known",
-      "created_at": "2026-10-03T21:10:53.695264+00:00",
-      "parent_run_id": "37452fc329e1498f"
-    },
-    {
-      "run_id": "56ccf9cecb8d4571",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5a8e2fe95542995085b373d0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:50:49.215382+00:00",
-      "parent_run_id": "c9070754abd5414a"
-    },
-    {
-      "run_id": "5b5ddb7815c04aeb",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5a8e2fe95542995085b373d0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:50:44.737550+00:00",
-      "parent_run_id": "c9070754abd5414a"
-    },
-    {
-      "run_id": "a272fbc1571944c9",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5a8e2fe95542995085b373d0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "pass",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:50:00.691306+00:00",
-      "parent_run_id": "c9070754abd5414a"
-    },
-    {
-      "run_id": "d7ffdaac6bc04e4c",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5a8e2fe95542995085b373d0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:50:00.632015+00:00",
-      "parent_run_id": "c9070754abd5414a"
-    },
-    {
-      "run_id": "72710ae60852487f",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5a8e2fe95542995085b373d0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
-      "guilty_step": null,
-      "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:45:26.460456+00:00",
-      "parent_run_id": "158ee641b5d548c2"
-    },
-    {
-      "run_id": "cd20be1981ca4431",
+      "run_id": "12428c8b5c574014",
       "family": "qa",
       "family_label": "QA",
       "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
       "outcome": "pass",
-      "planted": null,
+      "planted": "F10",
       "guilty_step": null,
       "label_source": null,
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:44:37.997547+00:00",
+      "steps": 7,
+      "split": "test_new_mistakes",
+      "created_at": "2026-10-03T21:18:43.484776+00:00",
       "parent_run_id": "97829374efd64a80"
     },
     {
-      "run_id": "8348a5efc1914122",
+      "run_id": "beaad375db194f95",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "qa-5a821c95554299676cceb219",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
       "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": null,
+      "outcome": "pass",
+      "planted": "F9",
       "guilty_step": null,
       "label_source": null,
       "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:44:13.566278+00:00",
-      "parent_run_id": "6b95675274044c29"
+      "split": "test_new_mistakes",
+      "created_at": "2026-10-03T21:18:43.106831+00:00",
+      "parent_run_id": "97829374efd64a80"
     },
     {
-      "run_id": "fcd56b6bace54664",
+      "run_id": "0173b7de91c04021",
       "family": "qa",
       "family_label": "QA",
-      "task_id": "qa-5aba768c55429901930fa7e0",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
       "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": "F8",
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 9,
+      "split": "test_new_mistakes",
+      "created_at": "2026-10-03T21:18:41.106438+00:00",
+      "parent_run_id": "97829374efd64a80"
+    },
+    {
+      "run_id": "b5f8158a44f540f6",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": "F6",
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T21:18:37.536444+00:00",
+      "parent_run_id": "97829374efd64a80"
+    },
+    {
+      "run_id": "b2bcca5279614012",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": "F5",
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T21:18:34.476102+00:00",
+      "parent_run_id": "97829374efd64a80"
+    },
+    {
+      "run_id": "55d7974475004f18",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F4",
+      "guilty_step": 1,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T21:18:17.228957+00:00",
+      "parent_run_id": "97829374efd64a80"
+    },
+    {
+      "run_id": "17e553979db74d0e",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1250",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 6,
+      "split": null,
+      "created_at": "2026-10-03T21:12:30.754627+00:00",
+      "parent_run_id": "316f79e907cd485e"
+    },
+    {
+      "run_id": "f34fb797f8064443",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1240",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "train",
+      "created_at": "2026-10-03T21:12:27.717316+00:00",
+      "parent_run_id": "ca9cd7be2e644d5e"
+    },
+    {
+      "run_id": "a12b84c033ad468d",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1297",
+      "agent": "math_agent@v1",
       "model": "agent-local-7b",
       "outcome": "fail",
       "planted": null,
       "guilty_step": null,
       "label_source": null,
-      "steps": 9,
+      "steps": 14,
       "split": "train",
-      "created_at": "2026-10-03T20:43:25.943449+00:00",
-      "parent_run_id": "ae3a3076b9c141a7"
+      "created_at": "2026-10-03T21:12:22.685540+00:00",
+      "parent_run_id": "27a170d9ed834458"
+    },
+    {
+      "run_id": "3b12752e5ec94bfe",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:12:19.353346+00:00",
+      "parent_run_id": "a94b964728bd42f8"
+    },
+    {
+      "run_id": "fcf46358d347416f",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:12:17.704955+00:00",
+      "parent_run_id": "a94b964728bd42f8"
+    },
+    {
+      "run_id": "bc0b36507f1b4144",
+      "family": "math",
+      "family_label": "Math",
+      "task_id": "math-1066",
+      "agent": "math_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "pass",
+      "planted": null,
+      "guilty_step": null,
+      "label_source": null,
+      "steps": 14,
+      "split": "test_known",
+      "created_at": "2026-10-03T21:12:14.391635+00:00",
+      "parent_run_id": "a94b964728bd42f8"
     }
   ],
   "recent_failures": [
+    {
+      "run_id": "55d7974475004f18",
+      "family": "qa",
+      "family_label": "QA",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "agent": "qa_agent@v1",
+      "model": "agent-local-7b",
+      "outcome": "fail",
+      "planted": "F4",
+      "guilty_step": 1,
+      "label_source": "injected",
+      "steps": 9,
+      "split": "train",
+      "created_at": "2026-10-03T21:18:17.228957+00:00",
+      "parent_run_id": "97829374efd64a80"
+    },
     {
       "run_id": "53f0d78b38154249",
       "family": "qa",
@@ -407,22 +423,6 @@
       "steps": 9,
       "split": "train",
       "created_at": "2026-10-03T20:16:55.474592+00:00",
-      "parent_run_id": "ae3a3076b9c141a7"
-    },
-    {
-      "run_id": "dbb8c886bb0f480b",
-      "family": "qa",
-      "family_label": "QA",
-      "task_id": "qa-5aba768c55429901930fa7e0",
-      "agent": "qa_agent@v1",
-      "model": "agent-local-7b",
-      "outcome": "fail",
-      "planted": "F6",
-      "guilty_step": 7,
-      "label_source": "injected",
-      "steps": 9,
-      "split": "train",
-      "created_at": "2026-10-03T20:16:55.458700+00:00",
       "parent_run_id": "ae3a3076b9c141a7"
     }
   ],
@@ -596,8 +596,13 @@
     },
     {
       "name": "Overnight 4: retrain diagnosis model (CV-chosen variant) + evaluate",
-      "state": "running",
-      "note": "log: data/logs/overnight_retrain.log"
+      "state": "done",
+      "note": "test_known by mistake type: F1 0.11 (n=9), F2 0.40 (n=5), F3 1.00 (n=5), F4 0.69 (n=13), F5 0.00 (n=2), F6 0.70 (n=33)\r \r saved data\\models\\gnn.pt and data\\models\\gnn_metrics.json (982s)\r "
+    },
+    {
+      "name": "Overnight 5: dataset export for the team",
+      "state": "done",
+      "note": "5629 runs, 859 labelled failures, 35303 save-points -> data/dataset/blackbox-3k\r "
     }
   ]
 }

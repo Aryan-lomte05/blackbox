@@ -1,6 +1,127 @@
 {
   "runs": [
     {
+      "run_id": "55d7974475004f18",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "task_input": {
+        "question": "Who founded the Canadian manufacturer of winter clothing which is a major sponsor of Polar Bears International?",
+        "paragraphs": [
+          {
+            "title": "Polar Bears International",
+            "text": "Polar Bears International (PBI) is the world's leading polar bear conservation organization. Their research, education, and action programs address the issues that are endangering polar bears. Polar Bears International is a non-profit organization that works closely with Frontiers North Adventures, a commercial tour company that operates a fleet of tundra buggies in Churchill, Manitoba, Canada. Other major sponsors include Canada Goose and Natural Exposures Photography. Their Chief Scientist is Steven Amstrup."
+          },
+          {
+            "title": "Polar bear",
+            "text": "The polar bear (\"Ursus maritimus\") is a carnivorous bear whose native range lies largely within the Arctic Circle, encompassing the Arctic Ocean, its surrounding seas and surrounding land masses. It is a large bear, approximately the same size as the omnivorous Kodiak bear (\"Ursus arctos middendorffi\"). A boar (adult male) weighs around 350 – , while a sow (adult female) is about half that size. Although it is the sister species of the brown bear, it has evolved to occupy a narrower ecological niche, with many body characteristics adapted for cold temperatures, for moving across snow, ice and open water, and for hunting seals, which make up most of its diet. Although most polar bears are born on land, they spend most of their time on the sea ice. Their scientific name means \"maritime bear\" and derives from this fact. Polar bears hunt their preferred food of seals from the edge of sea ice, often living off fat reserves when no sea ice is present. Because of their dependence on the sea ice, polar bears are classified as marine mammals."
+          },
+          {
+            "title": "Ian Stirling (biologist)",
+            "text": "Ian Grote Stirling {'1': \", '2': \", '3': \", '4': \"} (born September 26, 1941) is a research scientist emeritus with Environment and Climate Change Canada and an adjunct professor in the University of Alberta Department of Biological Sciences. His research has focused mostly on Arctic and Antarctic zoology and ecology, and he is one of the world's top authorities on polar bears. Stirling has written five books and more than 150 articles published in peer-reviewed scientific journals. He has written and spoken extensively about the danger posed to polar bears by global warming."
+          },
+          {
+            "title": "Phoenix Polar Bears",
+            "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011."
+          },
+          {
+            "title": "Kermode bear",
+            "text": "The Kermode bear (\"Ursus americanus kermodei\"), also known as the \"spirit bear\" (particularly in British Columbia), is a rare subspecies of the American black bear living in the Central and North Coast regions of British Columbia, Canada. It is the official provincial mammal of British Columbia. It is noted for about one-tenth of its population having white or cream-coloured coats like polar bears. This colour is due to a double recessive gene unique in the subspecies. They are not albinos and not any more related to polar bears or the \"blonde\" brown bears of Alaska's \"ABC Islands\" than other members of their species. Sometimes, a mother black bear can have a white cub."
+          },
+          {
+            "title": "Canada Goose (clothing)",
+            "text": "Canada Goose Inc. is a Canadian manufacturer of winter clothing. The company was founded in 1957 by Sam Tick, under the name Metro Sportswear Ltd. Canada Goose manufactures a wide range of jackets, parkas, vests, hats, gloves, shells and other apparel. Some Canada Goose jackets use coyote fur on the hoods and are often filled with down which is purchased from Hutterite farmers in rural Canada\". Duck down is used for most models. The jackets retail between $600 and $1,275; the \"Kensington\", its best-selling women's coat, retails for approximately $745."
+          },
+          {
+            "title": "Mitchell Taylor",
+            "text": "Mitchell Taylor, Ph.D., is a Canadian biologist specializing in polar bears who claims that Canada's polar bear population is higher now than it was 30 years ago and that polar bears are not currently threatened by climate change. He is currently a contract adjunct professor at Lakehead University , and he is affiliated with the Heartland Institute ."
+          },
+          {
+            "title": "Agreement on the Conservation of Polar Bears",
+            "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters."
+          },
+          {
+            "title": "The Real Bears",
+            "text": "The Real Bears is an anti-soft-drink advertising campaign by the Center for Science in the Public Interest, which debuted in October 2012. It is a parody of the Coca-Cola Company's ad campaigns depicting polar bears, in particular the \"Open Happiness\" ads, and was produced with the help of Alex Bogusky. Michael Jacobson said that the ad was \"...our attempt to reposition soft drinks from a source of happiness to a major cause of disease.\" CSPI chose Bogusky to direct the ad because, they said, they had long admired his work in creating anti-tobacco ads through his agency, Crispin Porter + Bogusky. The song playing throughout the CSPI ad is by Jason Mraz and is entitled \"Sugar.\" The ad depicts polar bears suffering from a wide variety of health problems as a result of soda consumption, such as type II diabetes and erectile dysfunction. In response to the ad, Coca-Cola spokeswoman Susan Stribling stated that the ad was \"irresponsible and the usual grandstanding from CSPI,” and Karen Hanretty, a spokeswoman for the American Beverage Association, noted that soda consumption has decreased over the last decade or so, whereas obesity rates have still risen over the same time period, saying, \"CSPI is better at producing videos than they are doing math.\" The video has over 2 million views on YouTube."
+          },
+          {
+            "title": "Polar Bears (band)",
+            "text": "Polar Bears are an indie rock band from Santa Rosa, California who currently play in and around the North Bay music scene. They have toured nationally with longtime friends The Velvet Teen and have done numerous West Coast tours since their inception in 2001. In March 2004, they released an EP, \"Shorts Are for Warm\", on Petaluma-based record label, Pandacide. More recently, in early 2007, Polar Bears self-released their full-length album, \"The Future King\". Currently this album is only available directly from the band at their live shows and from The Last Record Store in Santa Rosa, CA. Polar Bears are notable in the Sonoma County music scene for being one of the biggest drawing and intensely furious live bands in the area. Their following has steadily grown during their existence, being prominently featured in publications such as the North Bay Bohemian and Metroactive.com. Bands that Polar Bears have shared the stage with include: Victims Family, Cursive (band), Nomeansno, The Casket Lottery and Aloha (band)."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Sam Tick",
+        "supporting_titles": [
+          "Canada Goose (clothing)",
+          "Polar Bears International"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "97829374efd64a80",
+      "fork_step_idx": 1,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "docs": [
+            {
+              "id": 5,
+              "title": "Phoenix Polar Bears",
+              "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011.",
+              "score": 7.6088
+            },
+            {
+              "id": 0,
+              "title": "Agreement on the Conservation of Polar Bears",
+              "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters.",
+              "score": 5.6692
+            }
+          ]
+        },
+        "note": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+      },
+      "fault": {
+        "type": "F4",
+        "step_idx": 1,
+        "params": {
+          "change_kind": "output",
+          "note": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "No",
+        "expected": "Sam Tick",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 1,
+        "source": "injected",
+        "notes": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 7,
+        "n_reused": 1,
+        "n_llm_calls": 4,
+        "tokens_in": 1280,
+        "tokens_out": 66,
+        "latency_ms": 17235.13,
+        "tokens_saved": 78,
+        "seconds_saved": 0.79,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1585
+      },
+      "created_at": "2026-10-03T21:18:17.228957+00:00",
+      "machine": "aryan-4060"
+    },
+    {
       "run_id": "53f0d78b38154249",
       "schema_version": 1,
       "task_family": "qa",
@@ -1008,127 +1129,6 @@
         "full_rerun_tokens": 1525
       },
       "created_at": "2026-10-03T20:16:47.062175+00:00",
-      "machine": "aryan-4060"
-    },
-    {
-      "run_id": "a63e58844c3e4bfa",
-      "schema_version": 1,
-      "task_family": "qa",
-      "task_id": "qa-5aba768c55429901930fa7e0",
-      "task_input": {
-        "question": "Which of the songs that outperformed \"Drive\" was most successful in the United States?",
-        "paragraphs": [
-          {
-            "title": "Losing My Religion",
-            "text": "\"Losing My Religion\" is a song by the American alternative rock band R.E.M. The song was released as the first single from the group's 1991 album \"Out of Time\". Built on a mandolin riff, \"Losing My Religion\" was an unlikely hit for the group, garnering heavy airplay on radio as well as on MTV due to its critically acclaimed music video. The song became R.E.M.'s highest-charting hit in the United States, reaching No. 4 on the \"Billboard\" Hot 100 and expanding the group's popularity beyond its original fanbase. It was nominated for several Grammy Awards, and won two for Best Pop Performance by a Duo or Group with Vocal and Best Short Form Music Video."
-          },
-          {
-            "title": "Driving in the United States",
-            "text": "Driving in the United States is similar to driving in Canada, Australia, and the United Kingdom but different from Europe, Asia, and Africa. Like most countries in the world, United States traffic drives on the right. It is not uncommon for Americans to drive more than an hour each way to work, and 77% of Americans drive alone to their work, while an additional 11% carpool. Most states allow people to drive unaccompanied once they have reached the age of sixteen, and all states require that one obtain a driver's license before they may operate a motor vehicle. All states recognize each other's driver's licenses, and Canada will recognize an American driver's license for a short visit. Driving while intoxicated is illegal in the United States."
-          },
-          {
-            "title": "Boeing B-17 Flying Fortress",
-            "text": "The Boeing B-17 Flying Fortress is a four-engine heavy bomber developed in the 1930s for the United States Army Air Corps (USAAC). Competing against Douglas and Martin for a contract to build 200 bombers, the Boeing entry (prototype Model 299/XB-17) outperformed both competitors and exceeded the air corps' performance specifications. Although Boeing lost the contract (to the Douglas B-18 Bolo) because the prototype crashed, the air corps ordered 13 more B-17s for further evaluation. From its introduction in 1938, the B-17 Flying Fortress evolved through numerous design advances, becoming the third-most produced bomber of all time, behind the B-24 and the multirole Ju 88."
-          },
-          {
-            "title": "WGPL, Lexington",
-            "text": "WGPL is a neighborhood in southwestern Lexington, Kentucky, United States. Its name is an acronym for each street in the neighborhood - Wabash Drive, Lackawanna Drive, Goodrich Avenue, Pensacola Drive, and Norfolk Drive. It is located between Rosemont Garden, Southland Drive, Nicholasville Road, and the Norfolk Southern railroad tracks. WGPL is part of a larger neighborhood in Lexington called Pensacola Park, which includes Suburban Court, Rosemont Garden, and Penmoken Park, according to the Fayette County Property Value Administrator."
-          },
-          {
-            "title": "Skycrest, Lexington",
-            "text": "Skycrest is a neighborhood in southwestern Lexington, Kentucky, United States. It takes its name from its location on a ridge between Wolf Run Creek and Vaughns Branch Creek that provides a panoramic view downtown Lexington. Its boundaries are Della Drive to the north, Beacon Hill Drive to the west, Furlong Drive and Spring Meadows Drive to the south, and Harrodsburg Road to the east."
-          },
-          {
-            "title": "Great Lakes XTBG",
-            "text": "The Great Lakes XTBG-1, also known as \"Avenger\" (a name coincidentally used for the successful Grumman TBF), was an American prototype torpedo bomber, intended for service in the United States Navy as part of that service's plan to modernise its aerial striking force in the mid-1930s. The XTBG-1 was outperformed by the competing TBD Devastator, however, in addition to having instability problems and only a single prototype of the three-seat design was constructed during 1935."
-          },
-          {
-            "title": "Billboard 200",
-            "text": "The \"Billboard\" 200 is a record chart ranking the 200 most popular music albums and EPs in the United States. It is published weekly by \"Billboard\" magazine. It is frequently used to convey the popularity of an artist or groups of artists. Often, a recording act will be remembered by its \"number ones\", those of their albums that outperformed all others during at least one week."
-          },
-          {
-            "title": "George Stoneman",
-            "text": "George Stoneman Jr. (August 8, 1822 – September 5, 1894) was a United States Army cavalry officer, trained at West Point, where his roommate was Stonewall Jackson. In the Civil War he became Adjutant to George B. McClellan, who did not appreciate the use of centralized cavalry, and was therefore outperformed by the Confederates, who did."
-          },
-          {
-            "title": "Grumman F4F Wildcat",
-            "text": "The Grumman F4F Wildcat is an American carrier-based fighter aircraft that began service with both the United States Navy and the British Royal Navy (as the Martlet) in 1940. First used in combat by the British in Europe, the Wildcat was the only effective fighter available to the United States Navy and Marine Corps in the Pacific Theater during the early part of World War II in 1941 and 1942; the disappointing Brewster Buffalo was withdrawn in favor of the Wildcat and replaced as units became available. With a top speed of 318 mph , the Wildcat was outperformed by the faster 331 mph , more maneuverable, and longer-ranged Mitsubishi A6M Zero. However, the F4F's ruggedness, coupled with tactics such as the Thach Weave, resulted in a claimed air combat kill-to-loss ratio of 5.9:1 in 1942 and 6.9:1 for the entire war."
-          },
-          {
-            "title": "Drive (R.E.M. song)",
-            "text": "\"Drive\" is the lead single and first track from American alternative rock band R.E.M.'s eighth studio album \"Automatic for the People\" in 1992. Although it was not as commercially successful as previous lead singles \"Losing My Religion,\" \"Stand,\" or \"The One I Love\" in the United States, it became R.E.M.'s then second biggest hit on the UK Singles Charts, peaking at #11. It managed a peak of #28 on the \"Billboard\" Hot 100. The song did hit number one on the Modern Rock Tracks and number two on the Mainstream Rock Tracks."
-          }
-        ]
-      },
-      "task_expected": {
-        "answer": "\"Losing My Religion\"",
-        "supporting_titles": [
-          "Drive (R.E.M. song)",
-          "Losing My Religion"
-        ]
-      },
-      "agent": "qa_agent@v1",
-      "model_id": "agent-local-7b",
-      "parent_run_id": "ae3a3076b9c141a7",
-      "fork_step_idx": 1,
-      "patch": {
-        "kind": "output",
-        "value": {
-          "docs": [
-            {
-              "id": 9,
-              "title": "Driving in the United States",
-              "text": "Driving in the United States is similar to driving in Canada, Australia, and the United Kingdom but different from Europe, Asia, and Africa. Like most countries in the world, United States traffic drives on the right. It is not uncommon for Americans to drive more than an hour each way to work, and 77% of Americans drive alone to their work, while an additional 11% carpool. Most states allow people to drive unaccompanied once they have reached the age of sixteen, and all states require that one obtain a driver's license before they may operate a motor vehicle. All states recognize each other's driver's licenses, and Canada will recognize an American driver's license for a short visit. Driving while intoxicated is illegal in the United States.",
-              "score": 3.0464
-            },
-            {
-              "id": 0,
-              "title": "Skycrest, Lexington",
-              "text": "Skycrest is a neighborhood in southwestern Lexington, Kentucky, United States. It takes its name from its location on a ridge between Wolf Run Creek and Vaughns Branch Creek that provides a panoramic view downtown Lexington. Its boundaries are Della Drive to the north, Beacon Hill Drive to the west, Furlong Drive and Spring Meadows Drive to the south, and Harrodsburg Road to the east.",
-              "score": 2.617
-            }
-          ]
-        },
-        "note": "F4: 'Drive (R.E.M. song)' -> 'Driving in the United States'; 'Losing My Religion' -> 'Skycrest, Lexington'"
-      },
-      "fault": {
-        "type": "F4",
-        "step_idx": 1,
-        "params": {
-          "change_kind": "output",
-          "note": "F4: 'Drive (R.E.M. song)' -> 'Driving in the United States'; 'Losing My Religion' -> 'Skycrest, Lexington'"
-        },
-        "generator": "catalog"
-      },
-      "outcome": {
-        "success": false,
-        "score": 0.0,
-        "final_answer": "No",
-        "expected": "\"Losing My Religion\"",
-        "checker": "qa_f1"
-      },
-      "label": {
-        "root_cause_step": 1,
-        "source": "injected",
-        "notes": "F4: 'Drive (R.E.M. song)' -> 'Driving in the United States'; 'Losing My Religion' -> 'Skycrest, Lexington'"
-      },
-      "split": "train",
-      "status": "done",
-      "error": null,
-      "stats": {
-        "n_steps": 9,
-        "n_executed": 7,
-        "n_reused": 1,
-        "n_llm_calls": 4,
-        "tokens_in": 1394,
-        "tokens_out": 132,
-        "latency_ms": 8626.1,
-        "tokens_saved": 80,
-        "seconds_saved": 0.612,
-        "full_rerun_steps": 9,
-        "full_rerun_tokens": 1746
-      },
-      "created_at": "2026-10-03T20:16:46.803717+00:00",
       "machine": "aryan-4060"
     }
   ],
