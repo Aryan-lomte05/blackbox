@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { OverviewResponse } from '../types/api';
+import { formatRelativeTime } from '../lib/time';
 import {
   Layers,
   HardDrive,
@@ -11,15 +12,15 @@ import {
   ChevronRight,
   ShieldAlert,
   ArrowRight,
-  CheckCircle2,
   Radio,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const OverviewScreen: React.FC = () => {
   const navigate = useNavigate();
   const [failurePage, setFailurePage] = useState(0);
 
-  const { data, isLoading, error } = useQuery<OverviewResponse>({
+  const { data, isLoading } = useQuery<OverviewResponse>({
     queryKey: ['overview-data'],
     queryFn: async () => {
       return await api.get<OverviewResponse>('/api/ui/overview');
@@ -27,72 +28,53 @@ export const OverviewScreen: React.FC = () => {
     refetchInterval: 10000,
   });
 
-  const totalRuns = data?.kpis?.runs || 5672;
-  const totalSteps = data?.kpis?.steps || 56122;
-  const failuresDiagnosed = data?.kpis?.labelled_failures || 859;
+  const totalRuns = data?.kpis?.runs ?? (data?.kpis?.total_runs ?? 0);
+  const totalSteps = data?.kpis?.steps ?? 0;
+  const failuresDiagnosed = data?.kpis?.labelled_failures ?? 0;
 
-  const total = totalRuns || 5672;
-  const failed = failuresDiagnosed || 859;
-  const crashed = 22;
-  const passed = Math.max(0, total - failed - crashed);
+  const passed = data?.kpis?.passed ?? Math.max(0, totalRuns - (data?.kpis?.failed ?? 0) - (data?.kpis?.crashed ?? 0));
+  const failed = data?.kpis?.failed ?? failuresDiagnosed;
+  const crashed = data?.kpis?.crashed ?? 0;
+  const blobMb = data?.kpis?.blob_mb ?? 0;
+  const savePointDedup = data?.kpis?.save_point_dedup ?? 0;
+
+  const total = totalRuns || 1;
   const passedPct = Math.max(0, Math.min(100, (passed / total) * 100)).toFixed(1);
   const failedPct = Math.max(0, Math.min(100, (failed / total) * 100)).toFixed(1);
   const crashedPct = Math.max(0, Math.min(100, (crashed / total) * 100)).toFixed(1);
 
-  // Real or deterministic reference failures
-  const fallbackFailures = [
-    { title: 'Search result contamination', run_id: '7F92', family: 'QA', time: '2m ago' },
-    { title: 'Calculator divergence', run_id: '91A2', family: 'Math', time: '8m ago' },
-    { title: 'Tool misuse', run_id: '3C11', family: 'Shop', time: '14m ago' },
-    { title: 'Memory overwrite', run_id: '6E90', family: 'Shop', time: '41m ago' },
-    { title: 'Retrieval mismatch', run_id: '9F03', family: 'QA', time: '1h ago' },
-  ];
-
   const recentFailures = (data?.recent_failures && data.recent_failures.length > 0)
-    ? data.recent_failures.map((rf, idx) => ({
-        title: rf.planted ? `${rf.planted}: wrong result` : 'Search result contamination',
+    ? data.recent_failures.map((rf) => ({
+        title: rf.planted ? `Planted: ${rf.planted} mistake` : `${rf.agent} in ${rf.family_label || rf.family.toUpperCase()}`,
         run_id: rf.run_id.slice(0, 4).toUpperCase(),
         family: rf.family_label || rf.family.toUpperCase(),
-        time: idx === 0 ? '2m ago' : idx === 1 ? '8m ago' : `${(idx + 1) * 7}m ago`,
+        time: formatRelativeTime(rf.created_at),
         fullId: rf.run_id,
       }))
-    : fallbackFailures;
+    : [];
 
   const pageSize = 3;
-  const totalFailurePages = Math.ceil(recentFailures.length / pageSize);
+  const totalFailurePages = Math.max(1, Math.ceil(recentFailures.length / pageSize));
   const displayedFailures = recentFailures.slice(failurePage * pageSize, (failurePage + 1) * pageSize);
 
-  // Active Incident from data or reference
-  const activeIncident = (data?.incidents && data.incidents.length > 0)
-    ? data.incidents[0]
-    : {
-        incident_id: 'trader-bot-pause',
-        title: 'Trader Bot',
-        severity: 'critical',
-        created_at: '12m ago',
-        run_id: 'run_9A71',
-        subtitle: 'Agent paused after unsafe action attempt',
-      };
+  const activeIncident = data?.incidents && data.incidents.length > 0 ? data.incidents[0] : null;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
-      {/* 1. HERO BANNER with Flight Recorder Earth Horizon matching Reference */}
+      {/* 1. HERO BANNER with Flight Recorder Earth Horizon */}
       <div className="relative rounded-2xl bg-[#0b0c10] border border-white/[0.08] overflow-hidden p-8 min-h-[220px] flex items-center shadow-2xl">
-        {/* Background Earth Curvature */}
         <div className="absolute right-0 top-0 bottom-0 w-3/5 pointer-events-none select-none overflow-hidden">
           <img
             src="/earth_horizon.jpg"
             alt="Earth Horizon"
             className="w-full h-full object-cover object-left opacity-80 mix-blend-screen"
             onError={(e) => {
-              // Fallback subtle gradient if image not ready
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/60 to-transparent" />
         </div>
 
-        {/* Hero Content Left */}
         <div className="relative z-10 max-w-xl space-y-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white font-heading">
@@ -128,7 +110,7 @@ export const OverviewScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. 4 KPI STATS CARDS matching Reference */}
+      {/* 2. 4 KPI STATS CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* TOTAL RUNS */}
         <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-2">
@@ -139,10 +121,10 @@ export const OverviewScreen: React.FC = () => {
             <Layers className="w-4 h-4 text-zinc-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            {totalRuns.toLocaleString()}
+            {isLoading ? '—' : totalRuns.toLocaleString()}
           </div>
           <div className="text-[11px] font-sans text-emerald-400/90 flex items-center gap-1">
-            <span>+12% this week</span>
+            <span>Authoritative backend store</span>
           </div>
         </div>
 
@@ -155,10 +137,10 @@ export const OverviewScreen: React.FC = () => {
             <Radio className="w-4 h-4 text-zinc-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            {totalSteps.toLocaleString()}
+            {isLoading ? '—' : totalSteps.toLocaleString()}
           </div>
           <div className="text-[11px] font-sans text-zinc-400 flex items-center gap-1">
-            <span>+8%</span>
+            <span>Logged intermediate states</span>
           </div>
         </div>
 
@@ -170,9 +152,11 @@ export const OverviewScreen: React.FC = () => {
             </span>
             <HardDrive className="w-4 h-4 text-zinc-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">10.4 MB</div>
+          <div className="text-2xl font-bold font-mono text-white">
+            {isLoading ? '—' : blobMb > 0 ? `${blobMb} MB` : `${((data?.kpis?.savepoints_bytes ?? 0) / 1e6).toFixed(1)} MB`}
+          </div>
           <div className="text-[11px] font-sans text-cyan-400 flex items-center gap-1 font-mono">
-            <span>80% deduped</span>
+            <span>{Math.round(savePointDedup * 100)}% deduped</span>
           </div>
         </div>
 
@@ -185,15 +169,15 @@ export const OverviewScreen: React.FC = () => {
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            {failuresDiagnosed.toLocaleString()}
+            {isLoading ? '—' : failuresDiagnosed.toLocaleString()}
           </div>
           <div className="text-[11px] font-sans text-rose-400/90 flex items-center gap-1 font-mono">
-            <span>15.2% failure rate</span>
+            <span>{totalRuns > 0 ? ((failed / totalRuns) * 100).toFixed(1) : '0'}% failure rate</span>
           </div>
         </div>
       </div>
 
-      {/* 3. RUN HEALTH SECTION matching Reference */}
+      {/* 3. RUN HEALTH SECTION */}
       <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
@@ -202,15 +186,15 @@ export const OverviewScreen: React.FC = () => {
           <div className="flex items-center gap-4 text-xs font-mono">
             <span className="flex items-center gap-1.5 text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>{passed.toLocaleString()} Passed</span>
+              <span>{isLoading ? '—' : passed.toLocaleString()} Passed</span>
             </span>
             <span className="flex items-center gap-1.5 text-rose-400">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
-              <span>{failed.toLocaleString()} Failed</span>
+              <span>{isLoading ? '—' : failed.toLocaleString()} Failed</span>
             </span>
             <span className="flex items-center gap-1.5 text-cyan-400">
               <span className="w-2 h-2 rounded-full bg-cyan-500" />
-              <span>{crashed} Crashed</span>
+              <span>{isLoading ? '—' : crashed} Crashed</span>
             </span>
           </div>
         </div>
@@ -235,7 +219,7 @@ export const OverviewScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. RECENT FAILURES & ACTIVE INCIDENTS matching Reference Grid */}
+      {/* 4. RECENT FAILURES & ACTIVE INCIDENTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* RECENT FAILURES */}
         <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] flex flex-col justify-between space-y-4">
@@ -243,45 +227,53 @@ export const OverviewScreen: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
               RECENT FAILURES
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setFailurePage((p) => Math.max(0, p - 1))}
-                disabled={failurePage === 0}
-                className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setFailurePage((p) => Math.min(totalFailurePages - 1, p + 1))}
-                disabled={failurePage >= totalFailurePages - 1}
-                className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {recentFailures.length > pageSize && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setFailurePage((p) => Math.max(0, p - 1))}
+                  disabled={failurePage === 0}
+                  className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setFailurePage((p) => Math.min(totalFailurePages - 1, p + 1))}
+                  disabled={failurePage >= totalFailurePages - 1}
+                  className="p-1 rounded text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:hover:text-zinc-500"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="divide-y divide-white/[0.04] space-y-1">
-            {displayedFailures.map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => navigate((item as any).fullId ? `/runs/${(item as any).fullId}` : '/runs')}
-                className="pt-2.5 pb-2 flex items-center justify-between hover:bg-white/[0.02] px-2 rounded-lg transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <div>
-                    <div className="text-xs font-medium text-zinc-200 group-hover:text-white transition-colors">
-                      {item.title}
-                    </div>
-                    <div className="text-[11px] font-mono text-zinc-500">
-                      run_{item.run_id} · {item.family}
+            {displayedFailures.length === 0 ? (
+              <div className="py-6 text-center text-xs font-mono text-zinc-500">
+                {isLoading ? 'Loading recorded failures...' : 'No failures recorded in recent runs'}
+              </div>
+            ) : (
+              displayedFailures.map((item, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => navigate(item.fullId ? `/runs/${item.fullId}` : '/runs')}
+                  className="pt-2.5 pb-2 flex items-center justify-between hover:bg-white/[0.02] px-2 rounded-lg transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <div>
+                      <div className="text-xs font-medium text-zinc-200 group-hover:text-white transition-colors">
+                        {item.title}
+                      </div>
+                      <div className="text-[11px] font-mono text-zinc-500">
+                        run_{item.run_id} · {item.family}
+                      </div>
                     </div>
                   </div>
+                  <span className="text-xs font-mono text-zinc-500">{item.time}</span>
                 </div>
-                <span className="text-xs font-mono text-zinc-500">{item.time}</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -291,43 +283,53 @@ export const OverviewScreen: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
               ACTIVE INCIDENTS
             </span>
+            <span className="text-[11px] font-mono text-zinc-500">
+              {data?.kpis?.open_incidents ?? (activeIncident ? 1 : 0)} open
+            </span>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-[#111216] border border-white/[0.06] space-y-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
-                  <ShieldAlert className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold uppercase text-rose-400 tracking-wider">
-                    CRITICAL
+          {activeIncident ? (
+            <div className="p-3.5 rounded-lg bg-[#111216] border border-white/[0.06] space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                    <ShieldAlert className="w-4 h-4" />
                   </div>
-                  <div className="text-sm font-bold text-white mt-0.5">
-                    {activeIncident.title || 'Trader Bot'}
+                  <div>
+                    <div className="text-[10px] font-mono font-bold uppercase text-rose-400 tracking-wider">
+                      {activeIncident.severity.toUpperCase()}
+                    </div>
+                    <div className="text-sm font-bold text-white mt-0.5">
+                      {activeIncident.title}
+                    </div>
                   </div>
                 </div>
+                <span className="text-xs font-mono text-zinc-500">
+                  {formatRelativeTime(activeIncident.created_at)}
+                </span>
               </div>
-              <span className="text-xs font-mono text-zinc-500">
-                {activeIncident.created_at || '12m ago'}
-              </span>
-            </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              {(activeIncident as any).subtitle ||
-                'Agent paused after unsafe action attempt'}
-            </p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Run #{activeIncident.run_id.slice(0, 8)} flagged with status {activeIncident.status}.
+              </p>
 
-            <div className="pt-1">
-              <Link
-                to="/incidents"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#171920] hover:bg-[#20232c] text-zinc-200 border border-white/[0.08] text-xs font-medium transition-colors"
-              >
-                <span>Review Incident</span>
-                <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-              </Link>
+              <div className="pt-1">
+                <Link
+                  to="/incidents"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#171920] hover:bg-[#20232c] text-zinc-200 border border-white/[0.08] text-xs font-medium transition-colors"
+                >
+                  <span>Review Incident</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+                </Link>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-6 rounded-lg bg-[#111216] border border-white/[0.06] text-center space-y-2">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto" />
+              <div className="text-xs font-bold text-white font-mono">No Active Incidents</div>
+              <p className="text-[11px] text-zinc-400">All guardian safety policies and live agent executions are nominal.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

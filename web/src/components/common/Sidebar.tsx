@@ -25,16 +25,6 @@ interface NavItem {
   badgeColor?: 'red' | 'neutral';
 }
 
-const primaryNavItems: NavItem[] = [
-  { name: 'Overview', path: '/', icon: Home },
-  { name: 'Runs', path: '/runs', icon: ListFilter },
-  { name: 'Live Lab', path: '/lab', icon: FlaskConical },
-  { name: 'Experiments', path: '/fleet', icon: Sliders },
-  { name: 'Atlas', path: '/atlas', icon: Network },
-  { name: 'Incidents', path: '/incidents', icon: ShieldAlert, badge: 3, badgeColor: 'red' },
-  { name: 'Dataset', path: '/dataset', icon: Database },
-];
-
 const systemNavItems: NavItem[] = [
   { name: 'Machine', path: '/machine', icon: Cpu },
   { name: 'API', path: '/api-status', icon: Server },
@@ -49,7 +39,30 @@ export const Sidebar: React.FC = () => {
     refetchInterval: 10000,
   });
 
+  const { data: overview } = useQuery<any>({
+    queryKey: ['overview-data'],
+    queryFn: () => api.get<any>('/api/ui/overview').catch(() => null),
+    refetchInterval: 10000,
+  });
+
   const isOnline = !!status;
+  const openIncidents = overview?.kpis?.open_incidents ?? 0;
+
+  const primaryNavItems: NavItem[] = [
+    { name: 'Overview', path: '/', icon: Home },
+    { name: 'Runs', path: '/runs', icon: ListFilter },
+    { name: 'Live Lab', path: '/lab', icon: FlaskConical },
+    { name: 'Experiments', path: '/fleet', icon: Sliders },
+    { name: 'Atlas', path: '/atlas', icon: Network },
+    {
+      name: 'Incidents',
+      path: '/incidents',
+      icon: ShieldAlert,
+      badge: openIncidents > 0 ? openIncidents : undefined,
+      badgeColor: 'red',
+    },
+    { name: 'Dataset', path: '/dataset', icon: Database },
+  ];
 
   return (
     <aside className="w-56 bg-[#090a0c] border-r border-white/[0.06] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">

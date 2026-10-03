@@ -162,6 +162,37 @@ class Store:
             rows = self._db.execute(sql, (*args, limit, offset)).fetchall()
         return [Run.model_validate_json(r[0]) for r in rows]
 
+    def count_runs(
+        self,
+        *,
+        task_family: str | None = None,
+        task_id: str | None = None,
+        success: bool | None = None,
+        split: str | None = None,
+        fault_type: str | None = None,
+        parent_run_id: str | None = None,
+        has_label: bool | None = None,
+    ) -> int:
+        where, args = [], []
+        if has_label is not None:
+            where.append("has_label = ?")
+            args.append(int(has_label))
+        for col, val in (
+            ("task_family", task_family), ("task_id", task_id), ("split", split),
+            ("fault_type", fault_type), ("parent_run_id", parent_run_id),
+        ):
+            if val is not None:
+                where.append(f"{col} = ?")
+                args.append(val)
+        if success is not None:
+            where.append("success = ?")
+            args.append(int(success))
+        sql = "SELECT COUNT(*) FROM runs"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        with self._lock:
+            return self._db.execute(sql, tuple(args)).fetchone()[0]
+
     def counts(self) -> dict:
         with self._lock:
             runs = self._db.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
@@ -170,6 +201,9 @@ class Store:
             checkpoints = self._db.execute(
                 "SELECT COUNT(*) FROM steps WHERE json_extract(body, '$.state_hash_after') IS NOT NULL"
             ).fetchone()[0]
+            passed = self._db.execute("SELECT COUNT(*) FROM runs WHERE success = 1").fetchone()[0]
+            failed = self._db.execute("SELECT COUNT(*) FROM runs WHERE success = 0").fetchone()[0]
+            crashed = self._db.execute("SELECT COUNT(*) FROM runs WHERE status IN ('crashed', 'error')").fetchone()[0]
         blobs = list(self.blob_dir.rglob("*.json"))
         return {
             "runs": runs,
@@ -178,6 +212,9 @@ class Store:
             "save_points": checkpoints,
             "unique_save_points": len(blobs),
             "blob_mb": round(sum(p.stat().st_size for p in blobs) / 1e6, 2),
+            "passed": passed,
+            "failed": failed,
+            "crashed": crashed,
         }
 
     def close(self) -> None:

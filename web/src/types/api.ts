@@ -180,8 +180,11 @@ export interface OverviewResponse {
   model?: {
     name?: string;
     version?: string;
+    variant?: string;
+    results?: Record<string, any>;
     metrics?: Record<string, any>;
     headline?: string;
+    policy?: string;
   };
   recent_runs: RunCard[];
   recent_failures: RunCard[];
@@ -330,4 +333,58 @@ export interface LabStepEvent {
     used?: string;
     output?: string;
   };
+}
+
+export interface RunsResponse {
+  runs: any[];
+  total?: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AtlasPattern {
+  family: string;
+  mistake: string;
+  mistake_name: string;
+  step_kind: string;
+  agent_node: string;
+  count: number;
+  examples: string[];
+  share: number;
+  title: string;
+}
+
+export interface AtlasResponse {
+  total_failures: number;
+  patterns: AtlasPattern[];
+}
+
+export interface EvidenceSentence {
+  idx: number;
+  sentences: string[];
+  trail?: number[];
+}
+
+export interface FullDiagnosisResponse {
+  suspects: number[];
+  model: string;
+  policy?: string;
+  suspect_set_90?: {
+    steps: number[];
+    k: number;
+    target: number;
+    n_calib: number;
+    coverage_on_calib: number;
+  };
+  evidence_sentences?: EvidenceSentence[];
+  evidence?: EvidenceSentence[];
+  scores: Array<{
+    idx: number;
+    p: number;
+    rank: number;
+  }>;
+  source: string;
+  monitor?: any[];
+  known_guilty_step?: number | null;
+  guilty_in_top3?: boolean;
 }

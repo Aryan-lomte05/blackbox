@@ -49,7 +49,7 @@ export const SimilarScreen: React.FC = () => {
             Seen This Before?
           </h2>
           <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
-            Every failure gets a causal fingerprint. 859 cataloged fleet failures collapse into ~30 canonical failure patterns; brand-new bugs are flagged as <strong>NOVEL</strong>, and known approved fixes are recommended instantly.
+            Every failure gets a causal fingerprint. Cataloged fleet failures collapse into canonical failure patterns; brand-new bugs are flagged as <strong>NOVEL</strong>, and known approved fixes are recommended instantly.
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export const SimilarScreen: React.FC = () => {
       {/* Loading & Error States */}
       {isLoading && (
         <div className="p-16 text-center text-zinc-500 text-xs animate-pulse">
-          Querying failure fingerprint catalog (859 runs index)...
+          Querying failure fingerprint catalog index...
         </div>
       )}
 
@@ -126,7 +126,7 @@ export const SimilarScreen: React.FC = () => {
                 </div>
 
                 <div className="text-right text-xs text-zinc-400 font-mono space-y-1">
-                  <div>Catalog Size: <strong className="text-zinc-100">{data.library_size || 859} runs</strong></div>
+                  <div>Catalog Size: <strong className="text-zinc-100">{data.library_size ?? (data.look_alikes ? data.look_alikes.length : '—')} runs</strong></div>
                   <div>Best Match Similarity: <strong className="text-cyan-400 font-bold">{((data.best_similarity ?? 1) * 100).toFixed(0)}%</strong></div>
                 </div>
               </div>

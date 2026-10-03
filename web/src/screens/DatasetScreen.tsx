@@ -11,6 +11,14 @@ export const DatasetScreen: React.FC = () => {
     },
   });
 
+  const totalRuns = data?.summary?.runs || 0;
+  const totalSteps = data?.storage?.save_points || 0;
+  const totalLabelled = data?.storage?.labelled_failures || 0;
+  const blobMb = data?.storage?.blob_mb || 0;
+  const dedupPct = Math.round((data?.storage?.save_point_dedup || 0) * 100);
+  const injectedCount = data?.summary?.labelled_by_source?.injected || 0;
+  const verifiedCount = data?.summary?.labelled_by_source?.verified || 0;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
       {/* Top Header */}
@@ -26,12 +34,14 @@ export const DatasetScreen: React.FC = () => {
           <span>Dataset & Provenance</span>
         </h1>
         <p className="text-xs text-zinc-400 mt-0.5">
-          Comprehensive accounting of 5,672 recorded agent executions, 56k states, and 859 ground-truth root causes.
+          {isLoading
+            ? 'Loading dataset provenance from flight recorder database...'
+            : `Comprehensive accounting of ${totalRuns.toLocaleString()} recorded agent executions, ${totalSteps.toLocaleString()} states, and ${totalLabelled.toLocaleString()} ground-truth root causes.`}
         </p>
       </div>
 
       {isLoading && (
-        <div className="p-12 text-center text-zinc-500 text-xs">
+        <div className="p-12 text-center text-zinc-500 text-xs font-mono">
           Computing dataset health statistics from store...
         </div>
       )}
@@ -50,30 +60,34 @@ export const DatasetScreen: React.FC = () => {
             <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">TOTAL RECORDED RUNS</span>
               <div className="text-2xl font-bold font-mono text-white">
-                {data.summary?.total_runs?.toLocaleString() || '5,672'}
+                {totalRuns.toLocaleString()}
               </div>
-              <div className="text-[11px] text-zinc-400">GSM8K, HotpotQA, Shop</div>
+              <div className="text-[11px] text-zinc-400">
+                {Object.keys(data.summary?.by_family || {}).join(', ').toUpperCase()}
+              </div>
             </div>
 
             <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">SAVE-POINTS</span>
               <div className="text-2xl font-bold font-mono text-white">
-                {data.storage?.save_points?.toLocaleString() || '56,122'}
+                {totalSteps.toLocaleString()}
               </div>
-              <div className="text-[11px] text-zinc-400">{data.storage?.blob_mb || '10.4'} MB stored</div>
+              <div className="text-[11px] text-zinc-400">{blobMb} MB stored</div>
             </div>
 
             <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">LABELLED ROOT CAUSES</span>
               <div className="text-2xl font-bold font-mono text-white">
-                {data.storage?.labelled_failures || '859'}
+                {totalLabelled.toLocaleString()}
               </div>
-              <div className="text-[11px] text-rose-400">815 injected, 44 verified</div>
+              <div className="text-[11px] text-rose-400">
+                {injectedCount} injected, {verifiedCount} verified
+              </div>
             </div>
 
             <div className="p-4 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">SAVE-POINT DEDUP</span>
-              <div className="text-2xl font-bold font-mono text-cyan-400">80.0%</div>
+              <div className="text-2xl font-bold font-mono text-cyan-400">{dedupPct}%</div>
               <div className="text-[11px] text-zinc-400">Content-addressed storage</div>
             </div>
           </div>
@@ -81,7 +95,7 @@ export const DatasetScreen: React.FC = () => {
           {/* Breakdown Grids */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Task Families */}
-            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3 shadow-xl">
               <span className="text-xs uppercase font-bold text-white font-mono tracking-wider block pb-2 border-b border-white/[0.04]">
                 Runs by Task Family
               </span>
@@ -98,7 +112,7 @@ export const DatasetScreen: React.FC = () => {
             </div>
 
             {/* Generalization Splits */}
-            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+            <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3 shadow-xl">
               <span className="text-xs uppercase font-bold text-white font-mono tracking-wider block pb-2 border-b border-white/[0.04]">
                 Generalization Splits (Partitioned by task hash)
               </span>
@@ -123,13 +137,13 @@ export const DatasetScreen: React.FC = () => {
           </div>
 
           {/* Planted Mistakes Catalog */}
-          <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3">
+          <div className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-3 shadow-xl">
             <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
               <span className="text-xs uppercase font-bold text-white font-mono tracking-wider">
                 Planted Mistakes Catalog (F1–F10)
               </span>
               <span className="text-xs text-amber-400 font-mono">
-                Held out from training: [{data.kept_out_of_training?.join(', ') || 'F5, F8'}]
+                Held out from training: [{data.kept_out_of_training?.join(', ') || 'F7, F8, F9, F10'}]
               </span>
             </div>
 

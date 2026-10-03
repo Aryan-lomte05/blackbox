@@ -305,11 +305,16 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         limit: int = Query(20, le=500),
         offset: int = 0,
     ) -> dict:
-        runs = db().list_runs(
+        s = db()
+        runs = s.list_runs(
             task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
             has_label=labelled, success=None if outcome is None else outcome == "pass", limit=limit, offset=offset,
         )
-        return {"runs": [r.model_dump(mode="json") for r in runs], "limit": limit, "offset": offset}
+        total = s.count_runs(
+            task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
+            has_label=labelled, success=None if outcome is None else outcome == "pass",
+        )
+        return {"runs": [r.model_dump(mode="json") for r in runs], "total": total, "limit": limit, "offset": offset}
 
     @app.get("/api/runs/{run_id}", tags=["Runs"], summary="2 · Open a run (steps + who-used-what links)")
     def get_run(run_id: str = PathParam(..., openapi_examples=any_run or None)) -> dict:

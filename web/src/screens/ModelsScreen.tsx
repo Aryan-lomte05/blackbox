@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import { OverviewResponse } from '../types/api';
 import { Boxes, Cpu, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const ModelsScreen: React.FC = () => {
@@ -9,13 +10,25 @@ export const ModelsScreen: React.FC = () => {
     queryFn: () => api.get<any>('/api/status'),
   });
 
+  const { data: overview } = useQuery<OverviewResponse>({
+    queryKey: ['overview-data'],
+    queryFn: () => api.get<OverviewResponse>('/api/ui/overview'),
+  });
+
+  const totalRuns = status?.counts?.runs || overview?.kpis?.runs || 0;
+  const gnnModel = overview?.model?.name || 'gnn@35f3e605';
+  const gnnVariant = overview?.model?.variant || 'with_real_failures';
+  const newTasksResults = overview?.model?.results?.test_new_tasks;
+  const top1Pct = newTasksResults ? (newTasksResults.top1 * 100).toFixed(1) : '63.4';
+  const top3Pct = newTasksResults ? (newTasksResults.top3 * 100).toFixed(1) : '79.5';
+
   const models = [
     {
-      id: 'gnn.pt',
+      id: gnnModel,
       role: 'Autonomous Diagnosis Engine',
-      type: 'Graph Neural Network (PyTorch)',
+      type: `Graph Neural Network (${gnnVariant})`,
       architecture: '3 Layers GNN · 128 Hidden · Graph Structure Features',
-      accuracy: 'Top-3: 82.0% · Top-1: 63.0% (Unseen tasks)',
+      accuracy: `Top-3: ${top3Pct}% · Top-1: ${top1Pct}% (Generalization across unseen tasks)`,
       status: 'Loaded & Calibrated',
       location: 'data/models/gnn.pt',
     },
@@ -23,9 +36,11 @@ export const ModelsScreen: React.FC = () => {
       id: 'qwen2.5:7b',
       role: 'Local Agent Reasoner & Repair Model',
       type: 'Instruction-tuned LLM (Ollama)',
-      architecture: '7B Parameters · 4-bit Quantized · 5.1 GB VRAM',
+      architecture: '7B Parameters · 4-bit Quantized · Local GPU Inference',
       accuracy: 'Deterministic tool calling with seed lock',
-      status: 'Online (GPU)',
+      status: status?.machine?.some((l: string) => l.includes('Ollama loaded') && !l.includes('none'))
+        ? 'Online (GPU)'
+        : 'Standby',
       location: 'localhost:11434',
     },
     {
@@ -33,7 +48,7 @@ export const ModelsScreen: React.FC = () => {
       role: 'Fleet Agent Personas',
       type: 'Multi-turn ReAct agents',
       architecture: 'Tools: Wikipedia Search, Python REPL, Calculator, SQL Store',
-      accuracy: 'Monitored across 5,672 recorded runs',
+      accuracy: totalRuns > 0 ? `Monitored across ${totalRuns.toLocaleString()} recorded runs` : 'Autonomous telemetry collection',
       status: 'Active',
       location: 'blackbox.agents.builtin',
     },
@@ -59,7 +74,7 @@ export const ModelsScreen: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {models.map((m) => (
-          <div key={m.id} className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-4 flex flex-col justify-between">
+          <div key={m.id} className="p-5 rounded-xl bg-[#0c0d10] border border-white/[0.06] space-y-4 flex flex-col justify-between shadow-xl">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-mono font-bold text-sm text-white">{m.id}</span>
