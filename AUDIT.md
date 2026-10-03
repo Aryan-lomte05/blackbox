@@ -5,7 +5,30 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ---
 
-## Aryan · `aryan/core-recorder`
+## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
+
+### 8. Cheaper-model advisor (U18) and privacy guard (X9) · `aryan/advisor-privacy`
+- **Advisor** (`replay/advisor.py`, `POST /api/runs/{id}/advise` as a job):
+  for a passing run, each model call is forked onto a cheaper model on its
+  own; it reports which steps still pass and the tokens movable. Money is
+  shown only if `models.yaml` has `price_per_mtok` for both models; nothing is
+  estimated.
+- **Privacy** (`core/privacy.py`, `Store(redact=True)` or `BLACKBOX_REDACT=1`):
+  masks emails, phone numbers (incl. the Indian `+91 98765 43210` format),
+  Luhn-valid card numbers and API-key shapes in requests, outputs, memory
+  diffs, save-points, task input, expected answer, outcome and errors.
+  `input_hash` is kept, so replay still recognises steps; masked outputs
+  replay masked (stated in the module).
+- **Verified:** `tests/test_advisor_privacy.py`: the advisor finds an unsafe
+  downgrade and a safe one, and invents no USD. The redaction test **caught
+  two leaks in the first version** (final answer in `outcome`, and Indian
+  phone format); both are fixed. 20 tests pass.
+
+### 7. CI is live (PR #2)
+- GitHub Actions runs on every PR into `dev`/`main`: pytest + a web build
+  (skipped until `web/` exists). **CI caught a real bug on its first run:**
+  `.gitignore`'s `data/` also ignored `blackbox/data/`, so `shards.py` had
+  never been committed. Anchored to `/data/`; fixed in PR #2.
 
 ### 6. Live streams and jobs (Aryan #13; feeds Advay's Live run + Experiment screens)
 - `POST /api/runs` starts a live run in the background (`autopilot: true`

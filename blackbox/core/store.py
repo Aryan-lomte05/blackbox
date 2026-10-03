@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from blackbox.core.hashing import canonical, fingerprint
+from blackbox.core.privacy import redact
 from blackbox.core.schema import Run, Step, Trace
 
 DEFAULT_DIR = Path(os.environ.get("BLACKBOX_DATA", "data"))
@@ -35,8 +36,9 @@ CREATE TABLE IF NOT EXISTS steps (
 
 
 class Store:
-    def __init__(self, root: Path | str = DEFAULT_DIR):
+    def __init__(self, root: Path | str = DEFAULT_DIR, *, redact: bool | None = None):
         self.root = Path(root)
+        self.redact = redact if redact is not None else os.environ.get("BLACKBOX_REDACT", "") in ("1", "true", "yes")
         self.blob_dir = self.root / "blobs"
         self.blob_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
@@ -46,6 +48,8 @@ class Store:
 
     # ---- blobs -------------------------------------------------------------
     def put_blob(self, value: Any) -> str:
+        if self.redact:
+            value, _ = redact(value)
         digest = fingerprint(value)
         path = self._blob_path(digest)
         if not path.exists():
@@ -66,6 +70,8 @@ class Store:
 
     # ---- runs --------------------------------------------------------------
     def save_trace(self, trace: Trace) -> None:
+        if self.redact:
+            trace = self._redacted(trace)
         run = trace.run
         row = (
             run.run_id, run.task_family, run.task_id, run.agent, run.model_id,
@@ -83,6 +89,33 @@ class Store:
                 [(run.run_id, s.idx, s.model_dump_json()) for s in trace.steps],
             )
             self._db.commit()
+
+    @staticmethod
+    def _redacted(trace: Trace) -> Trace:
+        """Mask personal data in everything stored. input_hash stays as computed from the
+        original, so replay still recognises the same step."""
+        masked_total = 0
+        steps = []
+        for s in trace.steps:
+            data = s.model_dump(mode="json")
+            for key in ("request", "output", "state_diff", "error"):
+                data[key], n = redact(data[key])
+                masked_total += n
+            steps.append(Step.model_validate(data))
+        run = trace.run.model_copy(deep=True)
+        run.task_input, n = redact(run.task_input)
+        masked_total += n
+        run.task_expected, n = redact(run.task_expected)
+        masked_total += n
+        if run.error:
+            run.error, n = redact(run.error)
+            masked_total += n
+        if run.outcome is not None:
+            data, n = redact(run.outcome.model_dump(mode="json"))
+            run.outcome = type(run.outcome).model_validate(data)
+            masked_total += n
+        run.stats = {**run.stats, "privacy_masks": masked_total}
+        return Trace(run=run, steps=steps)
 
     def load_trace(self, run_id: str) -> Trace:
         with self._lock:
