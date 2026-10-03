@@ -21,9 +21,10 @@ checker = ["laya", "system-one-adapter[openai]"]   # step-checker cascade (Laya 
 jev = ["typesafe-sdk"]
 ml = ["lightgbm>=4", "scikit-learn>=1.4", "shap>=0.45", "sentence-transformers>=3", "numpy"]
 ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "sse-starlette>=2"]
-agents = ["rank-bm25>=0.2", "datasets>=2.18"]       # our test agents + task loaders
+agents = ["rank-bm25>=0.2"]                         # our test agents
+data = ["datasets>=2.18"]                           # HotpotQA / GSM8K loaders
 dev = ["pytest>=8", "ruff>=0.5"]
-all = ["agent-blackbox[checker,ml,ui,agents]"]
+all = ["agent-blackbox[checker,ml,ui,agents,data]"]
 
 [project.scripts]
 blackbox = "blackbox.cli:main"
