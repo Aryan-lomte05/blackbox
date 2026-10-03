@@ -13,6 +13,7 @@ An **installable Python package** (`pip install agent-blackbox`) that adds Black
 |---|---|---|---|
 | **Aryan** (lead) | RTX 4060 8 GB | `core/` `recorder/` `replay/` `api/` (skeleton) | Recording, save-points, replay/fork, compare, verify, GenAI repair, integration, demo |
 | **Radhesh** | RTX 3050 | `agents/` `faults/` `data/` `eval/` | The 3 test agents, planted mistakes, generating ~3,000 runs, then the evaluation tables |
+| **Aryan (added)** | RTX 4060 | `diagnosis/gnn.py`, `diagnosis/graph_data.py` | Diagnosis GNN (docs/DIAGNOSIS_GNN.md): a second learned model; its scores feed Aditya's ranker and the eval |
 | **Aditya** | M1 Air | `monitor/` `diagnosis/` `report/` | Step-checker questions, the trained ranker, suspect list, evidence, GenAI incident report |
 | **Advay** (joins ~H7) | RTX 4050 6 GB | `web/` + extra API routes | Every screen, live streaming in the browser, demo driving |
 

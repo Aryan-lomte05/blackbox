@@ -12,8 +12,14 @@ from tests.test_core_replay import DOCS, ToyAgent, _task, fake_model  # noqa: E4
 
 
 @pytest.fixture
-def client(tmp_path):
+def client(tmp_path, monkeypatch):
     providers.register_fake("fake-model", fake_model)
+    try:  # hermetic: a model trained on this machine must not change what the API test sees
+        from blackbox.diagnosis import gnn
+
+        monkeypatch.setattr(gnn, "available", lambda *a, **k: False)
+    except ImportError:
+        pass
     store = Store(tmp_path)
     from blackbox.api.main import create_app
 
