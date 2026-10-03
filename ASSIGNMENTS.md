@@ -67,6 +67,8 @@ H11.
 
 **Beyond-PS (SYSTEM.md §1B):** must = X1 autopilot · X3 checker cascade (Laya → Jev → LLM) · X4 3-line wrapper · X7 model report card · X8 BlackBox-3K dataset · X10 minutes-to-milliseconds study. Stretch-must = X2 fine-tuned Laya · X5 MCP server. Stretch = X6 agent CI · X9 privacy guard.
 
+**Guardian (mentor feedback, SYSTEM.md §0B):** built by Aryan: incidents, email/WhatsApp/outbox, approval pause, dry-run rule for money-moving tools, trader-bot demo. Next: approve/reject on the incident page (Advay's UI), live Twilio/SMTP credentials (whoever owns the accounts), digest + trends (stretch).
+
 **Pitch rule:** a USP goes on a slide only if it works in the demo and its
 number comes from `data/`. Advay keeps a USP checklist on the team board and
 ticks each one only after seeing it work in the browser.

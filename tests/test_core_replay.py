@@ -165,3 +165,16 @@ def test_savings_count_the_original_cost_through_a_chain_of_forks(store):
     second = fork(first, 3, Change(kind="output", value={"text": "Tokyo"}), store=store)
     assert second.steps[0].meta["saved_tokens"] == 15  # step 0 really cost 10 + 5 tokens
     assert savings(second)["tokens_saved"] == savings(first)["tokens_saved"] > 0
+
+
+def test_dry_run_tools_never_execute_during_a_rerun(store):
+    from blackbox.recorder.context import dry_run_tools
+
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    token = dry_run_tools.set(frozenset({"upper"}))
+    try:
+        child = fork(tr, 1, Change(kind="output", value={"docs": DOCS["japan"]}), reuse_after_fork=False)
+    finally:
+        dry_run_tools.reset(token)
+    tool = child.steps[2]
+    assert tool.meta.get("dry_run") and tool.output["result"].startswith("[not executed]")

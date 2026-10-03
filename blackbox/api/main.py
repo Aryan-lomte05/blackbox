@@ -396,6 +396,56 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
 
         return as_json(db())
 
+    @app.get("/api/incidents", tags=["Guardian"], summary="G1 · Incidents (failed / crashed / flagged runs, explained)")
+    def incidents(limit: int = Query(20, le=200)) -> dict:
+        from blackbox.guardian.service import list_incidents
+
+        return {"incidents": [i.model_dump(mode="json") for i in list_incidents()[:limit]]}
+
+    @app.get("/api/incidents/{incident_id}", tags=["Guardian"], summary="G2 · One incident: what, why, how to fix, who was told")
+    def incident(incident_id: str) -> dict:
+        from blackbox.guardian.service import get_incident
+
+        inc = get_incident(incident_id)
+        if inc is None:
+            raise HTTPException(404, f"no incident {incident_id}")
+        return inc.model_dump(mode="json")
+
+    @app.post("/api/incidents/from-run/{run_id}", tags=["Guardian"],
+              summary="G3 · Raise an incident for a run and notify the owner (email / WhatsApp / outbox)")
+    def raise_incident(run_id: str = PathParam(..., openapi_examples=failed or None),
+                       owner: str = Query("Aryan", description="name shown in the message"),
+                       money_moving_tools: str = Query("place_order,refund_order,transfer",
+                                                       description="comma-separated tools that move money: never auto-retried")) -> dict:
+        from blackbox.guardian.service import Guardian
+
+        g = Guardian(owner=owner, dashboard=os.environ.get("BLACKBOX_DASHBOARD", "http://127.0.0.1:8000"),
+                     money_moving_tools=tuple(t.strip() for t in money_moving_tools.split(",") if t.strip()),
+                     store=db(), dedupe_minutes=0)
+        inc = g.handle(load(run_id))
+        if inc is None:
+            raise HTTPException(400, "this run passed: no incident")
+        return inc.model_dump(mode="json")
+
+    @app.get("/incident/{incident_id}", include_in_schema=False)
+    def incident_page(incident_id: str):
+        """The page the email / WhatsApp link opens: the report, then a link into the run inspector."""
+        from fastapi.responses import HTMLResponse
+
+        from blackbox.guardian import render
+        from blackbox.guardian.service import get_incident
+
+        inc = get_incident(incident_id)
+        if inc is None:
+            raise HTTPException(404, f"no incident {incident_id}")
+        page = render.html_email(inc).replace(
+            f'href="{inc.link}"', f'href="/#run-{inc.run_id}"').replace(
+            "Open the incident in Black Box →", "Open the full run in the inspector →")
+        sent = "".join(f"<li>{n['channel']}: {n['status']} ({n['detail']})</li>" for n in inc.notifications)
+        page = page.replace("</body>", f'<div style="max-width:600px;margin:0 auto 30px;font:13px Segoe UI,Arial,sans-serif;'
+                                        f'color:#5b6676"><b>Notifications</b><ul>{sent}</ul></div></body>')
+        return HTMLResponse(page)
+
     @app.get("/", include_in_schema=False)
     def inspector():
         return FileResponse(Path(__file__).parent / "static" / "inspector.html", media_type="text/html")
@@ -419,6 +469,8 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
         openapi_tags=[
             {"name": "Investigate", "description": "The whole investigation of one failed run in one call."},
             {"name": "Dataset", "description": "Everything recorded: tasks, test sets, planted mistakes, health."},
+            {"name": "Guardian", "description": "For people running agents unattended: incidents explained in plain "
+                                                "language, sent by email / WhatsApp with a link to the incident page."},
             {"name": "Runs", "description": "Recorded runs, steps, save-points, comparison."},
             {"name": "Diagnosis", "description": "Which step most likely caused a failure."},
             {"name": "Experiments", "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."},

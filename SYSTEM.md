@@ -84,6 +84,51 @@ to demo the native mode.
 
 ---
 
+## 0B. Guardian: Black Box for people who are not coding (mentor feedback, 3 Oct)
+
+The mentor's point: the people who suffer most from a failing agent are not
+the developers watching a terminal. They are the **operators** who automate
+something and walk away. Example: a trader whose bot places orders all day.
+When it breaks at 2 pm while they are out, they need to know **what broke, why,
+and what to do**, on their phone, in plain words, with one link to the details.
+
+```
+agent run (wrapped, any framework)
+   │  fails / crashes / the live checker raises an alarm
+   ▼
+INCIDENT ──► investigate (diagnose; prove the cause by replay, unless the run moves money)
+   │          plain-language what / why / how to fix, filled from recorded facts only
+   ▼
+NOTIFY  ──► WhatsApp (Twilio) · Email (SMTP / Mailgun; styled HTML) · outbox (always)
+   │          repeats of the same problem are grouped, never spammed; personal data masked
+   ▼
+INCIDENT PAGE  <dashboard>/incident/<id>  ──►  the run in the inspector: timeline, cause, fork, compare
+```
+
+**Safety rules for money-moving agents** (trading, refunds, payments):
+- The owner names the tools that move money (`money_moving_tools=("place_order",)`).
+- If one appears in a failed run, the incident is **critical** and the agent is
+  **paused**: nothing is retried without the owner's approval.
+- **Black Box never executes a money-moving tool while it investigates.** Any
+  replay, fork, verify or repair gets a marked `[not executed]` result for that
+  tool (a recorder-level rule, `dry_run_tools`). This was found the hard way:
+  the first trader-bot test placed two extra orders during its own investigation
+  (AUDIT.md entry 19).
+
+**Status (3 Oct, 22:30):** built and tested: incidents, plain-language
+explanation, email HTML + text, WhatsApp text, outbox, Twilio / SMTP / Mailgun
+senders (switched on by credentials in `.env`, not yet tested live: no
+credentials), grouping, approval pause, dry-run rule, `/api/incidents`,
+`/incident/<id>` page, `examples/trader_bot.py` (smolagents bot + feed glitch).
+
+**Where this grows** (the "sapling"): approve / reject the paused retry from
+the incident page; a per-owner incident inbox and daily digest; Slack / Telegram
+/ SMS channels; quiet hours and severity routing; a "what changed since the
+last good run" diff in the message; incident trends per agent ("your bot fails
+on Mondays at market open").
+
+---
+
 ## 1. The pipeline
 
 ```

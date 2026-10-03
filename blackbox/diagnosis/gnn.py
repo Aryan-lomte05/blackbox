@@ -102,10 +102,15 @@ class Prepared:
     out: np.ndarray
 
 
-def prepare(examples: list[GraphExample], cache: EmbeddingCache) -> list[Prepared]:
+def prepare(examples: list[GraphExample], cache: EmbeddingCache | None, save: bool = True) -> list[Prepared]:
+    """cache=None: no text features (the model does not use them) -> zero vectors, no encoder, no disk."""
     texts = [t for e in examples for t in e.req_text + e.out_text]
-    vecs = cache.embed(texts) if texts else np.zeros((0, 384), np.float32)
-    cache.save()
+    if cache is None:
+        vecs = np.zeros((len(texts), 384), np.float32)
+    else:
+        vecs = cache.embed(texts) if texts else np.zeros((0, 384), np.float32)
+        if save:
+            cache.save()
     out, i = [], 0
     for e in examples:
         n = len(e.req_text)
@@ -450,6 +455,12 @@ def _load(path: str):
     return cfg, models, blob["model"]
 
 
+@lru_cache(maxsize=1)
+def _runtime_cache() -> EmbeddingCache:
+    """Loaded once per process; never rewritten on every diagnosis (it is large)."""
+    return EmbeddingCache(EMB_CACHE)
+
+
 def available(path: Path = MODEL_PATH) -> bool:
     return path.exists()
 
@@ -457,7 +468,7 @@ def available(path: Path = MODEL_PATH) -> bool:
 def rank(trace: Trace, path: Path = MODEL_PATH, top_k: int = 3) -> dict:
     """The diagnose() contract (ASSIGNMENTS.md #7) from the GNN."""
     cfg, models, name = _load(str(path))
-    prepared = prepare([build(trace)], EmbeddingCache(EMB_CACHE))
+    prepared = prepare([build(trace)], _runtime_cache() if cfg.use_text else None, save=False)
     probs = predict_probs(models, prepared, cfg, torch.device("cpu"))[0]
     order = [int(i) for i in np.argsort(-probs, kind="stable") if prepared[0].ex.candidates[i]]
     return {"suspects": order[:top_k], "model": name,
