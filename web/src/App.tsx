@@ -6,9 +6,7 @@ import { Sidebar } from './components/common/Sidebar';
 import { Header } from './components/common/Header';
 
 import { InvestigateScreen } from './screens/InvestigateScreen';
-
-// Stub components for remaining screens while we build them in demo order
-const RunGraphStub = () => <div className="p-8 text-zinc-400 font-mono">Run Graph screen building next...</div>;
+import { RunGraphScreen } from './screens/RunGraphScreen';
 const LiveLabStub = () => <div className="p-8 text-zinc-400 font-mono">Live Lab screen building next...</div>;
 const FleetFixStub = () => <div className="p-8 text-zinc-400 font-mono">Fleet Firewall screen building next...</div>;
 const CausalStub = () => <div className="p-8 text-zinc-400 font-mono">Causal Report screen building next...</div>;
@@ -36,7 +34,7 @@ export const App: React.FC = () => {
             <main className="flex-1 bg-zinc-950">
               <Routes>
                 <Route path="/investigate" element={<InvestigateScreen />} />
-                <Route path="/runs/:id" element={<RunGraphStub />} />
+                <Route path="/runs/:id" element={<RunGraphScreen />} />
                 <Route path="/runs" element={<Navigate to="/runs/37452fc329e1498f" replace />} />
                 <Route path="/lab" element={<LiveLabStub />} />
                 <Route path="/fleet" element={<FleetFixStub />} />
