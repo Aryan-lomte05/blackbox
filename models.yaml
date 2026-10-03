@@ -40,3 +40,11 @@
   provider: openrouter
   model: qwen/qwen3.8-27b:free
   params: {temperature: 0}
+
+- id: monitor-llm          # step-checker fallback
+  provider: groq
+  model: llama-3.1-8b-instant
+  params:
+    temperature: 0
+    max_tokens: 150
+
