@@ -18,6 +18,7 @@ pays for steps its change actually reaches (U15).
 
 from __future__ import annotations
 
+import contextvars
 import copy
 import random
 import time
@@ -33,6 +34,10 @@ from blackbox.recorder import providers
 from blackbox.recorder.providers import LLMResult
 
 INTERNAL_PREFIX = "__"
+
+# The context of the run executing on this thread/task. Integrations
+# (blackbox.wrap, @blackbox.tool) record into it; outside a run they pass through.
+current: contextvars.ContextVar["RunContext | None"] = contextvars.ContextVar("blackbox_ctx", default=None)
 
 
 class ToolError(Exception):
@@ -193,6 +198,11 @@ class RunContext:
     def final(self, answer: Any) -> Any:
         request = {"answer": answer}
         return self._step("final", "final", request, lambda req: ({"answer": req["answer"]}, {})).output["answer"]
+
+    def record(self, kind: StepKind, name: str, request: dict, execute) -> Step:
+        """Record one step. `execute(request) -> (output_dict, meta)` runs it for real;
+        on replay it is skipped and the recorded output is served. Integrations use this."""
+        return self._step(kind, name, request, execute)
 
     # ---- the step machine -----------------------------------------------------
     def _step(self, kind: StepKind, name: str, request: dict, execute) -> Step:

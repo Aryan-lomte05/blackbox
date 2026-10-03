@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 SCHEMA_VERSION = 1
 
@@ -80,6 +80,8 @@ class Change(BaseModel):
 
 
 class Run(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     run_id: str
     schema_version: int = SCHEMA_VERSION
     task_family: str  # "qa" | "math" | "ops" for our agents; anything for a user's project

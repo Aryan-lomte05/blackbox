@@ -26,7 +26,7 @@ from typing import Any, Callable, ClassVar
 
 from blackbox.core.schema import Change, Outcome, Run, Trace
 from blackbox.core.store import Store
-from blackbox.recorder.context import Monitor, ReplayPlan, RunContext, StepListener
+from blackbox.recorder.context import Monitor, ReplayPlan, RunContext, StepListener, current
 
 MAX_NODE_VISITS = 60
 
@@ -79,15 +79,19 @@ def register_checker(family: str, fn: Checker) -> Checker:
 
 
 def get_agent(ref: str) -> Agent:
+    if ref not in _AGENTS and ref.endswith("@fn"):
+        from blackbox.integrations import resolve_function_agent  # user function agents
+
+        resolve_function_agent(ref)
     if ref not in _AGENTS:
         raise KeyError(f"agent {ref!r} not registered (import its module). Known: {sorted(_AGENTS)}")
     return _AGENTS[ref]()
 
 
-def get_checker(family: str) -> Checker:
-    if family not in _CHECKERS:
-        raise KeyError(f"no checker for family {family!r}. Known: {sorted(_CHECKERS)}")
-    return _CHECKERS[family]
+def get_checker(family: str) -> Checker | None:
+    """None for a user's project that registered no checker: the run is recorded
+    without a pass/fail verdict rather than with an invented one."""
+    return _CHECKERS.get(family)
 
 
 def machine_name() -> str:
@@ -134,6 +138,7 @@ def run_task(
         tool_caller=agent.tool_caller(task), retriever=agent.retriever(task),
         plan=plan, monitor=monitor, on_step=on_step,
     )
+    token = current.set(ctx)
     try:
         node: str | None = agent.entry
         visits = 0
@@ -152,12 +157,15 @@ def run_task(
         ctx.close()
         final_steps = [s for s in ctx.steps if s.kind == "final"]
         answer = final_steps[-1].output["answer"] if final_steps else None
-        run.outcome = get_checker(task.family)(answer, task.expected)
+        checker = get_checker(task.family)
+        run.outcome = checker(answer, task.expected) if checker else None
         run.status = "done"
     except Exception:  # noqa: BLE001 - recorded loudly as a crash, see docstring
         ctx.close(monitor_timeout=5.0)
         run.status = "crashed"
         run.error = traceback.format_exc()
+    finally:
+        current.reset(token)
     run.stats = {**ctx.stats(), **run.stats}
     trace = Trace(run=run, steps=ctx.steps)
     if store is not None:
