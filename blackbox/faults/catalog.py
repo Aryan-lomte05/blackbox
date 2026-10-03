@@ -306,7 +306,11 @@ def f8_memory_lost(trace: Trace, step: Step, rng: random.Random) -> Change | Non
 
 
 def f9_instruction_dropped(trace: Trace, step: Step, rng: random.Random) -> Change | None:
-    """One sentence of the system prompt goes missing; the step is then asked again for real."""
+    """Part of the system prompt goes missing; the step is then asked again for real.
+
+    Either one sentence is dropped, or the whole reply-format block at the end
+    (a truncated prompt). The first sentence always stays: it says what the job is.
+    """
     messages = step.request.get("messages") or []
     system = next((i for i, m in enumerate(messages) if m.get("role") == "system"), None)
     if system is None:
@@ -315,10 +319,14 @@ def f9_instruction_dropped(trace: Trace, step: Step, rng: random.Random) -> Chan
     pieces = _SENTENCE_END.split(content) if isinstance(content, str) else []
     if len(pieces) < 2:
         return None
-    drop = rng.randrange(1, len(pieces))  # never the first sentence: that one says what the job is
+    options = [(i, i + 1) for i in range(1, len(pieces))]
+    fmt = next((i for i in range(1, len(pieces)) if pieces[i].lower().startswith("reply")), None)
+    if fmt is not None and (fmt, len(pieces)) not in options:
+        options.append((fmt, len(pieces)))
+    start, stop = rng.choice(options)
     new = [dict(m) for m in messages]
-    new[system]["content"] = " ".join(pieces[:drop] + pieces[drop + 1:])
-    return Change(kind="messages", value=new, note=f"F9: dropped {pieces[drop][:60]!r}")
+    new[system]["content"] = " ".join(pieces[:start] + pieces[stop:])
+    return Change(kind="messages", value=new, note=f"F9: dropped {' '.join(pieces[start:stop])[:60]!r}")
 
 
 def f10_answers_too_early(trace: Trace, step: Step, rng: random.Random) -> Change | None:
