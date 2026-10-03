@@ -6,6 +6,7 @@
     blackbox replay <run_id>           replay from the recording (0 model calls) and compare outcomes
     blackbox models                    check every models.yaml model exists at its provider
     blackbox demo [--run ID]           the whole investigation on a real failed run
+    blackbox status [--watch 5]        what is running right now (queue, processes, GPU, logs, data)
 """
 
 from __future__ import annotations
@@ -123,6 +124,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--run")
     s.add_argument("--repeats", type=int, default=1)
     s.set_defaults(fn=cmd_demo)
+
+    s = sub.add_parser("status", help="what is running now: queue, processes, GPU, logs, data, model")
+    s.add_argument("--watch", type=float, default=0)
+    s.set_defaults(fn=lambda a: __import__("blackbox.status", fromlist=["main"]).main(
+        ["--watch", str(a.watch)] if a.watch else []))
 
     s = sub.add_parser("ui", help="serve the API and web app")
     s.add_argument("--host", default="127.0.0.1")
