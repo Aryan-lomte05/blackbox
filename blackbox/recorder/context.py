@@ -19,6 +19,7 @@ pays for steps its change actually reaches (U15).
 from __future__ import annotations
 
 import contextvars
+import json
 import copy
 import random
 import time
@@ -90,6 +91,48 @@ class ReplayPlan:
                 self._used.add(s.idx)
                 return s
         return None
+
+
+_MIN_FACT = 3
+
+
+def _facts_of(step: Step) -> list[str]:
+    """Pieces of a step's output that a later step would carry along if it used them."""
+    out = step.output or {}
+    facts: list[str] = []
+    if step.kind == "llm":
+        for call in out.get("tool_calls") or []:
+            facts += [json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v
+                      for v in (call.get("arguments") or {}).values()]
+            facts.append(call.get("id") or "")
+        text = (out.get("text") or "").strip()
+        if len(text) >= 12:
+            facts.append(text[:80])
+    elif step.kind in ("tool", "retrieval"):
+        res = out.get("result", out.get("docs"))
+        facts.append(res if isinstance(res, str) else json.dumps(res, ensure_ascii=False, default=str))
+        facts += _leaves(res)
+    return [f for f in facts if f and len(f) >= _MIN_FACT and f not in ("null", "[]", "{}", '""')]
+
+
+def _leaves(value, depth: int = 0) -> list[str]:
+    """Distinctive leaf values of a dict/list result (strings and numbers; never booleans or
+    None, which would link everything to everything)."""
+    if depth > 3 or isinstance(value, bool) or value is None:
+        return []
+    if isinstance(value, dict):
+        return [x for v in value.values() for x in _leaves(v, depth + 1)]
+    if isinstance(value, list):
+        return [x for v in value[:20] for x in _leaves(v, depth + 1)]
+    text = str(value)
+    return [text] if len(text) >= 4 else []
+
+
+def infer_parents(request: dict, earlier: list[Step]) -> list[int]:
+    """Earlier steps whose output appears in this request. Used only when a step reads no
+    memory through ctx.state (wrap mode), so native agents keep their exact links."""
+    blob = json.dumps(request, ensure_ascii=False, default=str)
+    return [s.idx for s in earlier if s.kind != "final" and any(f in blob for f in _facts_of(s))]
 
 
 class StateProxy:
@@ -251,11 +294,18 @@ class RunContext:
         self._reads = []
         read_values = {k: self.state._data.get(k) for k in reads}
         parents = sorted({self._last_writer[k] for k in reads if k in self._last_writer})
+        inferred = False
+        if not reads and self.steps:
+            # Wrap mode (an agent we did not write): no memory reads to follow, so link by content.
+            parents = infer_parents(request, self.steps)
+            inferred = bool(parents)
         step = Step(
             run_id=self.run.run_id, idx=idx, kind=kind, name=name, node=self.node,
             request=request, reads=reads, parents=parents,
             input_hash=step_input_hash(kind, name, request, read_values),
         )
+        if inferred:
+            step.meta["parents_inferred"] = "content"
 
         plan = self.plan
         recorded = plan.recorded(idx) if plan else None
