@@ -31,6 +31,14 @@ export const OverviewScreen: React.FC = () => {
   const totalSteps = data?.kpis?.steps || 56122;
   const failuresDiagnosed = data?.kpis?.labelled_failures || 859;
 
+  const total = totalRuns || 5672;
+  const failed = failuresDiagnosed || 859;
+  const crashed = 22;
+  const passed = Math.max(0, total - failed - crashed);
+  const passedPct = Math.max(0, Math.min(100, (passed / total) * 100)).toFixed(1);
+  const failedPct = Math.max(0, Math.min(100, (failed / total) * 100)).toFixed(1);
+  const crashedPct = Math.max(0, Math.min(100, (crashed / total) * 100)).toFixed(1);
+
   // Real or deterministic reference failures
   const fallbackFailures = [
     { title: 'Search result contamination', run_id: '7F92', family: 'QA', time: '2m ago' },
@@ -194,15 +202,15 @@ export const OverviewScreen: React.FC = () => {
           <div className="flex items-center gap-4 text-xs font-mono">
             <span className="flex items-center gap-1.5 text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>4,613 Passed</span>
+              <span>{passed.toLocaleString()} Passed</span>
             </span>
             <span className="flex items-center gap-1.5 text-rose-400">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
-              <span>859 Failed</span>
+              <span>{failed.toLocaleString()} Failed</span>
             </span>
             <span className="flex items-center gap-1.5 text-cyan-400">
               <span className="w-2 h-2 rounded-full bg-cyan-500" />
-              <span>22 Crashed</span>
+              <span>{crashed} Crashed</span>
             </span>
           </div>
         </div>
@@ -211,18 +219,18 @@ export const OverviewScreen: React.FC = () => {
         <div className="h-2.5 w-full bg-[#16181d] rounded-full overflow-hidden flex gap-0.5">
           <div
             className="bg-emerald-500 h-full rounded-l-full transition-all"
-            style={{ width: '81.4%' }}
-            title="4,613 Passed (81.4%)"
+            style={{ width: `${passedPct}%` }}
+            title={`${passed.toLocaleString()} Passed (${passedPct}%)`}
           />
           <div
             className="bg-rose-500 h-full transition-all"
-            style={{ width: '15.1%' }}
-            title="859 Failed (15.1%)"
+            style={{ width: `${failedPct}%` }}
+            title={`${failed.toLocaleString()} Failed (${failedPct}%)`}
           />
           <div
             className="bg-cyan-500 h-full rounded-r-full transition-all"
-            style={{ width: '3.5%' }}
-            title="22 Crashed (3.5%)"
+            style={{ width: `${crashedPct}%` }}
+            title={`${crashed} Crashed (${crashedPct}%)`}
           />
         </div>
       </div>

@@ -429,24 +429,81 @@ export const RunGraphScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* React Flow Canvas */}
-          <div className="flex-1 w-full h-full relative">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onNodeClick={onNodeClick}
-              nodeTypes={nodeTypes}
-              fitView
-              minZoom={0.2}
-              maxZoom={1.5}
-              defaultEdgeOptions={{ type: 'smoothstep' }}
-            >
-              <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#18191f" />
-              <Controls showInteractive={false} className="!bg-[#111216] !border-white/[0.06] !fill-zinc-300 rounded-lg overflow-hidden shadow-xl" />
-            </ReactFlow>
-          </div>
+          {/* React Flow Canvas or Timeline View */}
+          {activeTab === 'Timeline' ? (
+            <div className="flex-1 w-full h-full p-4 overflow-y-auto space-y-3 bg-[#08090a]">
+              <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider mb-2">
+                CHRONOLOGICAL EXECUTION TIMELINE
+              </div>
+              <div className="space-y-2">
+                {nodes.map((node) => {
+                  const d = node.data as any;
+                  const isSelected = d.idx === selectedStepIdx;
+                  return (
+                    <div
+                      key={node.id}
+                      onClick={() => setSelectedStepIdx(d.idx)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs font-mono ${
+                        d.is_guilty
+                          ? 'bg-rose-950/20 border-rose-500/40 text-rose-200'
+                          : d.is_contaminated
+                          ? 'bg-amber-950/15 border-amber-500/30 text-amber-200'
+                          : isSelected
+                          ? 'bg-[#15171d] border-blue-500/40 text-white'
+                          : 'bg-[#0c0d10] border-white/[0.04] text-zinc-400 hover:border-white/[0.08]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded bg-black/40 flex items-center justify-center font-bold text-zinc-400 text-[11px]">
+                          #{d.idx}
+                        </span>
+                        <div>
+                          <div className="font-semibold text-zinc-200 capitalize font-sans">
+                            {d.kind}: {d.name}
+                          </div>
+                          <div className="text-[10px] text-zinc-500">{d.preview}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {d.is_guilty && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 text-white uppercase">
+                            GUILTY
+                          </span>
+                        )}
+                        {d.is_contaminated && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 uppercase">
+                            CONTAMINATED
+                          </span>
+                        )}
+                        <span className="text-[11px] text-zinc-500">
+                          {d.latency_ms ? `${d.latency_ms}ms` : '12ms'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 w-full h-full relative">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onNodeClick={onNodeClick}
+                nodeTypes={nodeTypes}
+                fitView
+                minZoom={0.2}
+                maxZoom={1.5}
+                defaultEdgeOptions={{ type: 'smoothstep' }}
+              >
+                <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#18191f" />
+                <Controls showInteractive={false} className="!bg-[#111216] !border-white/[0.06] !fill-zinc-300 rounded-lg overflow-hidden shadow-xl" />
+              </ReactFlow>
+            </div>
+          )}
         </div>
 
         {/* PANEL 2: Step Details / Evidence Inspector (Center: 4 cols) */}
