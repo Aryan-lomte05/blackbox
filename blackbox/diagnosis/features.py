@@ -82,8 +82,8 @@ def answer_depends_on(step: Step, steps: list[Step]) -> bool:
 FEATURE_NAMES_STRUCTURAL = [
     # position
     "step_idx",
-    "step_position_frac",  # idx / (n_steps - 1)
-    "steps_remaining",  # n_steps - 1 - idx (excluding final)
+    "step_position_frac",      # idx / (n_steps - 1)
+    "steps_remaining",         # n_steps - 1 - idx (excluding final)
     # step type (one-hot: llm, tool, retrieval, state)
     "kind_llm",
     "kind_tool",
@@ -92,24 +92,28 @@ FEATURE_NAMES_STRUCTURAL = [
     # error / output quality
     "has_error",
     "output_empty",
-    "unsupported_facts",  # numbers/names in output not in input
+    "unsupported_facts",       # numbers/names in output not in input
     # data-flow
-    "n_downstream_steps",  # how many later steps used this step's output
-    "answer_depends_on_step",  # 1 if final answer traces back to this step
+    "n_downstream_steps",      # how many later steps used this step's output
+    # FIX: replaced binary answer_depends_on_step (collapses to 1.0 for all steps in
+    # ops/shop runs, causing model to rank guilty last → Top-1 0.042 on shop).
+    # fraction_downstream stays discriminative across all task families.
+    "fraction_downstream",     # n_downstream / max(1, steps_remaining)
+    "n_parents",               # how many parent steps fed into this one
     # memory
-    "memory_changed",  # len(step.writes) > 0 or state_diff present
+    "memory_changed",          # len(step.writes) > 0 or state_diff present
     "n_keys_written",
     # monitor features (Variant B only — -1.0 if not available)
     "monitor_consistent_prob",
     "monitor_on_track_prob",
-    "monitor_on_track_drop",  # on_track[i] - on_track[i-1] (negative = drop)
+    "monitor_on_track_drop",   # on_track[i] - on_track[i-1] (negative = drop)
     "monitor_mistake_type_none_prob",
     "monitor_severity_will_derail",
     "monitor_confidence",
 ]
 
-FEATURE_NAMES_STRUCTURAL_ONLY = FEATURE_NAMES_STRUCTURAL[:14]  # first 14, no monitor
-FEATURE_NAMES_WITH_MONITOR = FEATURE_NAMES_STRUCTURAL  # all 20
+FEATURE_NAMES_STRUCTURAL_ONLY = FEATURE_NAMES_STRUCTURAL[:15]  # first 15, no monitor
+FEATURE_NAMES_WITH_MONITOR = FEATURE_NAMES_STRUCTURAL          # all 21
 
 
 def extract_features(
@@ -138,6 +142,8 @@ def extract_features(
     ds_map = build_downstream_map(all_steps)
 
     kind = step.kind
+    n_downstream = len(ds_map.get(step.idx, []))
+    steps_remaining = max(1, n - 1 - step.idx)
     row: list[float] = [
         # position
         float(step.idx),
@@ -152,9 +158,11 @@ def extract_features(
         1.0 if step.error else 0.0,
         1.0 if not step.output else 0.0,
         float(unsupported_facts(step)),
-        # data-flow
-        float(len(ds_map.get(step.idx, []))),
-        1.0 if answer_depends_on(step, all_steps) else 0.0,
+        # data-flow — fraction_downstream replaces binary answer_depends_on_step
+        # (binary collapses to 1.0 for all steps in ops/shop, causing model to rank guilty last)
+        float(n_downstream),
+        float(n_downstream) / float(steps_remaining),  # fraction_downstream
+        float(len(step.parents)),                       # n_parents
         # memory
         1.0 if (step.writes or getattr(step, "state_diff", None)) else 0.0,
         float(len(step.writes)) if step.writes else 0.0,

@@ -251,7 +251,7 @@ def main(argv: list[str] | None = None) -> None:
     model_pos = train_position_only_baseline(
         X_tr_A, y_tr_A, g_tr_A, X_val_A, y_val_A, g_val_A
     )
-    pos_top1 = top_k_accuracy(X_tst_A, y_tst_A, g_tst_A, model_pos, 1)
+    pos_top1 = top_k_accuracy(X_tst_A[:, :1], y_tst_A, g_tst_A, model_pos, 1)
     a_top1 = top_k_accuracy(X_tst_A, y_tst_A, g_tst_A, model_A, 1)
     print(f"\n[TRAP CHECK] Position-only Top-1: {pos_top1:.3f} vs Variant A: {a_top1:.3f}")
     if abs(a_top1 - pos_top1) < 0.05:
