@@ -72,6 +72,21 @@ class VerifyRequest(BaseModel):
     repeats: int = 3
 
 
+class FleetRequest(BaseModel):
+    rule: str | None = None  # an instruction for every model call; None = GenAI writes one from this failure
+    model: str | None = None  # or/and: swap the model (time machine A/B)
+    n_fail: int = 4  # similar failures to test
+    n_pass: int = 3  # passing runs to check for regressions
+
+
+class TimeMachineRequest(BaseModel):
+    family: Literal["qa", "math", "ops"] = "qa"
+    rule: str | None = None
+    model: str | None = None
+    n_fail: int = 4
+    n_pass: int = 4
+
+
 class RepairRequest(BaseModel):
     step_idx: int
     rounds: int = 2
@@ -387,6 +402,68 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         job = jobs.start("repair", lambda j: repair(trace, body.step_idx, store=db(), rounds=body.rounds,
                                                      evidence=body.evidence, on_event=j.emit))
         return {"job_id": job.job_id, "next": f"GET /api/jobs/{job.job_id}"}
+
+    @app.post("/api/runs/{run_id}/causal", tags=["Experiments"],
+              summary="★ Causal report: necessary vs sufficient, joint causes, every recovery path, blast radius")
+    def start_causal(run_id: str = PathParam(..., openapi_examples=failed or None),
+                     suspects: str = Query("", description="comma-separated; empty = the diagnosis' top 3")) -> dict:
+        """NECESSARY: repairing the step alone makes the run pass. SUFFICIENT: its output alone breaks a passing
+        run of the same task. If no single step is necessary, pairs are repaired together (joint cause).
+        Stream `/api/jobs/{id}/events`; ~10-60 s."""
+        from blackbox.replay.causal import causal_report
+
+        trace = load(run_id)
+        if trace.run.outcome is None or trace.run.outcome.success:
+            raise HTTPException(400, "a causal report needs a finished, failed run")
+        picked = [int(x) for x in suspects.split(",") if x.strip()] or list(diagnose(trace)["suspects"])[:3]
+        job = jobs.start("causal", lambda j: causal_report(trace, db(), picked, on_event=j.emit))
+        return {"job_id": job.job_id, "suspects": picked, "next": f"GET /api/jobs/{job.job_id}/events"}
+
+    fleet_bodies = {
+        "genai_rule": {"summary": "Let GenAI write one general rule from this failure, then test it on the fleet",
+                       "value": {"n_fail": 3, "n_pass": 2}},
+        "search_rule": {"summary": "Test a rule: re-check search results before answering",
+                        "value": {"rule": "Never trust a single search result: if a paragraph does not clearly answer "
+                                          "the question about the exact entity asked, search again with a more "
+                                          "specific query before answering.", "n_fail": 3, "n_pass": 2}},
+    }
+
+    @app.post("/api/runs/{run_id}/fleet-fix", tags=["Experiments"],
+              summary="★ One fix for many: turn this failure into ONE rule, test it on similar failures + passing runs")
+    def start_fleet_fix(run_id: str = PathParam(..., openapi_examples=failed or None),
+                        body: FleetRequest = Body(..., openapi_examples=fleet_bodies)) -> dict:
+        """Regression firewall: the rule is APPROVED only if it fixes failures and breaks no passing run
+        (BLOCK otherwise). Each run is re-run by fork (unchanged steps re-used); money tools never execute.
+        About 40 s per run on the local 7B. Stream `/api/jobs/{id}/events`."""
+        from blackbox.replay.fleet import fleet_test, one_fix_for_many, similar_runs
+
+        trace = load(run_id)
+        if body.model and not body.rule:
+            ids = similar_runs(db(), trace, body.n_fail, body.n_pass)
+            job = jobs.start("fleet", lambda j: fleet_test(db(), ids, model=body.model, on_event=j.emit))
+        else:
+            job = jobs.start("fleet", lambda j: one_fix_for_many(
+                db(), run_id, rule=body.rule, n_fail=body.n_fail, n_pass=body.n_pass, diagnose=diagnose,
+                on_event=j.emit))
+        return {"job_id": job.job_id, "next": f"GET /api/jobs/{job.job_id}/events to stream it"}
+
+    @app.post("/api/time-machine", tags=["Experiments"],
+              summary="★ Time machine A/B: re-run recorded history under a new rule or model; fixed vs regressions")
+    def start_time_machine(body: TimeMachineRequest = Body(..., openapi_examples={
+            "model_swap": {"summary": "What if every QA run had used the 3B model?",
+                           "value": {"family": "qa", "model": "agent-local", "n_fail": 3, "n_pass": 3}},
+            "rule": {"summary": "What if every QA run had this rule?",
+                     "value": {"family": "qa", "rule": "Answer with the shortest exact name or number; no explanation.",
+                               "n_fail": 3, "n_pass": 3}}})) -> dict:
+        from blackbox.replay.fleet import fleet_test, history_sample
+
+        if not (body.rule or body.model):
+            raise HTTPException(400, "give a rule and/or a model")
+        store = db()
+        ids = history_sample(store, body.family, body.n_fail, body.n_pass)
+        job = jobs.start("time-machine", lambda j: fleet_test(store, ids, instruction=body.rule,
+                                                              model=body.model, on_event=j.emit))
+        return {"job_id": job.job_id, "runs": ids, "next": f"GET /api/jobs/{job.job_id}/events"}
 
     @app.post("/api/runs/{run_id}/advise", tags=["Experiments"],
               summary="10 · Cheaper-model advisor (on a passing run)")

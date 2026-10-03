@@ -43,6 +43,9 @@ current: contextvars.ContextVar["RunContext | None"] = contextvars.ContextVar("b
 # Tools that must never execute while Black Box re-runs something (replay, fork, verify, repair),
 # e.g. money-moving calls like place_order. Set by Guardian during investigations.
 dry_run_tools: contextvars.ContextVar[frozenset] = contextvars.ContextVar("blackbox_dry_run_tools", default=frozenset())
+# A fleet-wide change to every model call from the fork point on (e.g. "add this instruction",
+# "use this model"): request -> request. Used by blackbox.replay.fleet to test one fix on many runs.
+llm_policy: contextvars.ContextVar["Callable[[dict], dict] | None"] = contextvars.ContextVar("blackbox_llm_policy", default=None)
 
 
 class ToolError(Exception):
@@ -303,6 +306,10 @@ class RunContext:
         self._close_open_step()
 
         idx = len(self.steps)
+        policy = llm_policy.get()
+        if policy is not None and kind == "llm" and (
+                self.plan is None or (self.plan.fork_idx is not None and idx >= self.plan.fork_idx)):
+            request = policy(request)
         reads = list(dict.fromkeys(self._reads))
         self._reads = []
         read_values = {k: self.state._data.get(k) for k in reads}
