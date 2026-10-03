@@ -5,8 +5,9 @@ Skipped when Ollama is not running. Run with: py -3 -m pytest -m live -q
 
 from __future__ import annotations
 
+import urllib.request
+
 import pytest
-import requests
 
 import blackbox
 from blackbox import Change
@@ -19,8 +20,9 @@ pytestmark = pytest.mark.live
 
 def _ollama_up() -> bool:
     try:
-        return requests.get("http://localhost:11434/api/tags", timeout=2).ok
-    except requests.RequestException:
+        with urllib.request.urlopen("http://localhost:11434/api/tags", timeout=2) as r:
+            return r.status == 200
+    except OSError:
         return False
 
 
