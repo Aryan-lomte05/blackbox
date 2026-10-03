@@ -7,6 +7,23 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
+### 10. Async agents (X4 completeness) · `aryan/async-wrap`
+- `blackbox.wrap()` now also wraps `AsyncOpenAI` clients (detected
+  automatically); `@blackbox.tool` works on `async def` tools; `await
+  blackbox.arun(agent, input)`, `areplay`, `afork` for async agent functions.
+- The recorder's step machine is split into decide (`_begin`) / execute / finish
+  (`_finish`), so the sync and async paths share one set of replay rules
+  (rule 6: one implementation for every path).
+- **Verified:** `tests/test_async_integrations.py`: an async agent records
+  llm/tool/llm/final, replay makes 0 real calls, a fork re-runs 1 call. All 77
+  tests pass after the refactor.
+
+### 9. Reviewed and merged Radhesh's tools + checkers (PR #4)
+- His commit was rebased onto `dev` with authorship kept (his branch was cut
+  from my pre-merge branch). Review notes are in the PR. CI failed first
+  because `rank-bm25` was only in an extra that CI did not install: fixed
+  (`[agents]` in CI; `datasets` moved to `[data]`). 76 tests passed at merge.
+
 ### 8. Cheaper-model advisor (U18) and privacy guard (X9) · `aryan/advisor-privacy`
 - **Advisor** (`replay/advisor.py`, `POST /api/runs/{id}/advise` as a job):
   for a passing run, each model call is forked onto a cheaper model on its

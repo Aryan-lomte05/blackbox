@@ -104,6 +104,29 @@ def _to_completion(output: dict, model: str):
     })
 
 
+def _llm_request(kwargs: dict) -> tuple[str, dict]:
+    model = kwargs.pop("model")
+    messages = to_jsonable(kwargs.pop("messages"))
+    tools = to_jsonable(kwargs.pop("tools", None) or [])
+    return model, {"model_id": model, "messages": messages, "tools": tools, "params": to_jsonable(kwargs)}
+
+
+def _call_kwargs(req: dict) -> dict:
+    extra = {"tools": req["tools"]} if req["tools"] else {}
+    return {"model": req["model_id"], "messages": req["messages"], **extra, **req["params"]}
+
+
+def _llm_result(resp, provider: str, model_tag: str) -> tuple[dict, dict]:
+    msg = resp.choices[0].message
+    usage = getattr(resp, "usage", None)
+    out = {"text": msg.content or "", "tool_calls": _parse_tool_calls(msg),
+           "finish_reason": resp.choices[0].finish_reason, "raw": resp.model_dump(mode="json")}
+    meta = {"provider": provider, "model_tag": model_tag,
+            "tokens_in": getattr(usage, "prompt_tokens", None) if usage else None,
+            "tokens_out": getattr(usage, "completion_tokens", None) if usage else None}
+    return out, meta
+
+
 class _Completions:
     def __init__(self, real, provider: str):
         self._real = real
@@ -116,30 +139,37 @@ class _Completions:
         if kwargs.get("stream"):
             warnings.warn("blackbox: streaming calls are passed through unrecorded")
             return self._real.create(**kwargs)
-        model = kwargs.pop("model")
-        messages = to_jsonable(kwargs.pop("messages"))
-        tools = to_jsonable(kwargs.pop("tools", None) or [])
-        request = {"model_id": model, "messages": messages, "tools": tools, "params": to_jsonable(kwargs)}
+        model, request = _llm_request(kwargs)
 
         def execute(req: dict) -> tuple[dict, dict]:
-            extra = {"tools": req["tools"]} if req["tools"] else {}
-            resp = self._real.create(model=req["model_id"], messages=req["messages"], **extra, **req["params"])
-            msg = resp.choices[0].message
-            usage = getattr(resp, "usage", None)
-            out = {"text": msg.content or "", "tool_calls": _parse_tool_calls(msg),
-                   "finish_reason": resp.choices[0].finish_reason, "raw": resp.model_dump(mode="json")}
-            meta = {"provider": self._provider, "model_tag": req["model_id"],
-                    "tokens_in": getattr(usage, "prompt_tokens", None) if usage else None,
-                    "tokens_out": getattr(usage, "completion_tokens", None) if usage else None}
-            return out, meta
+            return _llm_result(self._real.create(**_call_kwargs(req)), self._provider, req["model_id"])
 
         step = ctx.record("llm", model, request, execute)
         return _to_completion(step.output or {}, model)
 
 
+class _AsyncCompletions(_Completions):
+    async def create(self, **kwargs):  # type: ignore[override]
+        ctx = current.get()
+        if ctx is None:
+            return await self._real.create(**kwargs)
+        if kwargs.get("stream"):
+            warnings.warn("blackbox: streaming calls are passed through unrecorded")
+            return await self._real.create(**kwargs)
+        model, request = _llm_request(kwargs)
+
+        async def aexecute(req: dict) -> tuple[dict, dict]:
+            return _llm_result(await self._real.create(**_call_kwargs(req)), self._provider, req["model_id"])
+
+        step = await ctx.arecord("llm", model, request, aexecute)
+        return _to_completion(step.output or {}, model)
+
+
 class _Chat:
     def __init__(self, real_chat, provider: str):
-        self.completions = _Completions(real_chat.completions, provider)
+        real = real_chat.completions
+        is_async = inspect.iscoroutinefunction(getattr(real, "create", None))
+        self.completions = (_AsyncCompletions if is_async else _Completions)(real, provider)
         self._real = real_chat
 
     def __getattr__(self, name):
@@ -162,7 +192,8 @@ class WrappedClient:
 
 
 def wrap(client, provider: str | None = None) -> WrappedClient:
-    """Wrap an `openai.OpenAI(...)` client (also Groq / OpenRouter / Ollama via base_url)."""
+    """Wrap an `openai.OpenAI(...)` or `openai.AsyncOpenAI(...)` client
+    (also Groq / OpenRouter / Ollama via base_url)."""
     return WrappedClient(client, provider)
 
 
@@ -172,19 +203,36 @@ def _recorded(kind: str, fn: Callable | None, name: str | None):
         sig = inspect.signature(f)
         step_name = name or f.__name__
 
+        def request_for(args, kwargs) -> dict:
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+            return {"args": to_jsonable(dict(bound.arguments))}
+
+        if inspect.iscoroutinefunction(f):
+            @functools.wraps(f)
+            async def awrapper(*args, **kwargs):
+                ctx = current.get()
+                if ctx is None:
+                    return await f(*args, **kwargs)
+
+                async def aexecute(req: dict) -> tuple[dict, dict]:
+                    return {"result": to_jsonable(await f(**req["args"]))}, {}
+
+                return (await ctx.arecord(kind, step_name, request_for(args, kwargs), aexecute)).output["result"]
+
+            awrapper.__blackbox_kind__ = kind
+            return awrapper
+
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             ctx = current.get()
             if ctx is None:
                 return f(*args, **kwargs)
-            bound = sig.bind(*args, **kwargs)
-            bound.apply_defaults()
-            request = {"args": to_jsonable(dict(bound.arguments))}
 
             def execute(req: dict) -> tuple[dict, dict]:
                 return {"result": to_jsonable(f(**req["args"]))}, {}
 
-            return ctx.record(kind, step_name, request, execute).output["result"]
+            return ctx.record(kind, step_name, request_for(args, kwargs), execute).output["result"]
 
         wrapper.__blackbox_kind__ = kind
         return wrapper
@@ -317,3 +365,72 @@ def session(
 def ensure_agent(ref: str) -> None:
     if ref not in _AGENTS:
         resolve_function_agent(ref)
+
+
+# ---- async agents --------------------------------------------------------------
+async def _arun_function(agent_fn, task: Task, *, store: Store | None, plan=None, monitor: Monitor | None = None,
+                         parent_run_id: str | None = None, fork_step_idx: int | None = None, patch=None) -> Trace:
+    """The async twin of run_task for a single async agent function."""
+    import traceback
+
+    from blackbox.agents.base import get_checker, machine_name
+
+    run_obj = Run(run_id=uuid.uuid4().hex[:16], task_family=task.family, task_id=task.task_id,
+                  task_input=task.input, task_expected=task.expected,
+                  agent=f"{agent_fn.__module__}:{agent_fn.__qualname__}@afn", model_id="app",
+                  parent_run_id=parent_run_id, fork_step_idx=fork_step_idx, patch=patch, machine=machine_name())
+    ctx = RunContext(run_obj, {"input": task.input["input"]}, store=store, plan=plan, monitor=monitor)
+    token = current.set(ctx)
+    try:
+        ctx.node = "main"
+        answer = to_jsonable(await agent_fn(ctx.state["input"]))
+        ctx.final(answer)
+        ctx.close()
+        checker = get_checker(task.family)
+        run_obj.outcome = checker(answer, task.expected) if checker else None
+        run_obj.status = "done"
+    except Exception:  # noqa: BLE001 - a crash is recorded, never a task failure
+        ctx.close(monitor_timeout=5.0)
+        run_obj.status = "crashed"
+        run_obj.error = traceback.format_exc()
+    finally:
+        current.reset(token)
+    run_obj.stats = ctx.stats()
+    trace = Trace(run=run_obj, steps=ctx.steps)
+    if store is not None:
+        store.save_trace(trace)
+    return trace
+
+
+async def arun(agent_fn, input: Any, *, family: str = "app", task_id: str | None = None, expected: Any = None,
+               check: Checker | None = None, monitor: Monitor | None = None, store: Store | None = None,
+               save: bool = True) -> Trace:
+    """`await blackbox.arun(my_async_agent, input)`: the async version of run()."""
+    if check is not None:
+        register_checker(family, check)
+    task = Task(family=family, task_id=task_id or uuid.uuid4().hex[:12],
+                input={"input": to_jsonable(input)}, expected=to_jsonable(expected))
+    return await _arun_function(agent_fn, task, store=(store or default_store()) if save else None, monitor=monitor)
+
+
+async def afork(trace: Trace, agent_fn, step_idx: int, change=None, *, store: Store | None = None,
+                reuse_after_fork: bool = True) -> Trace:
+    """Fork a run recorded with arun(). Pass the same async agent function."""
+    from blackbox.agents.base import task_from_run
+    from blackbox.recorder.context import ReplayPlan
+
+    plan = ReplayPlan(parent=trace, fork_idx=step_idx, change=change, reuse_after_fork=reuse_after_fork)
+    child = await _arun_function(agent_fn, task_from_run(trace.run), store=None, plan=plan,
+                                 parent_run_id=trace.run.run_id, fork_step_idx=step_idx, patch=change)
+    child.run.stats["full_rerun_steps"] = len(trace.steps)
+    if store is not None:
+        store.save_trace(child)
+    return child
+
+
+async def areplay(trace: Trace, agent_fn) -> Trace:
+    from blackbox.agents.base import task_from_run
+    from blackbox.recorder.context import ReplayPlan
+
+    return await _arun_function(agent_fn, task_from_run(trace.run), store=None, plan=ReplayPlan(parent=trace),
+                                parent_run_id=trace.run.run_id)

@@ -12,6 +12,9 @@ from blackbox.core.schema import Change, Outcome, Run, Step, Trace
 from blackbox.core.store import Store
 from blackbox.integrations import (
     Session,
+    afork,
+    areplay,
+    arun,
     configure,
     default_store,
     retriever,
@@ -26,7 +29,7 @@ from blackbox.replay.engine import fork, replay, savings
 __version__ = "0.1.0"
 
 __all__ = [
-    "Agent", "Change", "Outcome", "Run", "RunContext", "Session", "Step", "Store", "Task", "ToolError",
+    "Agent", "Change", "afork", "areplay", "arun", "Outcome", "Run", "RunContext", "Session", "Step", "Store", "Task", "ToolError",
     "Trace", "configure", "default_store", "fork", "register_agent", "register_checker", "replay",
     "retriever", "run", "run_task", "savings", "session", "tool", "wrap",
 ]

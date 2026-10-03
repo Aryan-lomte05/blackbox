@@ -221,8 +221,28 @@ class RunContext:
         on replay it is skipped and the recorded output is served. Integrations use this."""
         return self._step(kind, name, request, execute)
 
+    async def arecord(self, kind: StepKind, name: str, request: dict, aexecute) -> Step:
+        """Async twin of record(): `await aexecute(request) -> (output_dict, meta)`."""
+        step, needs_exec = self._begin(kind, name, request)
+        if needs_exec:
+            t0 = time.perf_counter()
+            try:
+                output, meta = await aexecute(step.request)
+                self._store_result(step, output, meta)
+            except Exception as exc:  # noqa: BLE001 - same rules as _execute
+                self._store_error(step, exc)
+            step.latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+        return self._finish(step)
+
     # ---- the step machine -----------------------------------------------------
     def _step(self, kind: StepKind, name: str, request: dict, execute) -> Step:
+        step, needs_exec = self._begin(kind, name, request)
+        if needs_exec:
+            self._execute(step, execute)
+        return self._finish(step)
+
+    def _begin(self, kind: StepKind, name: str, request: dict) -> tuple[Step, bool]:
+        """Build the step and decide: served from the recording / changed / executed live."""
         self._close_open_step()
         if self._pending_state_patch:
             patch, self._pending_state_patch = self._pending_state_patch, None
@@ -254,15 +274,16 @@ class RunContext:
                 )
             plan._used.add(idx)
             self._reuse(step, recorded)
-        elif at_fork:
-            self._apply_change(step, execute)
-        else:
-            reusable = plan.find_reusable(step.input_hash) if (plan and plan.reuse_after_fork) else None
-            if reusable is not None:
-                self._reuse(step, reusable)
-            else:
-                self._execute(step, execute)
+            return step, False
+        if at_fork:
+            return step, self._apply_change(step)
+        reusable = plan.find_reusable(step.input_hash) if (plan and plan.reuse_after_fork) else None
+        if reusable is not None:
+            self._reuse(step, reusable)
+            return step, False
+        return step, True
 
+    def _finish(self, step: Step) -> Step:
         self.steps.append(step)
         self._open = step
         self._open_before = {}
@@ -284,28 +305,37 @@ class RunContext:
         t0 = time.perf_counter()
         try:
             output, meta = execute(step.request)
-            step.output = output
-            step.tokens_in = meta.pop("tokens_in", None)
-            step.tokens_out = meta.pop("tokens_out", None)
-            step.meta.update(meta)
-        except ToolError as exc:
-            step.error = str(exc)
-        except Exception as exc:  # noqa: BLE001 - a tool/retriever raising is a recorded step error
-            if step.kind in ("tool", "retrieval"):
-                step.error = f"{type(exc).__name__}: {exc}"
-            else:
-                raise
+            self._store_result(step, output, meta)
+        except Exception as exc:  # noqa: BLE001 - see _store_error
+            self._store_error(step, exc)
         step.latency_ms = round((time.perf_counter() - t0) * 1000, 2)
 
-    def _apply_change(self, step: Step, execute) -> None:
+    @staticmethod
+    def _store_result(step: Step, output: dict, meta: dict) -> None:
+        step.output = output
+        step.tokens_in = meta.pop("tokens_in", None)
+        step.tokens_out = meta.pop("tokens_out", None)
+        step.meta.update(meta)
+
+    @staticmethod
+    def _store_error(step: Step, exc: Exception) -> None:
+        """A tool/search raising is a recorded step error; a model call raising is not ours to hide."""
+        if isinstance(exc, ToolError):
+            step.error = str(exc)
+        elif step.kind in ("tool", "retrieval"):
+            step.error = f"{type(exc).__name__}: {exc}"
+        else:
+            raise exc
+
+    def _apply_change(self, step: Step) -> bool:
+        """Apply the fork's change to this step. Returns True if it must then execute live."""
         change = self.plan.change
         step.meta["fork_change"] = change.model_dump(mode="json") if change else None
         if change is None:
-            self._execute(step, execute)
-            return
+            return True
         if change.kind == "output":
             step.output = copy.deepcopy(change.value)
-            return
+            return False
         if change.kind == "args":
             step.request = {**step.request, "args": {**step.request.get("args", {}), **change.value}}
         elif change.kind == "messages":
@@ -313,14 +343,12 @@ class RunContext:
         elif change.kind == "model":
             step.request = {**step.request, "model_id": change.value}
         elif change.kind == "state":
+            self._pending_state_patch = dict(change.value)
             recorded = self.plan.recorded(step.idx)
             if recorded is not None and recorded.input_hash == step.input_hash:
                 self._reuse(step, recorded)
-            else:
-                self._execute(step, execute)
-            self._pending_state_patch = dict(change.value)
-            return
-        self._execute(step, execute)
+                return False
+        return True
 
     def _note_read(self, key: str) -> None:
         if not key.startswith(INTERNAL_PREFIX):
