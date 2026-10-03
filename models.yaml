@@ -21,6 +21,11 @@
 # OpenRouter keys are free-tier: only ":free" models, ~50 requests/day per account.
 # Keep them for the few big-model jobs; bulk run generation goes to local Ollama.
 # Measured 3 Oct: nemotron-3-super 0.4 s, qwen3.8-27b 1.1 s, gemma-4-31b rate-limited upstream.
+- id: agent-local-14b      # local repair model for labelling 7B failures (spills past 8 GB: slow, free, no rate limit)
+  provider: ollama
+  model: qwen2.5:14b
+  params: {temperature: 0, seed: 7}
+
 - id: agent-strong         # repair attempts in Verify / Autopilot
   provider: openrouter
   model: nvidia/nemotron-3-super-120b-a12b:free
