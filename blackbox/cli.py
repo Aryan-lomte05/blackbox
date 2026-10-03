@@ -176,6 +176,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
 
+    s = sub.add_parser("ci", help="regression firewall for agent code: pin recorded runs, replay them on every PR")
+    s.add_argument("rest", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=lambda a: __import__("blackbox.ci", fromlist=["main"]).main(a.rest))
+
     s = sub.add_parser("import", help="import traces your agent already exports (OpenTelemetry, Langfuse)")
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.data.importers.external", fromlist=["main"]).main(

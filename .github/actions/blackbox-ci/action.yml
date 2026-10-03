@@ -1,0 +1,42 @@
+name: Black Box CI
+description: >-
+  Regression firewall for AI agent code. Replays the pinned recorded runs (.blackbox/pack.json) against the
+  pull request's code, reports which runs changed behaviour, optionally re-runs them live, and fails on regressions.
+inputs:
+  pack:
+    description: Path to the regression pack (create it with `blackbox ci pin`).
+    default: .blackbox/pack.json
+  live:
+    description: Re-run changed runs from the first changed step (needs model access, e.g. GROQ_API_KEY in env).
+    default: "false"
+  imports:
+    description: Space-separated modules that register your agents.
+    default: ""
+  install:
+    description: pip install target for Black Box.
+    default: "agent-blackbox"
+  comment:
+    description: Post the report as a pull request comment.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: pip install ${{ inputs.install }}
+    - id: run
+      shell: bash
+      run: |
+        args=(run --pack "${{ inputs.pack }}" --report blackbox-ci.md --junit blackbox-ci.xml)
+        [ "${{ inputs.live }}" = "true" ] && args+=(--live)
+        for m in ${{ inputs.imports }}; do args+=(--import "$m"); done
+        set +e
+        blackbox ci "${args[@]}"
+        echo "exit=$?" >> "$GITHUB_OUTPUT"
+        cat blackbox-ci.md >> "$GITHUB_STEP_SUMMARY"
+    - if: inputs.comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh pr comment "${{ github.event.pull_request.number }}" --body-file blackbox-ci.md || echo "could not comment"
+    - shell: bash
+      run: exit ${{ steps.run.outputs.exit || 1 }}   # no exit code recorded = the check did not run: fail
