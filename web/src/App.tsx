@@ -12,7 +12,7 @@ import { FleetFixScreen } from './screens/FleetFixScreen';
 import { CausalScreen } from './screens/CausalScreen';
 import { CrashTestScreen } from './screens/CrashTestScreen';
 import { SimilarScreen } from './screens/SimilarScreen';
-const IncidentsStub = () => <div className="p-8 text-zinc-400 font-mono">Guardian Incidents screen building next...</div>;
+import { IncidentsScreen } from './screens/IncidentsScreen';
 const OverviewStub = () => <div className="p-8 text-zinc-400 font-mono">Overview screen building next...</div>;
 const AtlasStub = () => <div className="p-8 text-zinc-400 font-mono">Atlas screen building next...</div>;
 const DatasetStub = () => <div className="p-8 text-zinc-400 font-mono">Dataset screen building next...</div>;
@@ -41,7 +41,7 @@ export const App: React.FC = () => {
                 <Route path="/causal" element={<CausalScreen />} />
                 <Route path="/crash-test" element={<CrashTestScreen />} />
                 <Route path="/similar" element={<SimilarScreen />} />
-                <Route path="/incidents" element={<IncidentsStub />} />
+                <Route path="/incidents" element={<IncidentsScreen />} />
                 <Route path="/atlas" element={<AtlasStub />} />
                 <Route path="/dataset" element={<DatasetStub />} />
                 <Route path="/" element={<InvestigateScreen />} />
