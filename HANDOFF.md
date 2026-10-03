@@ -1,5 +1,30 @@
 # HANDOFF: read this first in a new session
 
+## ⏱ Update 4 Oct ~03:10 IST: **Pitch 1 at 11:00**, Pitch 2 at 16:00 (if we pass). Freeze the demo at 09:30.
+Merged to dev overnight (each its own PR, CI green):
+| PR | What | Where |
+|---|---|---|
+| #37, #40 | MCP server as a package, 27 tools, resources, prompts, progress, autocomplete | `blackbox/mcp/`, `docs/MCP.md`, `.mcp.json` |
+| #38 | forks re-use the whole run family: undoing a planted mistake = 1 step re-run, 0 model calls, deterministic | `recorder/context.py`, `replay/engine.py` |
+| #39 | **fleet replay** (one fix for many, time machine, regression firewall APPROVE/BLOCK) + **causal report** (necessary / sufficient, joint causes, recovery paths, blast radius) | `replay/fleet.py`, `replay/causal.py`, `blackbox fleet` |
+| #41 | **failure fingerprints** (seen before? NOVEL? known fixes); UI fixtures for every new screen; Advay start-here | `diagnosis/fingerprint.py`, `fixtures/ui/`, `assignments/Advay.md` |
+| #42 | Guardian channels: Slack, Telegram, voice call (critical only) | `guardian/channels.py` |
+| #43 | **crash test / red team**: every known mistake planted, graded, 1-5 stars | `replay/chaos.py`, `blackbox crash-test` |
+| #44 | fix: planted runs now write save-points; **backfill repaired 2,140 of 2,142** affected runs (2 differ, reported) | `data/farm.py`, `scripts/backfill_savepoints.py` |
+| #45 | **import OpenTelemetry / Langfuse traces** (CLI, API, MCP) | `data/importers/external.py`, `examples/traces/` |
+In flight: **Black Box CI** (`blackbox ci pin|run`, GitHub Action `.github/actions/blackbox-ci`, `docs/CI.md`): the
+wheel installs in a clean venv and passes on an 8-run pack.
+**Release for the dashboard** `ui-kit-2026-10-04`: live store (5,672 runs, save-points backfilled), models, UI kit.
+The UI owner needs collaborator access to the private repo to download it.
+**Model retrained 02:41** (overnight pipeline, n_features 37): unseen questions Top-1 0.597 / Top-3 0.821 (n=67, the
+test set grew from 28); Shop 0.634 / 0.795 (n=112); real failures still Top-1 0 (n=17); suspect set k=5, 93% on calib.
+Pitch deck source for NotebookLM: `docs/PITCH_BRIEF.md`.
+Real results worth quoting (from runs, not memory): F4 search rule BLOCKED (fixed 1/4, broke 1/2); fixture rule APPROVED
+(fixed 1/3, broke 0/1); 858 labelled failures → 30 fingerprints; crash test of a QA run ★★★★☆ (weak against
+misleading search paragraphs); causal report on a Math run: calculator step necessary, not sufficient, 2 recovery paths.
+Demo story: crash test finds a weakness → causal report explains it → fleet fix tests a rule → firewall verdict →
+Guardian incident → MCP: ask Claude Code the same questions.
+
 State as of **4 Oct 2026, ~02:30 IST** (pitch: **4 Oct, 16:00**). Lead: Aryan (`Aryan-lomte05`).
 Repo: `Aryan-lomte05/Half_a_Byte_maharashtra_round` (private). Work on `dev`; `main` only at milestones.
 
