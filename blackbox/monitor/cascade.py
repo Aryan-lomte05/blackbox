@@ -28,6 +28,41 @@ def check_step(step: Step, run: Run, prior: list[Step]) -> dict | None:
     on_c = result["on_track"]["confidence"]
     result["alarm"] = (on_p < ALARM_THRESHOLD) and (on_c > CONFIDENCE_THRESHOLD)
     result["alarm_lead_step"] = step.idx
+
+    # Canonical nested 'answers' dict for Laya/Jev/Autopilot compatibility
+    m_choice = "none"
+    if result.get("mistake_type"):
+        m_choice = max(result["mistake_type"], key=result["mistake_type"].get)
+    s_score = "harmless"
+    if result.get("severity"):
+        s_score = max(result["severity"], key=result["severity"].get)
+
+    result["answers"] = {
+        "consistent": {
+            "type": "noul",
+            "noul": result["consistent"]["prob"],
+            "prob": result["consistent"]["prob"],
+            "confidence": result["consistent"]["confidence"],
+        },
+        "on_track": {
+            "type": "noul",
+            "noul": result["on_track"]["prob"],
+            "prob": result["on_track"]["prob"],
+            "confidence": result["on_track"]["confidence"],
+        },
+        "mistake_type": {
+            "type": "choice",
+            "choice": m_choice,
+            "probabilities": result["mistake_type"],
+            "confidence": result.get("mistake_type_confidence", 0.5),
+        },
+        "severity": {
+            "type": "score",
+            "score": s_score,
+            "probabilities": result["severity"],
+            "confidence": result.get("severity_confidence", 0.5),
+        },
+    }
     return result
 
 

@@ -165,11 +165,14 @@ def test_required_keys_present():
     ):
         r = check_step(_step(), _run(), [])
     assert r is not None
-    for k in ["consistent", "on_track", "mistake_type", "severity", "tier", "alarm", "alarm_lead_step", "latency_ms"]:
+    for k in ["consistent", "on_track", "mistake_type", "severity", "tier", "alarm", "alarm_lead_step", "latency_ms", "answers"]:
         assert k in r, f"missing: {k}"
     assert isinstance(r["consistent"]["prob"], float)
     assert isinstance(r["alarm"], bool)
     assert r["tier"] in ("laya", "jev", "llm")
+    assert r["answers"]["on_track"]["noul"] == r["on_track"]["prob"]
+    assert r["answers"]["mistake_type"]["type"] == "choice"
+    assert r["answers"]["severity"]["type"] == "score"
 
 
 def test_json_serialisable():
