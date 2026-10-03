@@ -4,8 +4,12 @@
     blackbox mcp                                                    (same thing via the CLI)
 
 Speaks the Model Context Protocol over stdio (newline-delimited JSON-RPC 2.0) with no extra
-dependencies. Tools read the local Black Box data folder; only `investigate` re-runs anything, and it
-never executes tools that move money (the recorder's dry-run rule).
+dependencies. 22 tools (read: list_failures, run_steps, diagnose, dataset_summary, failure_patterns,
+list_incidents, incident, status; act: investigate, verify, replay, fork, repair, live_lab,
+decide_incident; beyond logs: time_travel, blame_map (Mermaid), compare_runs,
+search_steps, export_test, instrument_my_agent, cheaper_model), live progress notifications, resources (recent failed runs and incidents as blackbox:// URIs, with templates and run-id autocomplete) and prompts
+(investigate_latest_failure, explain_run_for_non_coder, what_if). Re-runs never execute money-moving
+tools (the recorder's dry-run rule).
 """
 
 from __future__ import annotations
@@ -15,6 +19,8 @@ import os
 import sys
 import traceback
 from typing import Any, Callable
+
+from blackbox import mcp_crazy, mcp_extras
 
 PROTOCOL = "2025-06-18"
 
@@ -111,29 +117,76 @@ HANDLERS: dict[str, Callable[..., str]] = {
 }
 
 
+def send(obj: dict) -> None:
+    """Write one JSON-RPC message (a reply or a notification) to the client."""
+    sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    sys.stdout.flush()
+
+
+def _progress_sender(token: Any) -> Callable[[str], None]:
+    """Long tools (live_lab, verify, investigate) report each stage as MCP progress notifications."""
+    count = [0]
+
+    def emit(message: str) -> None:
+        count[0] += 1
+        send({"jsonrpc": "2.0", "method": "notifications/progress",
+              "params": {"progressToken": token, "progress": count[0], "message": message}})
+
+    return emit
+
+
 def handle(msg: dict) -> dict | None:
     method, mid = msg.get("method"), msg.get("id")
     if mid is None:  # a notification (e.g. notifications/initialized): no reply
         return None
     if method == "initialize":
         result = {"protocolVersion": msg.get("params", {}).get("protocolVersion", PROTOCOL),
-                  "capabilities": {"tools": {}}, "serverInfo": {"name": "blackbox", "version": "0.1.0"}}
+                  "capabilities": {"tools": {}, "resources": {}, "prompts": {}, "completions": {}}, "serverInfo": {"name": "blackbox", "version": "0.1.0"}}
     elif method == "ping":
         result = {}
     elif method == "tools/list":
-        result = {"tools": TOOLS}
+        result = {"tools": TOOLS + mcp_extras.TOOLS + mcp_crazy.TOOLS}
+    elif method == "resources/list":
+        result = {"resources": mcp_extras.list_resources()}
+    elif method == "resources/read":
+        uri = msg.get("params", {}).get("uri", "")
+        try:
+            result = {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": mcp_extras.read_resource(uri)}]}
+        except KeyError:
+            return {"jsonrpc": "2.0", "id": mid, "error": {"code": -32002, "message": f"resource not found: {uri}"}}
+    elif method == "resources/templates/list":
+        result = {"resourceTemplates": mcp_extras.RESOURCE_TEMPLATES}
+    elif method == "completion/complete":
+        params = msg.get("params", {})
+        arg = params.get("argument") or {}
+        values = mcp_extras.complete(arg.get("name", ""), arg.get("value", ""))
+        result = {"completion": {"values": values[:100], "total": len(values), "hasMore": len(values) > 100}}
+    elif method == "prompts/list":
+        result = {"prompts": mcp_extras.PROMPTS}
+    elif method == "prompts/get":
+        params = msg.get("params", {})
+        try:
+            result = {"messages": mcp_extras.get_prompt(params.get("name"), params.get("arguments") or {})}
+        except KeyError:
+            return {"jsonrpc": "2.0", "id": mid,
+                    "error": {"code": -32602, "message": f"unknown prompt {params.get('name')!r}"}}
     elif method == "tools/call":
         params = msg.get("params", {})
         name, args = params.get("name"), params.get("arguments") or {}
-        if name not in HANDLERS:
+        handlers = {**HANDLERS, **mcp_extras.HANDLERS, **mcp_crazy.HANDLERS}
+        if name not in handlers:
             return {"jsonrpc": "2.0", "id": mid, "error": {"code": -32602, "message": f"unknown tool {name!r}"}}
+        token = (params.get("_meta") or {}).get("progressToken")
+        mcp_extras.PROGRESS = _progress_sender(token) if token is not None else None
         try:
-            text, is_error = HANDLERS[name](**args), False
+            text, is_error = handlers[name](**args), False
         except KeyError as exc:
             text, is_error = f"Not found: {exc}", True
         except Exception as exc:  # noqa: BLE001 - reported to the assistant, never crashes the server
             text, is_error = f"{type(exc).__name__}: {exc}", True
             traceback.print_exc(file=sys.stderr)
+        finally:
+            mcp_extras.PROGRESS = None
         result = {"content": [{"type": "text", "text": text}], "isError": is_error}
     else:
         return {"jsonrpc": "2.0", "id": mid, "error": {"code": -32601, "message": f"method not found: {method}"}}
@@ -154,8 +207,7 @@ def main() -> int:
         except json.JSONDecodeError as exc:
             reply = {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"parse error: {exc}"}}
         if reply is not None:
-            sys.stdout.write(json.dumps(reply, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
+            send(reply)
     return 0
 
 
