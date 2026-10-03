@@ -116,3 +116,38 @@ def test_number_edits_always_change_the_value_and_spare_list_markers():
         assert before in ("16", "2.50") and before != after
         assert new.startswith("1. ") and "\n2) " in new
     assert perturb_number_in_text("no digits here", rng) is None
+
+
+# ---- F6 goes for the fact the answer rests on -------------------------------------------
+def _with_text(trace, idx, text, answer):
+    step = trace.steps[idx]
+    step.output = {**step.output, "text": text}
+    trace.run.outcome.final_answer = answer
+    return idx
+
+
+def test_wrong_fact_changes_the_number_the_answer_rests_on_not_a_bystander(traces):
+    trace = traces["math"]
+    idx = _with_text(trace, 1, "NOTE: founded in 1966, the total is 18 dollars", "18")
+    for seed in range(10):
+        text = make_change(trace, "F6", idx, random.Random(seed)).value["text"]
+        assert "1966" in text and " 18 " not in text
+
+
+def test_wrong_fact_swaps_the_answer_entity_or_flips_the_answer(traces):
+    trace = traces["qa"]
+    idx = _with_text(trace, 2, "NOTE: Ed Wood (1924-1978) was an American filmmaker", "Ed Wood")
+    for seed in range(10):
+        change = make_change(trace, "F6", idx, random.Random(seed))
+        assert "1924-1978" in change.value["text"] and not change.value["text"].startswith("NOTE: Ed Wood (")
+        assert change.note.startswith("F6: Ed Wood -> ")
+    idx = _with_text(trace, 2, "NOTE: both were born in 1966, so yes they match", "yes")
+    assert make_change(trace, "F6", idx, random.Random(0)).value["text"] == \
+        "NOTE: both were born in 1966, so no they match"
+
+
+def test_wrong_fact_falls_back_when_the_step_does_not_state_the_answer(traces):
+    trace = traces["math"]
+    idx = _with_text(trace, 1, "CALC: 16 - 3 - 4", "18")
+    change = make_change(trace, "F6", idx, random.Random(0))
+    assert change is not None and change.value["text"] != "CALC: 16 - 3 - 4"

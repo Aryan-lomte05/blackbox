@@ -7,6 +7,23 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Radhesh · `radhesh/*` branches
 
+### 5. Mistake tuning after the first health checks · `radhesh/fault-tuning`
+- **F6 (wrong fact) now goes for the fact the answer rests on.** If the step
+  states the passing run's answer (a number, a name, yes/no), that is what
+  gets changed; otherwise it falls back to any number, entity or yes/no as
+  before. Changing a bystander number (a birth year nobody asked about) was
+  usually harmless. Measured on 50 fresh QA tasks, `agent-local`: pass→fail
+  **53%** (40 of 75), up from 24% (16 of 68) in the long batch.
+- **Tasks outside the training split get twice the forks when the farm runs
+  all ten mistakes.** One clean run there feeds two test sets (`test_known`
+  and `test_new_mistakes`); with equal forks, `test_known` had 24 labelled
+  failures after 2,000 runs.
+- **Verified:** 4 new tests, each failing on the old code; 175 passing.
+- **Left as they are, with the reason:** Math F1 78–100% (a changed number in
+  arithmetic changes the answer); Shop F7/F8/F9 7–16% (the 3B model keeps
+  making redundant calls after the request is handled, so most planted steps
+  no longer matter); QA F8 12%, F9 19%, F10 30%.
+
 ### 3. Mistakes F7–F10, kept back from training (checklist row 7) · `radhesh/faults-unseen`
 - **What:** `faults/catalog.py` now has all ten mistakes.
   - F7 wrong tool: the tool the model named is swapped for another of the

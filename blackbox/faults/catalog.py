@@ -76,13 +76,17 @@ def _to_number(raw: str) -> float | int:
 def perturb_number_in_text(text: str, rng: random.Random) -> tuple[str, str, str] | None:
     """Change one number in `text`. Returns (new_text, before, after), or None if it has none.
     List markers ("1. ", "2) ") are not facts and are left alone."""
-    markers = {m.start() + len(m.group()) - len(m.group().lstrip()) for m in _LIST_MARKER.finditer(text)}
-    spans = [m for m in _NUMBER.finditer(text) if m.start() not in markers]
+    spans = _number_spans(text)
     if not spans:
         return None
     m = rng.choice(spans)
     after = str(perturb_number(_to_number(m.group()), rng))
     return text[: m.start()] + after + text[m.end():], m.group(), after
+
+
+def _number_spans(text: str) -> list[re.Match]:
+    markers = {m.start() + len(m.group()) - len(m.group().lstrip()) for m in _LIST_MARKER.finditer(text)}
+    return [m for m in _NUMBER.finditer(text) if m.start() not in markers]
 
 
 def _paragraphs(trace: Trace) -> list[dict]:
@@ -202,13 +206,54 @@ def f5_search_misses(trace: Trace, step: Step, rng: random.Random) -> Change | N
 
 
 # ---- F6: model steps --------------------------------------------------------------
+def _wrong_answer_fact(trace: Trace, text: str, rng: random.Random) -> tuple[str, str, str] | None:
+    """If this step states the fact the run's (correct) answer rests on, get that fact wrong.
+
+    Changing any number in a note is usually harmless: a birth year the
+    question never asked about. The answer the passing run gave tells us which
+    stated fact matters. Returns (new_text, before, after) or None.
+    """
+    outcome = trace.run.outcome
+    answer = outcome.final_answer if outcome else None
+    if isinstance(answer, bool) or not isinstance(answer, (str, int, float)):
+        return None
+    ans = str(answer).strip()
+    try:
+        number = float(ans.replace(",", "").lstrip("$"))
+    except ValueError:
+        number = None
+    if number is not None:
+        spans = [m for m in _number_spans(text) if float(m.group()) == number]
+        if not spans:
+            return None
+        m = rng.choice(spans)
+        after = str(perturb_number(_to_number(m.group()), rng))
+        return text[: m.start()] + after + text[m.end():], m.group(), after
+    if ans.lower() in ("yes", "no"):
+        m = _YES_NO.search(text)
+        if m is None:
+            return None
+        after = "no" if m.group().lower() == "yes" else "yes"
+        return text[: m.start()] + after + text[m.end():], m.group(), after
+    at = text.lower().find(ans.lower()) if len(ans) >= 3 else -1
+    if at < 0:
+        return None
+    others = [p["title"] for p in _paragraphs(trace)
+              if ans.lower() not in p["title"].lower() and p["title"].lower() not in ans.lower()]
+    if not others:
+        return None
+    after = rng.choice(others)
+    return text[:at] + after + text[at + len(ans):], text[at: at + len(ans)], after
+
+
 def f6_wrong_fact(trace: Trace, step: Step, rng: random.Random) -> Change | None:
-    """Alter one fact the model stated: a number, a named entity, or a yes/no."""
+    """Alter one fact the model stated: the one the answer rests on if this step
+    states it, else a number, a named entity, or a yes/no."""
     text = (step.output or {}).get("text")
     if not isinstance(text, str) or not text.strip():
         return None
 
-    edited = perturb_number_in_text(text, rng)
+    edited = _wrong_answer_fact(trace, text, rng) or perturb_number_in_text(text, rng)
     if edited:
         new, before, after = edited
         return Change(kind="output", value={**step.output, "text": new}, note=f"F6: {before} -> {after}")
