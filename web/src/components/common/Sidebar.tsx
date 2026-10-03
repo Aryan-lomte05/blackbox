@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Map,
   Database,
-  Terminal,
+  Radio,
+  ChevronRight,
 } from 'lucide-react';
 
 interface NavItem {
@@ -20,6 +21,7 @@ interface NavItem {
   path: string;
   icon: any;
   badge?: string;
+  hint: string;
 }
 
 interface NavGroup {
@@ -29,52 +31,51 @@ interface NavGroup {
 
 const navigationItems: NavGroup[] = [
   {
-    category: 'DEMO PATH (PRIORITY)',
+    category: 'DEMO NARRATIVE',
     items: [
-      { name: 'Investigate', path: '/investigate', icon: Compass, badge: 'Demo 1' },
-      { name: 'Run Graph', path: '/runs/37452fc329e1498f', icon: GitGraph, badge: 'Demo 2' },
-      { name: 'Live Lab', path: '/lab', icon: FlaskConical, badge: 'Demo 3' },
-      { name: 'Fleet Firewall', path: '/fleet', icon: ShieldCheck, badge: 'Demo 4' },
-      { name: 'Causal Report', path: '/causal', icon: Split, badge: 'Demo 5' },
-      { name: 'Crash Test', path: '/crash-test', icon: Flame, badge: 'Demo 6' },
-      { name: 'Seen This Before?', path: '/similar', icon: Fingerprint, badge: 'Demo 7' },
-      { name: 'Guardian Incidents', path: '/incidents', icon: ShieldAlert, badge: 'Demo 8' },
+      { name: '1. Investigate', path: '/investigate', icon: Compass, badge: '1-Click', hint: 'Prove the root cause' },
+      { name: '2. Run Graph', path: '/runs/37452fc329e1498f', icon: GitGraph, hint: 'Causal step graph' },
+      { name: '3. Live Lab', path: '/lab', icon: FlaskConical, badge: 'Live SSE', hint: '14-stage stream' },
+      { name: '4. Fleet Firewall', path: '/fleet', icon: ShieldCheck, hint: 'Test rule on history' },
+      { name: '5. Causal Report', path: '/causal', icon: Split, hint: 'Pearl causality & blast' },
+      { name: '6. Crash Test', path: '/crash-test', icon: Flame, badge: 'Red Team', hint: '1-5 star safety rating' },
+      { name: '7. Look-alikes', path: '/similar', icon: Fingerprint, hint: 'Fingerprint catalog' },
+      { name: '8. Guardian', path: '/incidents', icon: ShieldAlert, badge: 'Oversight', hint: 'Money protection' },
     ],
   },
   {
-    category: 'OBSERVABILITY & DATA',
+    category: 'DATA & TELEMETRY',
     items: [
-      { name: 'Overview', path: '/', icon: LayoutDashboard },
-      { name: 'Failure Atlas', path: '/atlas', icon: Map },
-      { name: 'Dataset & Health', path: '/dataset', icon: Database },
+      { name: 'Mission Overview', path: '/', icon: LayoutDashboard, hint: 'Fleet telemetry' },
+      { name: 'Failure Atlas', path: '/atlas', icon: Map, hint: '27 archetypes' },
+      { name: 'Dataset Health', path: '/dataset', icon: Database, hint: '5,675 recorded runs' },
     ],
   },
 ];
 
 export const Sidebar: React.FC = () => {
   return (
-    <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
+    <aside className="w-64 bg-[#0a0b0d]/90 backdrop-blur-2xl border-r border-white/[0.06] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
       {/* Brand header */}
-      <div className="h-16 flex items-center gap-3 px-5 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center shadow-lg shadow-rose-950/50">
-          <Terminal className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <div className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
-            BLACK BOX
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-              v0.1
-            </span>
+      <div className="h-16 flex items-center justify-between px-5 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 via-rose-500 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/30">
+            <Radio className="w-4 h-4 text-white" />
           </div>
-          <div className="text-[11px] text-zinc-400 font-mono">Flight Recorder</div>
+          <div>
+            <div className="font-heading font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
+              BLACK BOX
+            </div>
+            <div className="text-[11px] text-zinc-400 font-sans tracking-normal">AI Flight Recorder</div>
+          </div>
         </div>
       </div>
 
-      {/* Nav list */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+      {/* Nav groups */}
+      <div className="flex-1 overflow-y-auto py-5 px-3 space-y-6">
         {navigationItems.map((group, idx) => (
           <div key={idx} className="space-y-1">
-            <div className="px-3 text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-2">
+            <div className="px-3 text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-semibold mb-2">
               {group.category}
             </div>
             {group.items.map((item) => {
@@ -84,21 +85,32 @@ export const Sidebar: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all group ${
+                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all group relative ${
                       isActive
-                        ? 'bg-rose-950/40 text-rose-200 border border-rose-500/30 shadow-sm shadow-rose-950/40 font-semibold'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+                        ? 'bg-rose-500/10 text-white border border-rose-500/30 shadow-sm font-semibold'
+                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
                     }`
                   }
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 transition-transform group-hover:scale-105" />
-                    <span>{item.name}</span>
-                  </div>
-                  {item.badge && (
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800 group-hover:border-zinc-700">
-                      {item.badge}
-                    </span>
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-rose-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                        <div className="truncate">
+                          <div className="truncate">{item.name}</div>
+                          <div className="text-[10px] text-zinc-400 font-normal truncate">{item.hint}</div>
+                        </div>
+                      </div>
+                      {item.badge && (
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md border shrink-0 ${
+                          isActive
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.06] group-hover:border-white/10'
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </NavLink>
               );
@@ -107,14 +119,17 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Footer status */}
-      <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/30 text-xs">
-        <div className="flex items-center justify-between px-2 py-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-mono text-[11px] text-zinc-400">API :8000</span>
+      {/* Footer system status */}
+      <div className="p-3 border-t border-white/[0.06] bg-black/40">
+        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs text-zinc-300 font-medium">Backend Ready</span>
           </div>
-          <span className="font-mono text-[10px] text-emerald-400 font-semibold">LIVE</span>
+          <span className="text-[10px] font-mono text-zinc-400">:8000</span>
         </div>
       </div>
     </aside>

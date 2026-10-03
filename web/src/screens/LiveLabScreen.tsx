@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { api, ApiError } from '../lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../lib/api';
 import { StepKind } from '../types/api';
 import { VerdictBadge } from '../components/common/VerdictBadge';
 import {
@@ -11,14 +12,16 @@ import {
   Bug,
   Sparkles,
   Terminal,
-  Cpu,
   Clock,
   ExternalLink,
+  ChevronRight,
+  Radio,
+  ArrowRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface LabStageItem {
-  id: string; // unique key for repeating stages
+  id: string;
   n: number;
   title: string;
   detail: string;
@@ -37,12 +40,12 @@ interface LabStepItem {
 
 const PRESET_QUESTIONS = [
   {
-    label: 'Math (Bakery)',
+    label: 'Math (Bakery Muffins)',
     family: 'math',
     q: 'A bakery bakes 24 muffins per tray. It bakes 6 trays and sells 97 muffins. How many muffins are left?',
   },
   {
-    label: 'QA (Inception)',
+    label: 'QA (Inception Film)',
     family: 'qa',
     q: 'Who directed the film Inception, and in what year was it released?',
   },
@@ -86,7 +89,6 @@ export const LiveLabScreen: React.FC = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
   const feedEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll feed on updates
   useEffect(() => {
     feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [stages, liveSteps]);
@@ -125,7 +127,7 @@ export const LiveLabScreen: React.FC = () => {
           setActiveStageN(parsed.n);
           setStages((prev) => [...prev, stageItem]);
         } catch (err) {
-          console.error('Error parsing stage event:', err);
+          console.error(err);
         }
       });
 
@@ -136,7 +138,7 @@ export const LiveLabScreen: React.FC = () => {
             setLiveSteps((prev) => [...prev, parsed.step]);
           }
         } catch (err) {
-          console.error('Error parsing step event:', err);
+          console.error(err);
         }
       });
 
@@ -147,7 +149,7 @@ export const LiveLabScreen: React.FC = () => {
             setScorecard(parsed.result);
           }
         } catch (err) {
-          console.error('Error parsing done event:', err);
+          console.error(err);
         }
         setIsRunning(false);
         es.close();
@@ -172,40 +174,39 @@ export const LiveLabScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-              DEMO SCREEN 3 (AUDIENCE MOMENT)
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              CINEMATIC LIVE DEMO
             </span>
-            <span className="text-xs font-mono text-zinc-400">14-Stage Real-Time Pipeline</span>
+            <span className="text-xs text-zinc-400">14 Visible Investigation Stages</span>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight mt-1 flex items-center gap-2.5">
-            <FlaskConical className="w-6 h-6 text-rose-500" />
+          <h2 className="text-3xl font-heading font-extrabold text-white tracking-tight mt-1.5 flex items-center gap-3">
+            <FlaskConical className="w-7 h-7 text-rose-500" />
             Live Lab
           </h2>
-          <p className="text-sm text-zinc-400 mt-1 max-w-2xl">
-            Type any question: the AI agent answers live, Black Box plants an on-stage mistake,
-            and streams the investigation across all 14 stages with zero mock data.
+          <p className="text-sm text-zinc-300 mt-1.5 max-w-2xl leading-relaxed">
+            Test any question in front of the audience: watch the agent answer, observe Black Box inject a realistic mistake live on stage, and follow the 14-stage causal investigation stream.
           </p>
         </div>
 
-        {/* Start / Stop Controls */}
+        {/* Start / Cancel */}
         <div className="flex items-center gap-3">
           {isRunning ? (
             <button
               onClick={handleStop}
-              className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-rose-400 font-mono text-xs rounded-lg border border-zinc-700 transition-colors flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-medium text-xs rounded-xl border border-rose-500/30 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <RotateCw className="w-4 h-4 animate-spin text-rose-500" />
-              <span>Cancel Stream</span>
+              <RotateCw className="w-4 h-4 animate-spin text-rose-400" />
+              <span>Cancel Pipeline</span>
             </button>
           ) : (
             <button
               onClick={handleStartLab}
-              className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs rounded-lg shadow-lg shadow-rose-950/50 transition-all flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
               <Play className="w-4 h-4 fill-white" />
               <span>Launch Live Lab</span>
@@ -214,14 +215,14 @@ export const LiveLabScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Preset Buttons & Interactive Input Box */}
-      <div className="p-6 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
+      {/* Question Input Card */}
+      <div className="p-6 rounded-3xl bg-zinc-900/60 border border-white/[0.08] shadow-xl space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-mono text-zinc-400 font-semibold uppercase tracking-wider">
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
             Audience Question Prompt
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-zinc-500">Presets:</span>
+            <span className="text-xs text-zinc-500">Presets:</span>
             {PRESET_QUESTIONS.map((p, idx) => (
               <button
                 key={idx}
@@ -230,7 +231,7 @@ export const LiveLabScreen: React.FC = () => {
                   setFamily(p.family);
                 }}
                 disabled={isRunning}
-                className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-mono border border-zinc-700/60 transition-colors cursor-pointer disabled:opacity-50"
+                className="px-3 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 text-xs border border-white/[0.06] transition-colors cursor-pointer disabled:opacity-50"
               >
                 {p.label}
               </button>
@@ -243,21 +244,21 @@ export const LiveLabScreen: React.FC = () => {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           disabled={isRunning || family === 'ops'}
-          placeholder={family === 'ops' ? '(Generated store operations: orders, stock, refunds)' : 'Type any question to test the live agent...'}
-          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-rose-500 transition-colors resize-none"
+          placeholder={family === 'ops' ? '(Generated store operations: orders, inventory, refunds)' : 'Type any question to test live...'}
+          className="w-full bg-zinc-950 border border-white/[0.08] rounded-2xl p-4 text-xs font-sans text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition-colors resize-none leading-relaxed"
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 text-xs font-mono text-zinc-400">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 text-xs text-zinc-400">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span>Mistake to plant:</span>
+              <span>Planted Fault:</span>
               <select
                 value={mistake}
                 onChange={(e) => setMistake(e.target.value)}
                 disabled={isRunning}
-                className="bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-rose-500"
+                className="bg-zinc-950 border border-white/[0.08] rounded-xl px-3 py-1.5 text-zinc-200 focus:outline-none focus:border-rose-500 text-xs"
               >
-                <option value="auto">auto (Best for question)</option>
+                <option value="auto">auto (AI selects best for prompt)</option>
                 <option value="F1">F1: wrong tool argument</option>
                 <option value="F2">F2: wrong tool result</option>
                 <option value="F3">F3: tool returned nothing</option>
@@ -277,28 +278,27 @@ export const LiveLabScreen: React.FC = () => {
                 checked={repair}
                 onChange={(e) => setRepair(e.target.checked)}
                 disabled={isRunning}
-                className="rounded border-zinc-700 bg-zinc-950 text-rose-600 focus:ring-0 cursor-pointer"
+                className="rounded border-zinc-700 bg-zinc-950 text-rose-600 focus:ring-0"
               />
               <span>Repair with GenAI (Stage 11)</span>
             </label>
           </div>
 
-          <div className="text-[11px] text-zinc-500">
-            Stages: 1 Understand → 2 Knowledge → 3 Run → ... → 14 Scorecard
+          <div className="text-[11px] text-zinc-500 font-mono">
+            Pipeline: 1 Understand → 2 Knowledge → 3 Run → ... → 14 Scorecard
           </div>
         </div>
       </div>
 
-      {/* Error Message */}
       {errorMsg && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs font-mono flex items-center gap-2.5">
+        <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* 14-Stage Visual Stepper */}
-      <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 overflow-x-auto">
+      {/* 14-Stage Stepper Bar */}
+      <div className="p-4 rounded-2xl bg-zinc-900/40 border border-white/[0.06] overflow-x-auto">
         <div className="flex items-center gap-2 min-w-max">
           {STAGE_NAMES.map((name, idx) => {
             const stageNum = idx + 1;
@@ -308,158 +308,166 @@ export const LiveLabScreen: React.FC = () => {
             return (
               <div
                 key={stageNum}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all ${
                   isCurrent
-                    ? 'bg-rose-950/80 text-rose-200 border border-rose-500/80 shadow-md shadow-rose-950/60 font-bold animate-pulse'
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/60 shadow-lg shadow-rose-950/50 font-bold animate-pulse'
                     : isCompleted
-                    ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-zinc-950/50 text-zinc-500 border border-zinc-800/80'
+                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                    : 'bg-white/[0.02] text-zinc-500 border border-white/[0.04]'
                 }`}
               >
-                <span className="text-[10px] opacity-70">#{stageNum}</span>
+                <span className="text-[10px] opacity-60 font-mono">#{stageNum}</span>
                 <span>{name}</span>
-                {isCompleted && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                {isCompleted && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Live Stage Stream Feed */}
+      {/* Stream Split Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Sequential Stages */}
+        {/* Left 2 Cols: Stages Feed */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-6 rounded-xl bg-zinc-900/60 border border-zinc-800 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="p-6 rounded-3xl bg-zinc-900/50 border border-white/[0.08] shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-rose-400" />
-                <span className="text-xs font-mono uppercase font-bold text-zinc-200">
-                  Sequential Investigation Stream
+                <Radio className="w-4 h-4 text-rose-500 animate-pulse" />
+                <span className="text-xs uppercase font-bold text-zinc-200 tracking-wider">
+                  Sequential Investigation Pipeline
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-zinc-500">
+              <span className="text-xs text-zinc-400 font-mono">
                 {stages.length} events received
               </span>
             </div>
 
             {stages.length === 0 && !isRunning && (
-              <div className="p-12 text-center text-zinc-500 font-mono text-xs">
-                Click "Launch Live Lab" to trigger the live pipeline and stream all 14 stages.
+              <div className="p-16 text-center text-zinc-500 text-xs">
+                Click "Launch Live Lab" to start the live demonstration pipeline.
               </div>
             )}
 
-            <div className="space-y-3 max-h-[560px] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[580px] overflow-y-auto pr-2">
               {stages.map((st) => (
-                <div
+                <motion.div
                   key={st.id}
-                  className={`p-3.5 rounded-lg border text-xs font-mono transition-all ${
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-2xl border text-xs transition-all ${
                     st.n === 14
-                      ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-100'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-100 shadow-lg'
                       : st.n === 6 || st.n === 7
-                      ? 'bg-amber-950/30 border-amber-500/40 text-amber-100'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-100'
                       : st.n === 10
-                      ? 'bg-rose-950/30 border-rose-500/40 text-rose-100 font-semibold'
-                      : 'bg-zinc-950 border-zinc-800/80 text-zinc-200'
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-100 font-semibold'
+                      : 'bg-zinc-950 border-white/[0.06] text-zinc-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold text-[10px]">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-2 py-0.5 rounded-md bg-white/[0.06] text-zinc-300 font-mono font-bold text-[10px]">
                         STAGE {st.n}/14
                       </span>
-                      <span className="font-bold text-white uppercase tracking-tight">{st.title}</span>
+                      <span className="font-heading font-bold text-white uppercase tracking-tight text-xs">
+                        {st.title}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                    <span className="text-[11px] text-zinc-400 font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-zinc-500" />
                       +{st.t.toFixed(1)}s
                     </span>
                   </div>
 
-                  <div className="text-zinc-300 leading-relaxed">{st.detail}</div>
+                  <div className="text-zinc-300 leading-relaxed font-sans">{st.detail}</div>
 
-                  {/* If stage 3, embed live agent steps */}
+                  {/* Stage 3 Live Step Ticker */}
                   {st.n === 3 && liveSteps.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-zinc-800/60 space-y-2">
-                      <div className="text-[10px] uppercase font-bold text-zinc-400">
-                        Live Recorded Agent Steps ({liveSteps.length}):
-                      </div>
+                    <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                        Agent Steps Streamed ({liveSteps.length}):
+                      </span>
                       <div className="space-y-1.5">
                         {liveSteps.map((step) => (
                           <div
                             key={step.idx}
-                            className="p-2 rounded bg-zinc-900 border border-zinc-800 text-[11px] flex items-center justify-between"
+                            className="p-2.5 rounded-xl bg-zinc-900 border border-white/[0.04] text-xs flex items-center justify-between"
                           >
                             <div className="flex items-center gap-2 truncate">
-                              <span className="font-bold text-zinc-400">#{step.idx}</span>
-                              <span className="text-rose-400">{step.kind}</span>
-                              <span className="text-zinc-300 truncate">{step.name}</span>
+                              <span className="font-mono font-bold text-zinc-400">#{step.idx}</span>
+                              <span className="text-rose-400 font-mono text-[10px] uppercase">{step.kind}</span>
+                              <span className="text-zinc-200 font-medium truncate">{step.name}</span>
                             </div>
-                            <span className="text-zinc-500 text-[10px] truncate max-w-xs">
-                              {step.output?.slice(0, 60)}
+                            <span className="text-zinc-400 font-mono text-[11px] truncate max-w-xs ml-2">
+                              {step.output?.slice(0, 50)}
                             </span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
               <div ref={feedEndRef} />
             </div>
           </div>
         </div>
 
-        {/* Right Col: Stage 14 Scorecard Hero */}
+        {/* Right Col: Hero Scorecard */}
         <div className="space-y-6">
-          <div className="p-6 rounded-xl bg-gradient-to-b from-zinc-900/80 to-zinc-950 border border-zinc-800 shadow-xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+          <div className="p-6 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-900/90 to-zinc-950 border border-white/[0.08] shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <span className="text-xs font-heading font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-rose-400" />
                 Stage 14: Scorecard
-              </h3>
+              </span>
               {scorecard && <VerdictBadge verdict="PROVED" size="sm" />}
             </div>
 
             {scorecard ? (
-              <div className="space-y-4 text-xs font-mono">
-                <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-2">
-                  <div className="flex justify-between text-zinc-400">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-4"
+              >
+                <div className="p-4 rounded-2xl bg-zinc-950 border border-white/[0.06] space-y-3 text-xs">
+                  <div className="flex justify-between items-center text-zinc-400">
                     <span>Planted Mistake:</span>
-                    <span className="text-amber-400 font-bold">{scorecard.planted || 'None'}</span>
+                    <span className="text-amber-400 font-bold font-mono">{scorecard.planted || 'None'}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
+                  <div className="flex justify-between items-center text-zinc-400">
                     <span>True Guilty Step:</span>
-                    <span className="text-rose-400 font-bold">Step #{scorecard.guilty}</span>
+                    <span className="text-rose-400 font-bold font-mono">Step #{scorecard.guilty}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Diagnosis Model:</span>
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span>GNN Top-3 Ranker:</span>
                     <span className={scorecard.hit ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                      {scorecard.hit ? 'Top-3 HIT' : 'Missed'}
+                      {scorecard.hit ? 'HIT (Found it)' : 'Missed'}
                     </span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
+                  <div className="flex justify-between items-center text-zinc-400">
                     <span>Replay Verified Cause:</span>
-                    <span className="text-emerald-400 font-bold">Step #{scorecard.cause}</span>
+                    <span className="text-emerald-400 font-bold font-mono">Step #{scorecard.cause}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Replay Runtime:</span>
-                    <span className="text-zinc-200">{scorecard.seconds}s total</span>
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span>Execution Runtime:</span>
+                    <span className="text-white font-mono">{scorecard.seconds}s total</span>
                   </div>
                 </div>
 
                 {scorecard.run_id && (
                   <Link
                     to={`/runs/${scorecard.run_id}`}
-                    className="w-full py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-rose-600/30"
                   >
-                    <span>Open Recorded Run Graph</span>
+                    <span>Inspect Recorded Run Graph</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
-              </div>
+              </motion.div>
             ) : (
-              <div className="p-8 text-center text-zinc-500 font-mono text-xs">
-                The scorecard will appear here once Stage 14 is reached.
+              <div className="p-12 text-center text-zinc-500 text-xs">
+                The final causal scorecard will appear here once Stage 14 is reached.
               </div>
             )}
           </div>

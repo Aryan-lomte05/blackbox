@@ -36,112 +36,105 @@ const kindIcons: Record<StepKind, React.ComponentType<{ className?: string }>> =
 };
 
 const kindStyles: Record<StepKind, { bg: string; text: string; border: string }> = {
-  llm: { bg: 'bg-blue-950/40', text: 'text-blue-300', border: 'border-blue-500/30' },
-  tool: { bg: 'bg-purple-950/40', text: 'text-purple-300', border: 'border-purple-500/30' },
-  retrieval: { bg: 'bg-cyan-950/40', text: 'text-cyan-300', border: 'border-cyan-500/30' },
-  final: { bg: 'bg-emerald-950/40', text: 'text-emerald-300', border: 'border-emerald-500/30' },
-  state: { bg: 'bg-zinc-800/40', text: 'text-zinc-300', border: 'border-zinc-700/30' },
+  llm: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  tool: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+  retrieval: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  final: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  state: { bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/20' },
 };
 
 export const StepNode = memo(({ data, selected }: { data: StepNodeData; selected?: boolean }) => {
   const Icon = kindIcons[data.kind] || Cpu;
   const style = kindStyles[data.kind] || kindStyles.llm;
 
-  // Determine border and highlight styles based on status
-  let borderStyle = 'border-zinc-800 hover:border-zinc-600';
-  let glowStyle = '';
+  let cardStyle = 'border-white/[0.08] bg-[#101216]/90 hover:border-white/[0.18] shadow-lg';
+  let banner = null;
 
   if (data.is_guilty) {
-    borderStyle = 'border-rose-500 shadow-lg shadow-rose-950/80 ring-2 ring-rose-500/50';
-    glowStyle = 'bg-rose-950/20';
+    cardStyle = 'border-rose-500/80 bg-gradient-to-b from-rose-950/40 via-zinc-900/90 to-zinc-950 shadow-2xl shadow-rose-950/80 ring-2 ring-rose-500/40';
+    banner = (
+      <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold bg-rose-500 text-white uppercase tracking-wider shadow-sm flex items-center gap-1 animate-pulse">
+        <AlertCircle className="w-2.5 h-2.5" />
+        Root Cause
+      </span>
+    );
   } else if (data.is_contaminated) {
-    borderStyle = 'border-amber-500 shadow-md shadow-amber-950/60 ring-1 ring-amber-500/40';
-    glowStyle = 'bg-amber-950/15';
+    cardStyle = 'border-amber-500/60 bg-gradient-to-b from-amber-950/30 via-zinc-900/90 to-zinc-950 shadow-xl shadow-amber-950/50 ring-1 ring-amber-500/30';
+    banner = (
+      <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider">
+        Contaminated
+      </span>
+    );
   } else if (data.suspect_rank) {
-    borderStyle = 'border-indigo-500/80 shadow-md shadow-indigo-950/50';
+    banner = (
+      <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 uppercase tracking-wider">
+        Suspect #{data.suspect_rank}
+      </span>
+    );
+  } else if (data.is_planted) {
+    banner = (
+      <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider">
+        Planted
+      </span>
+    );
   }
 
   if (selected) {
-    borderStyle += ' ring-2 ring-white';
+    cardStyle += ' ring-2 ring-white shadow-2xl';
   }
 
   return (
     <div
-      className={`w-64 rounded-xl border bg-zinc-900/90 text-zinc-100 p-3.5 transition-all cursor-pointer backdrop-blur-md ${borderStyle} ${glowStyle}`}
+      className={`w-72 rounded-2xl border text-zinc-100 p-4 transition-all duration-200 cursor-pointer backdrop-blur-xl ${cardStyle}`}
     >
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-zinc-500 !border-zinc-900" />
+      <Handle type="target" position={Position.Left} className="!w-2.5 !h-2.5 !bg-zinc-500 !border-2 !border-zinc-950" />
 
-      {/* Top badges bar */}
-      <div className="flex items-center justify-between gap-1 mb-2">
-        <div className="flex items-center gap-1.5">
-          <span className="w-5 h-5 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] font-mono font-bold text-zinc-300">
+      {/* Top badges */}
+      <div className="flex items-center justify-between gap-1 mb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-xs font-mono font-bold text-zinc-300">
             #{data.idx}
           </span>
-          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold border ${style.bg} ${style.text} ${style.border}`}>
-            <Icon className="w-2.5 h-2.5" />
+          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
+            <Icon className="w-3 h-3" />
             {data.kind}
           </span>
         </div>
 
-        {/* Suspect rank / Guilty badge */}
-        <div className="flex items-center gap-1">
-          {data.is_guilty && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-600 text-white uppercase tracking-tight flex items-center gap-0.5 animate-pulse">
-              <AlertCircle className="w-2.5 h-2.5" />
-              GUILTY
-            </span>
-          )}
-          {data.is_planted && !data.is_guilty && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-600/90 text-white uppercase tracking-tight flex items-center gap-0.5">
-              <Bug className="w-2.5 h-2.5" />
-              PLANTED
-            </span>
-          )}
-          {data.suspect_rank && !data.is_guilty && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-600 text-white uppercase tracking-tight flex items-center gap-0.5">
-              <ShieldAlert className="w-2.5 h-2.5" />
-              #{data.suspect_rank}
-            </span>
-          )}
-          {data.is_contaminated && !data.is_guilty && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-tight">
-              CONTAMINATED
-            </span>
-          )}
-        </div>
+        {banner}
       </div>
 
-      {/* Node / tool name */}
-      <div className="font-mono text-xs font-bold text-zinc-200 truncate flex items-center justify-between">
-        <span>{data.name || data.node}</span>
-        <span className="text-[10px] text-zinc-500 font-normal">:{data.node}</span>
+      {/* Step name / node */}
+      <div className="font-sans font-bold text-xs text-white truncate flex items-center justify-between">
+        <span className="truncate">{data.name || data.node}</span>
+        <span className="text-[10px] text-zinc-500 font-mono font-normal ml-1 shrink-0">:{data.node}</span>
       </div>
 
-      {/* Preview text */}
-      <div className="mt-2 p-2 rounded bg-zinc-950/80 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 line-clamp-2 break-all">
-        {data.preview || 'No preview'}
+      {/* Output preview */}
+      <div className="mt-2.5 p-2.5 rounded-xl bg-black/40 border border-white/[0.04] text-[11px] font-mono text-zinc-300 line-clamp-2 break-all leading-relaxed">
+        {data.preview || '(empty)'}
       </div>
 
       {/* Footer stats */}
-      <div className="mt-2.5 pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-zinc-400 font-sans">
         <div>
           {data.latency_ms !== undefined && data.latency_ms !== null ? (
-            <span>{data.latency_ms.toFixed(0)}ms</span>
+            <span className="font-mono text-zinc-400">{data.latency_ms.toFixed(0)}ms</span>
           ) : (
-            <span>cached</span>
+            <span className="text-emerald-400/90 font-medium">Replayed (0 tokens)</span>
           )}
         </div>
         {data.checker && (
-          <div className="flex items-center gap-1 text-[9px]">
-            <span>track:</span>
-            <span className={(data.checker.on_track ?? 1) < 0.6 ? 'text-amber-400' : 'text-emerald-400'}>
+          <div className="flex items-center gap-1 text-[10px]">
+            <span className="text-zinc-500">Track:</span>
+            <span className={`font-mono font-semibold ${(data.checker.on_track ?? 1) < 0.6 ? 'text-amber-400' : 'text-emerald-400'}`}>
               {((data.checker.on_track ?? 0) * 100).toFixed(0)}%
             </span>
           </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-zinc-500 !border-zinc-900" />
+      <Handle type="source" position={Position.Right} className="!w-2.5 !h-2.5 !bg-zinc-500 !border-2 !border-zinc-950" />
     </div>
   );
 });

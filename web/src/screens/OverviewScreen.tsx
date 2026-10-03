@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { api } from '../lib/api';
 import { OverviewResponse } from '../types/api';
 import { KPI } from '../components/common/KPI';
@@ -16,6 +17,8 @@ import {
   ArrowRight,
   Flame,
   CheckCircle2,
+  Activity,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -29,39 +32,46 @@ export const OverviewScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-mono">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
               MISSION CONTROL
             </span>
-            <span className="text-xs text-zinc-400">Flight Recorder Fleet Status</span>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Fleet Telemetry Active</span>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight mt-1 flex items-center gap-2.5">
-            <LayoutDashboard className="w-6 h-6 text-rose-500" />
+          <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-inner">
+              <LayoutDashboard className="w-5 h-5" />
+            </div>
             Black Box Overview
           </h2>
-          <p className="text-sm text-zinc-400 mt-1 max-w-2xl font-sans">
-            Autonomous causal flight recorder for AI agents: recording every step, proving root causes by replay,
-            guarding against regressions, and alerting owners before damages escalate.
+          <p className="text-sm text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
+            Autonomous causal flight recorder for AI agents: recording every step, proving root causes by replay, guarding against regressions, and alerting owners before financial damages escalate.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/investigate"
-            className="px-5 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs flex items-center gap-2 shadow-lg shadow-rose-950/50 transition-colors font-sans"
-          >
-            <span>Start 1-Click Investigation</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Link
+              to="/investigate"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-semibold text-xs flex items-center gap-2.5 shadow-lg shadow-rose-950/60 transition-all border border-rose-500/30"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Launch 1-Click Investigation</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Link>
+          </motion.div>
         </div>
       </div>
 
       {isLoading && (
-        <div className="p-16 text-center text-zinc-500 text-xs">
+        <div className="p-16 text-center text-zinc-500 text-xs animate-pulse">
           Loading fleet telemetry and database state...
         </div>
       )}
@@ -74,7 +84,11 @@ export const OverviewScreen: React.FC = () => {
       )}
 
       {data && (
-        <div className="space-y-8 animate-in fade-in duration-200">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
           {/* Key Metrics Row (Real Numbers Only) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPI
@@ -109,28 +123,28 @@ export const OverviewScreen: React.FC = () => {
           </div>
 
           {/* Model Status Headline Banner */}
-          <div className="p-5 rounded-xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-rose-950/30 border border-zinc-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-rose-950/30 border border-zinc-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">
                   DIAGNOSIS MODEL REPORT CARD
                 </span>
-                <span className="px-2 py-0.2 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
                   Calibrated (93% in top 5)
                 </span>
               </div>
-              <div className="text-sm font-bold text-white font-sans">
+              <div className="text-base font-semibold text-white">
                 {data.model?.headline ||
                   'Graph Neural Network (gnn@35f3e605) running locally on agent execution graphs.'}
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs font-mono text-zinc-400">
+            <div className="flex items-center gap-5 text-xs font-mono text-zinc-400">
               <div>
                 Known Mistakes: <strong className="text-white">10 Kinds (F1–F10)</strong>
               </div>
-              <div>
-                Replay Calls: <strong className="text-emerald-400">0 Tokens (Deterministic)</strong>
+              <div className="border-l border-zinc-800 pl-4">
+                Replay Calls: <strong className="text-emerald-400 font-bold">0 Tokens (Deterministic)</strong>
               </div>
             </div>
           </div>
@@ -138,13 +152,13 @@ export const OverviewScreen: React.FC = () => {
           {/* Main Grid: Recent Failures & Guardian Incidents */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left 2 Cols: Recent Failures */}
-            <div className="lg:col-span-2 p-6 rounded-xl bg-zinc-900/60 border border-zinc-800 shadow-xl space-y-4">
+            <div className="lg:col-span-2 glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200 tracking-wider">
                   <Flame className="w-4 h-4 text-rose-500" />
-                  Recent Failure Recordings
+                  <span>Recent Failure Recordings</span>
                 </div>
-                <span className="text-[11px] text-zinc-500">
+                <span className="text-[11px] font-mono text-zinc-500">
                   Showing {data.recent_failures?.length || 0} latest
                 </span>
               </div>
@@ -152,8 +166,8 @@ export const OverviewScreen: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-mono">
                   <thead>
-                    <tr className="text-zinc-500 border-b border-zinc-800">
-                      <th className="pb-3">RUN ID</th>
+                    <tr className="text-zinc-500 border-b border-zinc-800/80 text-[11px]">
+                      <th className="pb-3 pl-2">RUN ID</th>
                       <th className="pb-3">FAMILY</th>
                       <th className="pb-3">FAULT</th>
                       <th className="pb-3">GUILTY STEP</th>
@@ -161,17 +175,17 @@ export const OverviewScreen: React.FC = () => {
                       <th className="pb-3">ACTION</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/50">
+                  <tbody className="divide-y divide-zinc-800/40">
                     {data.recent_failures?.slice(0, 8).map((run) => (
-                      <tr key={run.run_id} className="hover:bg-zinc-800/30">
-                        <td className="py-3 font-bold text-zinc-200">
+                      <tr key={run.run_id} className="hover:bg-zinc-800/20 transition-colors">
+                        <td className="py-3 pl-2 font-bold text-zinc-200">
                           {run.run_id.slice(0, 10)}
                         </td>
                         <td className="py-3 uppercase text-zinc-400">
                           {run.family_label || run.family}
                         </td>
                         <td className="py-3">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-500/30">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-500/30">
                             {run.planted || 'Real Bug'}
                           </span>
                         </td>
@@ -182,9 +196,10 @@ export const OverviewScreen: React.FC = () => {
                         <td className="py-3">
                           <Link
                             to={`/runs/${run.run_id}`}
-                            className="text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                            className="text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium transition-colors font-sans"
                           >
-                            Inspect <ExternalLink className="w-3 h-3" />
+                            <span>Inspect</span>
+                            <ExternalLink className="w-3 h-3" />
                           </Link>
                         </td>
                       </tr>
@@ -195,14 +210,14 @@ export const OverviewScreen: React.FC = () => {
             </div>
 
             {/* Right Col: Guardian Active Incidents */}
-            <div className="p-6 rounded-xl bg-zinc-900/60 border border-zinc-800 shadow-xl space-y-4">
+            <div className="glass-card p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200 tracking-wider">
                   <ShieldAlert className="w-4 h-4 text-amber-400" />
-                  Active Incidents
+                  <span>Active Guardian Backlog</span>
                 </div>
-                <Link to="/incidents" className="text-[11px] text-rose-400 hover:underline">
-                  View All
+                <Link to="/incidents" className="text-xs text-rose-400 hover:underline font-medium">
+                  View All →
                 </Link>
               </div>
 
@@ -211,18 +226,18 @@ export const OverviewScreen: React.FC = () => {
                   <Link
                     key={inc.incident_id}
                     to="/incidents"
-                    className="block p-3 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors"
+                    className="block p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700 transition-all hover:translate-x-0.5"
                   >
-                    <div className="flex items-center justify-between text-[10px] mb-1">
-                      <span className="font-bold uppercase text-rose-400">{inc.severity}</span>
+                    <div className="flex items-center justify-between text-[10px] mb-1.5">
+                      <span className="font-bold uppercase text-rose-400 font-mono">{inc.severity}</span>
                       {inc.needs_approval && (
-                        <span className="text-amber-400 font-bold bg-amber-950/60 px-1 py-0.2 rounded border border-amber-500/30">
-                          MONEY PAUSED
+                        <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded text-[10px] border border-amber-500/30 font-mono">
+                          FINANCIAL PAUSE
                         </span>
                       )}
                     </div>
-                    <div className="font-bold text-zinc-200 text-xs truncate">{inc.title}</div>
-                    <div className="text-[10px] text-zinc-500 mt-1 flex justify-between">
+                    <div className="font-semibold text-zinc-200 text-xs truncate font-sans">{inc.title}</div>
+                    <div className="text-[10px] text-zinc-500 mt-1.5 flex justify-between font-mono">
                       <span>ID: #{inc.incident_id}</span>
                       <span>Run: {inc.run_id?.slice(0, 8)}</span>
                     </div>
@@ -231,8 +246,9 @@ export const OverviewScreen: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
 };
+
