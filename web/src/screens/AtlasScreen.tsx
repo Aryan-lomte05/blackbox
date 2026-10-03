@@ -1,361 +1,202 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { AtlasResponse, AtlasPattern } from '../types/api';
-import { ArrowRight, CheckCircle2, Network, ExternalLink } from 'lucide-react';
-
-interface ClusterNode {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  color: string;
-  runsCount: number;
-  percentage: string;
-  hasFix: boolean;
-  family: string;
-  examples: string[];
-  nodes: Array<{ x: number; y: number; r: number }>;
-}
+import { MonoLabel } from '../components/common/MonoLabel';
+import { RecMark } from '../components/common/RecMark';
+import { KPI } from '../components/common/KPI';
+import { EmptyState } from '../components/common/EmptyState';
+import { ArrowRight, Network, Layers, Filter } from 'lucide-react';
 
 export const AtlasScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const [selectedFamily, setSelectedFamily] = useState<string>('All');
-  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [selectedFamily, setSelectedFamily] = useState<string>('all');
 
-  // Fetch real Failure Atlas patterns from backend
-  const { data, isLoading } = useQuery<AtlasResponse>({
+  const { data, isLoading, error } = useQuery<AtlasResponse | any>({
     queryKey: ['atlas-data'],
     queryFn: async () => {
-      return await api.get<AtlasResponse>('/api/atlas');
+      return await api.get<any>('/api/atlas');
     },
   });
 
-  const patterns = data?.patterns || [];
-  const totalFailures = data?.total_failures || 863;
+  const patterns: AtlasPattern[] = data?.patterns || [];
+  const totalFailures = data?.total_failures ?? 859;
 
-  // Dynamically map backend patterns to interactive visual clusters
-  const clusters: ClusterNode[] = useMemo(() => {
-    if (patterns.length === 0) return [];
-
-    // Distinct color per family
-    const familyColors: Record<string, string> = {
-      QA: '#f43f5e',
-      MATH: '#f59e0b',
-      SHOP: '#06b6d4',
-      OPS: '#06b6d4',
-      TRADING: '#a855f7',
-      SMOLAGENTS: '#ec4899',
-    };
-
-    // Calculate layout coordinates around the SVG canvas
-    const width = 850;
-    const height = 440;
-    const cx = width / 2;
-    const cy = height / 2;
-
-    return patterns.map((p, idx) => {
-      const famUpper = (p.family || 'QA').toUpperCase();
-      const color = familyColors[famUpper] || '#10b981';
-
-      // Distribute in concentric elliptical constellation
-      const angle = (idx * 2.39996) + 0.5; // Golden angle spiral
-      const radius = 90 + (idx % 3) * 80 + Math.floor(idx / 3) * 15;
-      const x = Math.max(90, Math.min(width - 90, Math.round(cx + Math.cos(angle) * (radius * 1.3))));
-      const y = Math.max(60, Math.min(height - 60, Math.round(cy + Math.sin(angle) * (radius * 0.85))));
-
-      // Generate satellite constellation particles around center
-      const particleCount = Math.min(8, Math.max(3, Math.round(p.count / 15)));
-      const satellites: Array<{ x: number; y: number; r: number }> = [];
-      for (let s = 0; s < particleCount; s++) {
-        const sAngle = (s * 2 * Math.PI) / particleCount;
-        const sDist = 18 + ((s * 7) % 22);
-        satellites.push({
-          x: Math.round(x + Math.cos(sAngle) * sDist),
-          y: Math.round(y + Math.sin(sAngle) * sDist),
-          r: 2.5 + ((s + idx) % 4),
-        });
-      }
-
-      return {
-        id: `pattern-${idx}-${p.mistake || 'F'}`,
-        name: p.mistake_name ? `${p.mistake_name} (${p.step_kind})` : p.title,
-        x,
-        y,
-        color,
-        runsCount: p.count,
-        percentage: `${(p.share * 100).toFixed(1)}%`,
-        hasFix: p.count > 25,
-        family: famUpper,
-        examples: p.examples || [],
-        nodes: satellites,
-      };
+  const families = useMemo(() => {
+    const set = new Set<string>();
+    patterns.forEach((p) => {
+      if (p.family) set.add(p.family);
     });
+    return ['all', ...Array.from(set)];
   }, [patterns]);
 
-  // Distinct families for filter tabs
-  const availableFamilies = useMemo(() => {
-    const fams = new Set(clusters.map((c) => c.family));
-    return ['All', ...Array.from(fams)];
-  }, [clusters]);
+  const filteredPatterns = useMemo(() => {
+    if (selectedFamily === 'all') return patterns;
+    return patterns.filter((p) => p.family?.toLowerCase() === selectedFamily.toLowerCase());
+  }, [patterns, selectedFamily]);
 
-  const filteredClusters = useMemo(() => {
-    if (selectedFamily === 'All') return clusters;
-    return clusters.filter((c) => c.family === selectedFamily);
-  }, [clusters, selectedFamily]);
-
-  const activeCluster =
-    clusters.find((c) => c.id === selectedClusterId) ||
-    filteredClusters[0] ||
-    clusters[0];
+  const maxCount = useMemo(() => {
+    return Math.max(1, ...patterns.map((p) => p.count));
+  }, [patterns]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
-      {/* Header Bar matching Reference Panel 5 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 pb-24">
+      {/* Top Header */}
+      <div className="border-b border-[var(--line)] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight font-heading flex items-center gap-2">
-            <Network className="w-5 h-5 text-cyan-400" />
-            <span>Failure Atlas</span>
+          <div className="flex items-center gap-3 mb-2">
+            <MonoLabel index="10" label="FAILURE PATTERNS & FREQUENCY ATLAS" />
+            <span className="font-mono text-[10px] uppercase text-[var(--accent)] bg-[var(--raised)] px-2 py-0.5 rounded border border-[var(--line)]">
+              FLEET RECURRENCE
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold font-sans text-[var(--text-strong)] tracking-tight">
+            Failure Atlas
           </h1>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Clusters of similar failure modes across {totalFailures} cataloged runs
+          <p className="text-xs font-sans text-[var(--muted)] mt-1 max-w-2xl leading-relaxed">
+            Horizontal frequency distribution of failure patterns across agent task families. Discover which fault vectors and execution steps account for fleet failure density.
           </p>
         </div>
 
-        {/* Filter Pills matching Reference */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {availableFamilies.map((fam) => (
+        {/* Family Filter Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 bg-[var(--raised)] p-1 rounded-[var(--radius-sm)] border border-[var(--line)]">
+          {families.map((fam) => (
             <button
               key={fam}
               onClick={() => setSelectedFamily(fam)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer capitalize ${
+              className={`px-2.5 py-1 text-xs font-mono rounded-[var(--radius-sm)] uppercase transition-colors cursor-pointer ${
                 selectedFamily === fam
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-[#121316] text-zinc-400 hover:text-white border border-white/[0.06]'
+                  ? 'bg-[var(--panel)] text-[var(--text-strong)] border border-[var(--line-strong)] font-semibold'
+                  : 'text-[var(--faint)] hover:text-[var(--text)]'
               }`}
             >
-              {fam.toLowerCase()}
+              {fam}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 2-Column Main Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Constellation Canvas (Left: 8 cols) */}
-        <div className="lg:col-span-8 rounded-2xl bg-[#08090a] border border-white/[0.06] p-4 relative min-h-[480px] flex items-center justify-center overflow-hidden shadow-2xl">
-          {/* Subtle grid dots background */}
-          <div
-            className="absolute inset-0 opacity-20 pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
-          />
+      {/* Top KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KPI
+          label="CATALOGED FAILURES"
+          value={totalFailures.toLocaleString()}
+          context="fleet ground-truth failures"
+          variant="guilty"
+        />
+        <KPI
+          label="RECURRENCE PATTERNS"
+          value={patterns.length.toString()}
+          context="distinct causal signatures"
+        />
+        <KPI
+          label="TOP PATTERN SHARE"
+          value={`${patterns[0] ? Math.round(patterns[0].share * 100) : 14}%`}
+          context={patterns[0]?.title || 'wrong fact at check step'}
+          variant="trail"
+        />
+        <KPI
+          label="FILTERED SUBSET"
+          value={filteredPatterns.length.toString()}
+          context={`in family: ${selectedFamily.toUpperCase()}`}
+        />
+      </div>
 
-          {isLoading ? (
-            <div className="text-xs font-mono text-zinc-500 animate-pulse">
-              Computing failure embedding clusters from database...
-            </div>
-          ) : clusters.length === 0 ? (
-            <div className="text-xs font-mono text-zinc-500">
-              No failure clusters found in current partition
-            </div>
-          ) : (
-            <svg
-              viewBox="0 0 850 440"
-              className="w-full h-full max-h-[520px] select-none"
-            >
-              {/* Connector lines to satellites */}
-              {filteredClusters.map((cluster) =>
-                cluster.nodes.map((n, i) => (
-                  <line
-                    key={`${cluster.id}-l-${i}`}
-                    x1={cluster.x}
-                    y1={cluster.y}
-                    x2={n.x}
-                    y2={n.y}
-                    stroke={cluster.color}
-                    strokeOpacity={cluster.id === activeCluster?.id ? 0.4 : 0.12}
-                    strokeWidth={1}
-                  />
-                ))
-              )}
-
-              {/* Satellite particles */}
-              {filteredClusters.map((cluster) =>
-                cluster.nodes.map((n, i) => (
-                  <circle
-                    key={`${cluster.id}-p-${i}`}
-                    cx={n.x}
-                    cy={n.y}
-                    r={n.r}
-                    fill={cluster.color}
-                    fillOpacity={cluster.id === activeCluster?.id ? 0.9 : 0.4}
-                  />
-                ))
-              )}
-
-              {/* Main Cluster Centers */}
-              {filteredClusters.map((cluster) => {
-                const isSelected = cluster.id === activeCluster?.id;
-                return (
-                  <g
-                    key={cluster.id}
-                    className="cursor-pointer transition-all duration-200"
-                    onClick={() => setSelectedClusterId(cluster.id)}
-                  >
-                    {/* Pulsing ring if selected */}
-                    {isSelected && (
-                      <circle
-                        cx={cluster.x}
-                        cy={cluster.y}
-                        r={22}
-                        fill="none"
-                        stroke={cluster.color}
-                        strokeWidth={1.5}
-                        strokeDasharray="4 2"
-                        className="animate-spin"
-                        style={{ transformOrigin: `${cluster.x}px ${cluster.y}px`, animationDuration: '8s' }}
-                      />
-                    )}
-
-                    {/* Outer glow aura */}
-                    <circle
-                      cx={cluster.x}
-                      cy={cluster.y}
-                      r={14}
-                      fill={cluster.color}
-                      fillOpacity={isSelected ? 0.35 : 0.15}
-                    />
-
-                    {/* Core node */}
-                    <circle
-                      cx={cluster.x}
-                      cy={cluster.y}
-                      r={isSelected ? 8 : 6}
-                      fill={cluster.color}
-                    />
-
-                    {/* Label Tag */}
-                    <text
-                      x={cluster.x}
-                      y={cluster.y + 24}
-                      textAnchor="middle"
-                      fill={isSelected ? '#ffffff' : '#94a3b8'}
-                      fontSize={10}
-                      fontFamily="monospace"
-                      fontWeight={isSelected ? 'bold' : 'normal'}
-                    >
-                      {cluster.name}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          )}
+      {/* Loading & Error */}
+      {isLoading && (
+        <div className="panel p-12 text-center text-xs font-mono text-[var(--faint)]">
+          Computing failure pattern frequency distribution...
         </div>
+      )}
 
-        {/* Selected Cluster Detail Panel (Right: 4 cols) */}
-        <div className="lg:col-span-4 rounded-2xl bg-[#0c0d10] border border-white/[0.08] p-5 flex flex-col justify-between space-y-4 shadow-xl">
-          {activeCluster ? (
-            <div className="space-y-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 tracking-wider">
-                  SELECTED CLUSTER
-                </span>
-                <div className="flex items-center justify-between mt-1">
-                  <h2 className="text-base font-bold text-white font-heading">
-                    {activeCluster.name}
-                  </h2>
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: activeCluster.color }}
-                  />
-                </div>
-              </div>
+      {error && (
+        <div className="p-4 rounded-[var(--radius)] border border-[var(--guilty)]/40 bg-[var(--guilty-bg)] text-[var(--guilty)] text-xs font-mono">
+          Failed to load failure atlas: {(error as any)?.detail || (error as Error).message}
+        </div>
+      )}
 
-              {/* 3 Metric Cards matching reference */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-3 rounded-xl bg-[#14151a] border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-500 uppercase">OCCURRENCES</span>
-                  <div className="text-lg font-bold text-white mt-0.5">
-                    {activeCluster.runsCount} runs
-                  </div>
-                </div>
+      {/* Horizontal Bars Breakdown */}
+      {!isLoading && filteredPatterns.length > 0 && (
+        <div className="space-y-4">
+          <MonoLabel index="DISTRIBUTION" label="FAILURE PATTERNS (RANKED BY OCCURRENCE)" />
 
-                <div className="p-3 rounded-xl bg-[#14151a] border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-500 uppercase">SHARE</span>
-                  <div className="text-lg font-bold text-cyan-400 mt-0.5">
-                    {activeCluster.percentage}
-                  </div>
-                </div>
-              </div>
+          <div className="space-y-3">
+            {filteredPatterns.map((p, idx) => {
+              const barWidth = Math.max(4, Math.round((p.count / maxCount) * 100));
+              const sharePct = Math.round(p.share * 100);
 
-              {/* Family & Status */}
-              <div className="p-3 rounded-xl bg-[#14151a] border border-white/[0.04] space-y-2 text-xs font-mono">
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500">Task Family:</span>
-                  <span className="text-zinc-200 uppercase">{activeCluster.family}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500">Autonomous Fix:</span>
-                  {activeCluster.hasFix ? (
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>Available</span>
-                    </span>
-                  ) : (
-                    <span className="text-zinc-500">Under Analysis</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Real Example Runs */}
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
-                  Cluster Run Examples
-                </span>
-                <div className="space-y-1 font-mono text-xs">
-                  {activeCluster.examples.map((exId, i) => (
-                    <div
-                      key={i}
-                      onClick={() => navigate(`/runs/${exId}`)}
-                      className="p-2 rounded-lg bg-[#14151a] hover:bg-[#1a1c24] border border-white/[0.04] flex items-center justify-between text-zinc-300 hover:text-white transition-colors cursor-pointer group"
-                    >
-                      <span className="text-cyan-400">run_{exId.slice(0, 6)}</span>
-                      <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300" />
+              return (
+                <div
+                  key={idx}
+                  className="panel p-4 space-y-2.5 hover:border-[var(--line-strong)] transition-all select-none"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="font-mono text-xs font-bold text-[var(--faint)] w-6 text-right tabular-nums">
+                        #{idx + 1}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-[var(--guilty-bg)] text-[var(--guilty)] border border-[var(--guilty)]/30 font-mono text-[10px] font-bold">
+                        {p.mistake}
+                      </span>
+                      <span className="font-sans font-semibold text-xs text-[var(--text-strong)] truncate">
+                        {p.title || `${p.family}: ${p.mistake_name} at ${p.step_kind} (${p.agent_node})`}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-xs font-mono text-zinc-500">
-              Select a cluster to inspect its failure pattern and example traces.
-            </div>
-          )}
 
-          {/* Action button */}
-          <div className="pt-2">
-            <button
-              onClick={() => {
-                if (activeCluster?.examples?.[0]) {
-                  navigate(`/runs/${activeCluster.examples[0]}`);
-                } else {
-                  navigate(`/runs?search=${activeCluster?.family || ''}`);
-                }
-              }}
-              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 transition-all cursor-pointer"
-            >
-              <span>Investigate Example Run</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+                    <div className="flex items-center gap-3 font-mono text-xs text-[var(--text)] shrink-0 pl-8 sm:pl-0">
+                      <span className="tabular-nums font-semibold">{p.count} runs</span>
+                      <span className="text-[var(--faint)]">({sharePct}%)</span>
+                    </div>
+                  </div>
+
+                  {/* Horizontal Bar */}
+                  <div className="w-full bg-[var(--bg)] h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--accent)] rounded-full transition-all duration-300"
+                      style={{ width: `${barWidth}%` }}
+                    />
+                  </div>
+
+                  {/* Examples and Component node tags */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono text-[var(--faint)]">
+                    <div className="flex items-center gap-2">
+                      <span>Node: <span className="text-[var(--text)]">{p.step_kind}:{p.agent_node}</span></span>
+                      <span>·</span>
+                      <span>Family: <span className="text-[var(--text)]">{p.family}</span></span>
+                    </div>
+
+                    {p.examples && p.examples.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span>Traces:</span>
+                        <div className="flex items-center gap-1.5">
+                          {p.examples.slice(0, 3).map((ex) => (
+                            <Link
+                              key={ex}
+                              to={`/runs/${ex}`}
+                              className="text-[var(--accent)] hover:underline hover:text-white"
+                            >
+                              {ex.slice(0, 6)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && filteredPatterns.length === 0 && (
+        <EmptyState
+          title="No Patterns for this Family"
+          description={`No failure traces found matching category ${selectedFamily.toUpperCase()}.`}
+          endpoint="GET /api/atlas"
+        />
+      )}
     </div>
   );
 };
