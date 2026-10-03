@@ -186,7 +186,7 @@ class Guardian:
             self._save(prev)
             return prev
         for ch in self.channels:
-            ok, why = ch.available()
+            ok, why = ch.ready_for(inc)
             if not ok:
                 inc.notifications.append({"channel": ch.name, "status": "skipped", "detail": why})
                 continue
