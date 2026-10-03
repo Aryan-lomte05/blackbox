@@ -91,6 +91,17 @@ def cmd_ui(args) -> int:
     return 0
 
 
+def _export_test(args) -> int:
+    from pathlib import Path
+
+    from blackbox.api.ui import export_test
+
+    path = Path(args.out) / f"test_run_{args.run_id}.py"
+    path.write_text(export_test(Store(args.data).load_trace(args.run_id)), encoding="utf-8")
+    print(f"wrote {path}  (run it with: pytest {path})")
+    return 0
+
+
 def cmd_demo(args) -> int:
     from blackbox.demo import demo
 
@@ -129,6 +140,14 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("lab", help="Live Lab: type a question, plant a mistake live, watch the investigation")
     s.add_argument("rest", nargs=argparse.REMAINDER)
     s.set_defaults(fn=lambda a: __import__("blackbox.lab", fromlist=["main"]).main(a.rest))
+
+    s = sub.add_parser("mcp", help="run Black Box as an MCP server on stdio (for Claude Code, Cursor, ...)")
+    s.set_defaults(fn=lambda a: __import__("blackbox.mcp_server", fromlist=["main"]).main())
+
+    s = sub.add_parser("export-test", help="write a pytest regression test that replays a recorded run")
+    s.add_argument("run_id")
+    s.add_argument("--out", default=".")
+    s.set_defaults(fn=lambda a: _export_test(a))
 
     s = sub.add_parser("status", help="what is running now: queue, processes, GPU, logs, data, model")
     s.add_argument("--watch", type=float, default=0)
