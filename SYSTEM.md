@@ -381,8 +381,7 @@ that every named model exists.
   one thing, writes memory and names the next step. So **any save-point is a
   complete restart point.** (We write this ourselves; LangGraph can't re-use
   unaffected steps.)
-- `replay_from(run, k)` loads the save-point before step k. Steps before k
-  are copied, not re-run.
+- **How replay works (as built):** the agent's own code runs again, but every step before k is served from the recording: 0 model calls, and a check that each step asks exactly what it asked before. Any difference means the agent used something outside `ctx`, and it is reported as a crash. Save-points are stored after every step for inspection and the UI.
 - `fork(run, k, change)` is the same, but step k gets a change: a new output,
   new tool arguments, an edited prompt, another model, or an edited memory
   value.

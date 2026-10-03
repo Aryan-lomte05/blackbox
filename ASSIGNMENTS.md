@@ -25,11 +25,11 @@ exception is `core/schema.py`, which follows the change rule in `CLAUDE.md`.
 |---|---|---|---|---|
 | 1 | `core/schema.py` | Aryan → all | **H2** | SYSTEM.md §4.1 |
 | 2 | `RunContext` + `Agent` base (records to a JSON file is enough) | Aryan → Radhesh | **H3** | write the agent against the §4.2 signatures |
-| 3 | Step-checker questions + `check_step(step, run) -> dict` | Aditya → Aryan | **H5** | a stub returning `None` |
+| 3 | `blackbox/monitor/check.py: check_step(step, run, prior_steps) -> dict` returning Laya/Jev's shape: `{"answers": {"on_track": {"type": "noul", "noul": p, "confidence": c}, "mistake_type": {"type": "choice", "choice": ..., "probabilities": {...}, "confidence": c}, ...}, "tier": "laya"}` (autopilot reads `on_track.noul` + `confidence`) | Aditya → Aryan | **H5** | autopilot/monitor off |
 | 4 | `fork(run_id, k, change)` | Aryan → Radhesh, Aditya | **H6** | — (planted-mistake runs start at H6) |
 | 5 | First 200 real runs (shard file) | Radhesh → Aditya | **H6** | 3–4 hand-written fake runs |
 | 6 | `fixtures/` (10 real runs incl. a run + its fork) + API skeleton | Aryan → Advay | **H7** | — |
-| 7 | `diagnose(run) -> {scores, suspects, evidence}` | Aditya → Aryan | **H11** | a stub ranking by "first error" |
+| 7 | `blackbox/diagnosis/predict.py: diagnose(trace) -> {"suspects": [idx, ...], "scores": [{"idx", "p", "rank"}], "coverage": 0.9, "evidence": [{"idx", "sentences": [...], "trail": [idx, ...]}]}` (the API picks it up automatically when the module exists) | Aditya → Aryan | **H11** | API returns a labelled fallback order |
 | 8 | `data/reports/latest.json` | Radhesh → Advay | **H13** | "No evaluation yet" empty state |
 
 **Rule:** never wait. If your input is late, build against the stub shape.
