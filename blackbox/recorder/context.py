@@ -243,11 +243,8 @@ class RunContext:
 
     def _begin(self, kind: StepKind, name: str, request: dict) -> tuple[Step, bool]:
         """Build the step and decide: served from the recording / changed / executed live."""
+        self._apply_pending_state_patch()
         self._close_open_step()
-        if self._pending_state_patch:
-            patch, self._pending_state_patch = self._pending_state_patch, None
-            self.state.update(patch)
-            self._close_open_step()
 
         idx = len(self.steps)
         reads = list(dict.fromkeys(self._reads))
@@ -350,6 +347,14 @@ class RunContext:
                 return False
         return True
 
+    def _apply_pending_state_patch(self) -> None:
+        """A fork's memory change lands while the fork step is still open, so the
+        write is attributed to it (state_diff, writes, last writer). Applied after
+        the agent's own writes for that step, so the change is what later steps read."""
+        if self._pending_state_patch:
+            patch, self._pending_state_patch = self._pending_state_patch, None
+            self.state.update(patch)
+
     def _note_read(self, key: str) -> None:
         if not key.startswith(INTERNAL_PREFIX):
             self._reads.append(key)
@@ -394,6 +399,7 @@ class RunContext:
 
     # ---- lifecycle -----------------------------------------------------------
     def close(self, monitor_timeout: float = 30.0) -> None:
+        self._apply_pending_state_patch()
         self._close_open_step()
         if self._executor is not None:
             deadline = time.monotonic() + monitor_timeout
