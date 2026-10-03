@@ -44,6 +44,7 @@ class Config:
     use_text: bool = True
     text_dim: int = 64          # projection of the 384-d sentence embeddings
     graph_features: bool = True  # False zeroes the features computed from data-flow links (ablation)
+    verified_weight: float = 1.0  # loss weight of real failures (cause proven by experiment) vs planted ones
     edge_types: tuple[int, ...] = (0, 1, 2, 3)  # () = no message passing (an MLP)
     aux_weight: float = 0.3
     lr: float = 2e-3
@@ -125,7 +126,8 @@ def prepare(examples: list[GraphExample], cache: EmbeddingCache | None, save: bo
 GRAPH_FEATURE_COLS = [23, 24, 25, 27, 31, 32]
 
 
-def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_features: bool = True) -> dict:
+def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_features: bool = True,
+            verified_weight: float = 1.0) -> dict:
     n = max(len(p.ex.req_text) for p in items)
     b, f, r = len(items), feature_dim(), max(1, len(edge_types))
     x = np.zeros((b, n, f), np.float32)
@@ -136,6 +138,7 @@ def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_fe
     cand = np.zeros((b, n), bool)
     odd = np.full((b, n), np.nan, np.float32)
     root = np.full(b, -1, np.int64)
+    weight = np.ones(b, np.float32)
     failed = np.full(b, np.nan, np.float32)
     for i, p in enumerate(items):
         k = len(p.ex.req_text)
@@ -145,6 +148,8 @@ def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_fe
         odd[i, :k] = p.ex.odd
         if p.ex.root is not None:
             root[i] = p.ex.root
+            if p.ex.label_source == "verified":
+                weight[i] = verified_weight
         if p.ex.failed is not None:
             failed[i] = p.ex.failed
         for et, src, dst in p.ex.edges:
@@ -156,7 +161,8 @@ def collate(items: list[Prepared], edge_types: tuple[int, ...], device, graph_fe
     adj = np.divide(adj, deg, out=np.zeros_like(adj), where=deg > 0)
     t = lambda a, dt=torch.float32: torch.as_tensor(a, dtype=dt, device=device)  # noqa: E731
     return {"x": t(x), "req": t(req), "out": t(outv), "adj": t(adj), "mask": t(mask),
-            "cand": t(cand, torch.bool), "odd": t(odd), "root": t(root, torch.long), "failed": t(failed)}
+            "cand": t(cand, torch.bool), "odd": t(odd), "root": t(root, torch.long), "failed": t(failed),
+            "weight": t(weight)}
 
 
 def _root_logits(root, cand):
@@ -169,7 +175,10 @@ def _loss(model, batch, cfg: Config):
     loss = torch.zeros((), device=root.device)
     has_root = batch["root"] >= 0
     if has_root.any():
-        loss = loss + nn.functional.cross_entropy(_root_logits(root, batch["cand"])[has_root], batch["root"][has_root])
+        ce = nn.functional.cross_entropy(_root_logits(root, batch["cand"])[has_root], batch["root"][has_root],
+                                         reduction="none")
+        w = batch["weight"][has_root]
+        loss = loss + (ce * w).sum() / w.sum()
     if cfg.aux_weight:
         known = ~torch.isnan(batch["odd"]) & batch["cand"]
         if known.any():
@@ -216,7 +225,7 @@ def train_one(train: list[Prepared], val: list[Prepared], cfg: Config, seed: int
         order = train[:]
         rng.shuffle(order)
         for i in range(0, len(order), cfg.batch):
-            batch = collate(order[i:i + cfg.batch], cfg.edge_types, device, cfg.graph_features)
+            batch = collate(order[i:i + cfg.batch], cfg.edge_types, device, cfg.graph_features, cfg.verified_weight)
             loss = _loss(model, batch, cfg)
             if not loss.requires_grad:  # nothing labelled in this batch
                 continue
@@ -263,6 +272,23 @@ def score_rankings(labelled: list[Prepared], probs: list[np.ndarray]) -> dict:
             "mrr": round(float(np.mean(rr)), 4)}
 
 
+def first_model_call(p: Prepared) -> int | None:
+    llm = np.where((p.ex.x[:, 0] > 0) & p.ex.candidates)[0]
+    return int(llm[0]) if len(llm) else None
+
+
+def with_first_decision(prob: np.ndarray, p: Prepared) -> np.ndarray:
+    """Suspect policy: keep the model's top 2, and make sure the agent's first decision is in the top 3.
+    Real failures of weak models usually start at the opening plan; planted mistakes rarely do."""
+    order = [int(i) for i in np.argsort(-prob, kind="stable") if p.ex.candidates[i]]
+    first = first_model_call(p)
+    if first is not None and first not in order[:3]:
+        order = order[:2] + [first] + [i for i in order[2:] if i != first]
+    out = np.zeros_like(prob)
+    out[order] = np.linspace(1, 0.01, len(order))
+    return out
+
+
 def baseline_probs(p: Prepared, kind: str) -> np.ndarray:
     n = len(p.ex.req_text)
     cand = p.ex.candidates.astype(float)
@@ -272,6 +298,8 @@ def baseline_probs(p: Prepared, kind: str) -> np.ndarray:
     llm = p.ex.x[:, 0] > 0  # kind one-hot: llm first
     if kind == "last_model_call":
         score = np.where(llm & p.ex.candidates, pos + 1000, pos)
+    elif kind == "first_model_call":  # blame the agent's opening decision (often the plan)
+        score = np.where(llm & p.ex.candidates, 1000 - pos, -pos)
     elif kind == "fallback_order":  # the API's fallback: errors first, then model calls latest-first
         err = p.ex.x[:, feature_dim() - 6] > 0
         score = np.where(err, 1e6, 0) + np.where(llm, 1e3, 0) + pos
@@ -289,15 +317,21 @@ def evaluate(models, items: list[Prepared], cfg: Config, device) -> dict:
     for p in items:
         if p.ex.root is not None:
             by_split[p.ex.split or "none"].append(p)
+            # Real failures (nothing planted, cause proven by experiment) on tasks never used to train
+            # or choose the model: reported on their own so planted and real results never mix.
+            if p.ex.label_source == "verified" and p.ex.split not in ("train", "val"):
+                by_split["test_natural"].append(p)
     for split in EVAL_SPLITS:
         lab = by_split.get(split, [])
         if not lab:
             continue
         probs = predict_probs(models, lab, cfg, device)
         report["splits"][split] = score_rankings(lab, probs)
+        report.setdefault("policy_model_plus_first_decision", {})[split] = score_rankings(
+            lab, [with_first_decision(pr, p) for pr, p in zip(probs, lab)])
         report["baselines"][split] = {
             kind: score_rankings(lab, [baseline_probs(p, kind) for p in lab])
-            for kind in ("last_model_call", "fallback_order")
+            for kind in ("last_model_call", "first_model_call", "fallback_order")
         }
         # Random is an expectation, not a draw: argmax of uniform scores is just "the first step".
         exp_t1 = [1.0 / max(1, int(p.ex.candidates.sum())) for p in lab]
@@ -384,6 +418,7 @@ VARIANTS = {
     "no_text_no_message_passing": {"use_text": False, "edge_types": ()},   # does the graph help? (pairs with no_text)
     "no_text_order_only": {"use_text": False, "edge_types": (2, 3)},       # does data flow help beyond order?
     "no_graph_at_all": {"use_text": False, "edge_types": (), "graph_features": False},  # is the graph worth anything?
+    "with_real_failures": {"use_text": False, "edge_types": (), "verified_weight": 5.0},  # planted + real, real x5
 }
 
 
@@ -434,7 +469,10 @@ def _print_report(m: dict) -> None:
         b = m["baselines"][split]
         ci = r["top1_ci95"]
         print(f"{split:18} {r['n']:>4}  {r['top1']:.3f} [{ci[0]:.2f}, {ci[1]:.2f}]{'':6} {r['top3']:>6.3f} {r['mrr']:>6.3f}"
-              f"   {b['random']['top1']:.3f} / {b['last_model_call']['top1']:.3f} / {b['fallback_order']['top1']:.3f}")
+              f"   {b['random']['top1']:.3f} / {b['last_model_call']['top1']:.3f} / {b['fallback_order']['top1']:.3f}"
+              f"   first-model-call {b.get('first_model_call', {}).get('top1', float('nan')):.3f}")
+    for split, r in (m.get("policy_model_plus_first_decision") or {}).items():
+        print(f"  policy model+first decision  {split:16} top1 {r['top1']:.3f}  top3 {r['top3']:.3f}")
     if m.get("by_fault"):
         print("test_known by mistake type: " + ", ".join(f"{k} {v['top1']:.2f} (n={v['n']})" for k, v in m["by_fault"].items()))
     for name, rep in (m.get("ablations") or {}).items():
@@ -471,7 +509,11 @@ def rank(trace: Trace, path: Path = MODEL_PATH, top_k: int = 3) -> dict:
     prepared = prepare([build(trace)], _runtime_cache() if cfg.use_text else None, save=False)
     probs = predict_probs(models, prepared, cfg, torch.device("cpu"))[0]
     order = [int(i) for i in np.argsort(-probs, kind="stable") if prepared[0].ex.candidates[i]]
-    return {"suspects": order[:top_k], "model": name,
+    # Suspect policy (AUDIT entry 20): the model's top 2 + the agent's first decision, because real
+    # failures of weak models usually start at the opening plan and planted ones rarely do.
+    policy = [int(i) for i in np.argsort(-with_first_decision(probs, prepared[0]), kind="stable")
+              if prepared[0].ex.candidates[i]]
+    return {"suspects": policy[:top_k], "model": name, "policy": "model top 2 + first decision",
             "scores": [{"idx": i, "p": round(float(probs[i]), 4), "rank": r + 1} for r, i in enumerate(order)],
             "evidence": []}
 

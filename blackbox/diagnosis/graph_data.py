@@ -54,6 +54,7 @@ class GraphExample:
     family: str
     fault_type: str | None
     task_id: str = ""
+    label_source: str | None = None   # injected (planted) | verified (real failure, proven) | imported
 
 
 def _clip(text: str, n: int = TEXT_CHARS) -> str:
@@ -195,6 +196,7 @@ def build(trace: Trace) -> GraphExample:
         split=trace.run.split, family=trace.run.task_family,
         fault_type=trace.run.fault.type if trace.run.fault else None,
         task_id=trace.run.task_id,
+        label_source=trace.run.label.source if trace.run.label else None,
     )
 
 

@@ -176,6 +176,26 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
+### 20. Real failures: the model does not transfer (honest), and a suspect policy that covers both · `aryan/natural-eval`
+- **Real-failure test set:** failures nobody planted, cause proven by Verify (earliest step whose repair
+  flips the run; the Who&When "decisive step" definition), on tasks never used to train or choose the
+  model. n=15 so far (labeller: 40 tried → 17 proven, 3 bad luck, 20 unresolved; second batch running).
+- **Result: planted-trained model Top-1 0.000, Top-3 0.143 on real failures, below random (0.13).**
+  Cause: distribution shift. 16 of 28 real causes are step 0 (the agent's opening plan) and nearly all
+  are model decisions; planted mistakes are at step 0 only 5% of the time and spread over tools,
+  searches and model calls. Baseline "blame the first model call": 0.667–0.714 on real failures,
+  0.07–0.10 on planted ones.
+- **Tried:** training on planted + the 13 real labels in `train` (real ×5, variant `with_real_failures`,
+  now the saved model): real Top-3 0.14 → 0.27, Top-1 still 0; planted unchanged (test_known 0.567 /
+  0.900, Shop 0.594 / 0.724). 13 real examples cannot outweigh 191 planted. Note: this variant was tried
+  *after* seeing the real-failure result, so its real-failure numbers are indicative, not clean.
+- **Product fix, measured:** suspect list = model's top 2 + the agent's first decision. Real failures
+  Top-3 0.27 → **0.667**; planted Top-3 0.900 → 0.833; Shop 0.724 → 0.699; Top-1 unchanged. Verify
+  proves whichever suspect is right, so covering both kinds matters more than a slightly shorter list.
+  Now the default in `gnn.rank()` (API, demo, Investigate).
+- **What would actually fix it:** many more real-failure labels (labeller running), then train on them
+  properly with a held-out set chosen in advance.
+
 ### 19. Guardian for operators + a money-safety bug found with the trader bot · `aryan/e2e-guardian`
 - **Mentor feedback:** serve people running agents unattended (a trader's bot): log the error, explain it,
   notify by WhatsApp/email with a link to a personalized incident page. Design: SYSTEM.md §0B.
