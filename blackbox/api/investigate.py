@@ -45,7 +45,7 @@ def _step_text(s) -> str:
 
 
 def case_file(trace: Trace, store: Store, diagnose, *, repeats: int = 1, repair: bool = False,
-              strong_model: str = "agent-strong") -> dict[str, Any]:
+              strong_model: str | None = None) -> dict[str, Any]:
     t0 = time.perf_counter()
     r = trace.run
     if r.outcome is None or r.outcome.success:

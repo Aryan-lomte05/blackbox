@@ -221,10 +221,9 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
 
     # 10 verify (the planted step is added if the diagnosis missed it, so the proof can still be shown)
     test = suspects if (guilty is None or guilty in suspects) else suspects + [guilty]
-    # Verify needs a model stronger than the one that ran the agent, or "re-ask with a stronger model" is
-    # impossible and a model-call mistake can only look like bad luck.
-    strong = "agent-strong" if model != "agent-strong" else "agent-local-14b"
-    rep = verify(broken, test, store=store, repeats=1, strong_model=strong)
+    # The verify model comes from BLACKBOX_VERIFY_MODEL (default the local 7B). When the agent ran on that same
+    # model, Verify re-asks the step with a double-check instruction instead of "a stronger model".
+    rep = verify(broken, test, store=store, repeats=1)
     cause = rep["verified_step"]
     passing = next((run["run_id"] for s in rep["suspects"] for st in s["strategies"] for run in st["runs"]
                     if run["passed"] and st["forked_at"] == cause), None)
