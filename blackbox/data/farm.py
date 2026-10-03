@@ -93,6 +93,10 @@ def farm_task(task: Task, model_id: str, *, store: Store | None, n_forks: int,
     rng = random.Random(int(fingerprint([task.task_id, model_id, seed])[:12], 16))
     if not allows_unseen_mistakes(split):
         fault_types = tuple(f for f in fault_types if f not in UNSEEN_FAULTS)
+    elif any(f in UNSEEN_FAULTS for f in fault_types) and any(f in TRAIN_FAULTS for f in fault_types):
+        # these tasks feed two test sets (known and kept-back mistakes) from one clean run;
+        # with the same number of forks each set would get half as many runs as it needs
+        n_forks *= 2
     for fault_type, step_idx in pick_faults(clean, fault_types, n_forks, rng):
         traces.append(plant(clean, fault_type, step_idx, rng, store=store))
     return traces

@@ -7,6 +7,23 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Radhesh · `radhesh/*` branches
 
+### 5. Mistake tuning after the first health checks · `radhesh/fault-tuning`
+- **F6 (wrong fact) now goes for the fact the answer rests on.** If the step
+  states the passing run's answer (a number, a name, yes/no), that is what
+  gets changed; otherwise it falls back to any number, entity or yes/no as
+  before. Changing a bystander number (a birth year nobody asked about) was
+  usually harmless. Measured on 50 fresh QA tasks, `agent-local`: pass→fail
+  **53%** (40 of 75), up from 24% (16 of 68) in the long batch.
+- **Tasks outside the training split get twice the forks when the farm runs
+  all ten mistakes.** One clean run there feeds two test sets (`test_known`
+  and `test_new_mistakes`); with equal forks, `test_known` had 24 labelled
+  failures after 2,000 runs.
+- **Verified:** 4 new tests, each failing on the old code; 175 passing.
+- **Left as they are, with the reason:** Math F1 78–100% (a changed number in
+  arithmetic changes the answer); Shop F7/F8/F9 7–16% (the 3B model keeps
+  making redundant calls after the request is handled, so most planted steps
+  no longer matter); QA F8 12%, F9 19%, F10 30%.
+
 ### 4. Evaluation harness (checklist row 10) · `radhesh/eval`
 - **What:**
   - `eval/metrics.py`: Top-1, Top-3, within ±1 step, MRR, with a bootstrap
@@ -141,6 +158,8 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   blobs stay in the producing machine's `data/blobs/`, so a merged DB has the
   `state_hash_after` values without the blobs behind them.
 
+## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
+
 ### Aryan's review of Radhesh's agents + farm (PR into `dev`)
 - Approved: QA/Math agents use only `ctx`; F1–F6 are mechanical edits (no
   model); splits use sha1 (stable across machines; `hash()` is salted per
@@ -265,8 +284,6 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   1 of 9 steps (1,576 tokens saved per fix); the fixed answer is "Columbine".
 - Storage on real farm data: 1,974 save-points stored as 518 files (74%
   de-duplicated).
-
-## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
 ### 11. First live verification (real model, local Ollama) · `aryan/live-tests`
 - `tests/test_live_ollama.py` (marked `live`, skipped in CI and when Ollama is

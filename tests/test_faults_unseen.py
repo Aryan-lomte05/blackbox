@@ -254,3 +254,12 @@ def test_parse_faults():
     assert parse_faults("f1, F10") == ("F1", "F10")
     with pytest.raises(SystemExit, match="unknown mistake"):
         parse_faults("F1,F11")
+
+
+def test_tasks_that_feed_two_test_sets_get_twice_the_forks():
+    def forks(split, faults, n=2):
+        return len(farm_task(_math_task_in(split), "fake-math", store=None, n_forks=n, fault_types=faults, seed=0)) - 1
+
+    assert forks("train", tuple(FAULTS)) == 2
+    assert forks("test_known", TRAIN_FAULTS) == 2  # only one test set asked for: no doubling
+    assert forks("test_known", tuple(FAULTS)) == 4
