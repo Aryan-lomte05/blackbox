@@ -9,13 +9,13 @@ from __future__ import annotations
 import re
 
 
-def field(text: str, label: str) -> str | None:
-    """Value of the last 'LABEL: value' line in `text`, or None."""
+def field(text: str, label: str, *, first: bool = False) -> str | None:
+    """Value of the last 'LABEL: value' line in `text` (the first, with first=True), or None."""
     pattern = re.compile(rf"^[\s>*#`-]*\**{re.escape(label)}\**\s*[:=-]\s*(.*)$", re.IGNORECASE | re.MULTILINE)
     matches = pattern.findall(text or "")
     if not matches:
         return None
-    value = matches[-1].strip().strip("`*\"' ").strip()
+    value = matches[0 if first else -1].strip().strip("`*\"' ").strip()
     return value or None
 
 

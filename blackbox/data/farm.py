@@ -35,7 +35,7 @@ from blackbox.data.tasks import load_tasks
 from blackbox.faults.catalog import TRAIN_FAULTS, make_change
 from blackbox.replay.engine import fork
 
-AGENTS = {"qa": "qa_agent@v1", "math": "math_agent@v1"}
+AGENTS = {"qa": "qa_agent@v1", "math": "math_agent@v1", "ops": "shop_agent@v1"}
 SHARD_DIR = DEFAULT_DIR / "shards"
 
 

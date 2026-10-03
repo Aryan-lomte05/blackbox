@@ -5,7 +5,32 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ---
 
-## Radhesh · `radhesh/tools-agents`
+## Radhesh · `radhesh/*` branches
+
+### 2. Shop agent, mock shop API, 200 generated tasks (checklist row 7) · `radhesh/shop-agent`
+- **What:**
+  - `agents/tools/shop.py`: six tools (`get_order`, `check_stock`,
+    `cancel_order`, `ship_order`, `update_quantity`, `refund_order`). The
+    database is plain data in `ctx.state["db"]`; a tool takes it and returns
+    the changed one, and keeps no state of its own, so a replayed and a
+    re-run tool step land on the same database.
+  - `agents/shop.py`: plan → (act → call)* → answer, 5–15 steps. The model
+    sees tool reports, never the database. Checker `ops_state`: the database
+    the agent leaves equals the correct one.
+  - `data/tasks/ops_tasks.py`: 200 tasks over 7 kinds, deterministic. The
+    expected database is produced by running the correct actions through the
+    same tools.
+  - Farm and task loader accept `--family ops`; every Shop run gets split
+    `test_new_tasks`.
+- **Verified:** 23 new tests in `tests/test_shop.py`, 137 in total passing.
+  Each of the 7 task kinds is solved and replays with 0 model calls. Three
+  mutations of the agent (no repeated-call guard, last action instead of
+  first, database shown to the model) each fail a test.
+- **Real runs:** 60 tasks on `agent-local` (qwen2.5:3b): 153 runs, 0 crashes,
+  37/60 clean runs pass, mean 12.1 steps. Pass→fail: F1 83%, F3 38%, F6 23%.
+- **Limits:** F6 is under the 30% target on Shop runs: a changed number in
+  the plan text is usually harmless. F2 does not apply (tool results are
+  objects, not single values). F7–F10 come on `radhesh/faults-unseen`.
 
 ### 1. Tools, checkers, QA + Math agents, mistakes F1–F6, farm (checklist rows 1–6)
 - **What:**
