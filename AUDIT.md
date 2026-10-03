@@ -176,6 +176,36 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
 
 ## Aryan · `aryan/core-recorder` → merged to `dev` (PR #1); later work on `aryan/*` branches
 
+### 19. Guardian for operators + a money-safety bug found with the trader bot · `aryan/e2e-guardian`
+- **Mentor feedback:** serve people running agents unattended (a trader's bot): log the error, explain it,
+  notify by WhatsApp/email with a link to a personalized incident page. Design: SYSTEM.md §0B.
+- **Built:** `blackbox/guardian/` (incident from a failed/crashed/alarmed run; what/why/how-to-fix filled
+  from recorded facts; styled HTML email, text email, WhatsApp text; outbox always; SMTP, Mailgun, Twilio
+  WhatsApp senders switched on by `.env`; repeats grouped; personal data masked), `blackbox.run(...,
+  guardian=)`, `/api/incidents`, `/api/incidents/from-run/{id}`, `/incident/{id}` page,
+  `examples/trader_bot.py` (smolagents bot on qwen2.5:7b; `--glitch` = stale price feed).
+- **Bug found by running it:** Guardian's investigation re-runs the agent (Verify), and those re-runs
+  **executed `place_order` for real**: 2 extra orders in the first glitch test. Fixed at two levels:
+  a recorder rule (`dry_run_tools`: listed tools never execute during any re-run, marked
+  `[not executed]`) and Guardian never re-runs a money-moving run to prove a cause. Regression tests
+  `test_investigation_never_executes_money_moving_tools` (failed before, passes now) and
+  `test_dry_run_tools_never_execute_during_a_rerun`. Re-test: the glitch run shows only the bot's own order.
+- **Not verified:** real email / WhatsApp delivery (no SMTP / Twilio credentials yet).
+
+### 18. Every /docs use case tested end to end: 58/58 · `scripts/e2e_docs.py`
+- Calls every endpoint with every Swagger example (read from /openapi.json) against a live server,
+  checks the answers, writes `data/reports/e2e_docs.md`. 58/58 passed (22:19), incl. live runs on all
+  three families, verify, fork (undo → pass, plant → fail), replay (0 model calls each), repair (4/4),
+  advisor, SSE, every investigate case.
+- **Found:** diagnosing a never-seen run took 38 s (the 300k-entry text-embedding cache re-read and
+  re-written per call, for a model that does not use text). Fixed: no-text models skip embeddings, the
+  runtime cache loads once: 0.01–0.07 s.
+
+### 17. A third-party agent (smolagents) + inferred links in wrap mode · PR #26
+- `examples/smolagents_demo.py`: Hugging Face smolagents + our 3 lines. Replay 0 model calls; fork at the
+  Nagpur tool step flips the answer re-running 2/6 steps. Wrap mode infers who-used-what links from
+  content (carried values link; transformed values do not: both tested).
+
 ### Aryan's review of Radhesh's agents + farm (PR into `dev`)
 - Approved: QA/Math agents use only `ctx`; F1–F6 are mechanical edits (no
   model); splits use sha1 (stable across machines; `hash()` is salted per

@@ -40,6 +40,10 @@ INTERNAL_PREFIX = "__"
 # (blackbox.wrap, @blackbox.tool) record into it; outside a run they pass through.
 current: contextvars.ContextVar["RunContext | None"] = contextvars.ContextVar("blackbox_ctx", default=None)
 
+# Tools that must never execute while Black Box re-runs something (replay, fork, verify, repair),
+# e.g. money-moving calls like place_order. Set by Guardian during investigations.
+dry_run_tools: contextvars.ContextVar[frozenset] = contextvars.ContextVar("blackbox_dry_run_tools", default=frozenset())
+
 
 class ToolError(Exception):
     """A tool/retrieval call failed. Recorded on the step, then raised to the agent."""
@@ -323,12 +327,21 @@ class RunContext:
             self._reuse(step, recorded)
             return step, False
         if at_fork:
-            return step, self._apply_change(step)
+            return step, self._apply_change(step) and self._allowed_to_execute(step)
         reusable = plan.find_reusable(step.input_hash) if (plan and plan.reuse_after_fork) else None
         if reusable is not None:
             self._reuse(step, reusable)
             return step, False
-        return step, True
+        return step, self._allowed_to_execute(step)
+
+    def _allowed_to_execute(self, step: Step) -> bool:
+        """A dry-run tool is never executed during a re-run: its step gets a marked placeholder."""
+        if self.plan is not None and step.kind == "tool" and step.name in dry_run_tools.get():
+            step.output = {"result": f"[not executed] {step.name} moves money or cannot be undone, so Black Box "
+                                     "never runs it while investigating"}
+            step.meta["dry_run"] = True
+            return False
+        return True
 
     def _finish(self, step: Step) -> Step:
         self.steps.append(step)

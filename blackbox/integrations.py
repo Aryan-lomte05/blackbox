@@ -292,8 +292,12 @@ def run(
     monitor: Monitor | None = None,
     store: Store | None = None,
     save: bool = True,
+    guardian=None,
 ) -> Trace:
     """Run `agent_fn(input)` under the recorder. Returns the trace (also saved).
+
+    With `guardian=blackbox.Guardian(...)`, a failed, crashed or flagged run opens an
+    incident and notifies the owner (email / WhatsApp), with a link to the incident page.
 
     `check(answer, expected) -> Outcome` gives the run a pass/fail. Without
     one the run is recorded with no verdict, never an invented one.
@@ -303,8 +307,13 @@ def run(
     agent_cls = _function_agent(agent_fn, family)
     task = Task(family=family, task_id=task_id or uuid.uuid4().hex[:12],
                 input={"input": to_jsonable(input)}, expected=to_jsonable(expected))
-    return run_task(agent_cls(), task, model_id="app", store=(store or default_store()) if save else None,
-                    monitor=monitor)
+    trace = run_task(agent_cls(), task, model_id="app", store=(store or default_store()) if save else None,
+                     monitor=monitor)
+    if guardian is not None:
+        if guardian.store is None:
+            guardian.store = store or default_store()
+        trace.run.stats["incident"] = getattr(guardian.handle(trace), "incident_id", None)
+    return trace
 
 
 class Session:
