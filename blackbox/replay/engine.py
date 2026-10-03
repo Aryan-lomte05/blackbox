@@ -44,7 +44,7 @@ def fork(
     plan = ReplayPlan(parent=trace, fork_idx=step_idx, change=change, reuse_after_fork=reuse_after_fork)
     child = run_task(
         get_agent(trace.run.agent), task_from_run(trace.run), trace.run.model_id,
-        store=None, plan=plan, monitor=monitor, on_step=on_step,
+        store=store, plan=plan, monitor=monitor, on_step=on_step,  # save-points written as the fork runs
         parent_run_id=trace.run.run_id, fork_step_idx=step_idx, patch=change, split=trace.run.split,
     )
     child.run.stats["full_rerun_steps"] = len(trace.steps)

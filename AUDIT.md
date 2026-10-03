@@ -118,6 +118,22 @@ left. Everyone appends their own entries (CLAUDE.md §Git workflow).
   `merge` still reads the early bare-Trace shards. Test:
   `test_farm_shard_carries_savepoints_and_old_format_still_merges`.
 
+### 14. Two recorder bugs found by Radhesh, fixed · `aryan/recorder-fixes`
+- **A fork's memory change was recorded on no step:** it was applied after
+  the fork step was closed, so an F8 ("memory lost") run had no evidence at
+  its planted step, which is bad training data for the GNN. Now it is applied
+  while the fork step is still open (`_apply_pending_state_patch`, also in
+  `close()`), so it shows in that step's `writes` / `state_diff`.
+- **Forks never wrote their save-points:** `fork()` ran with no store, so a
+  saved fork's `state_hash_after` named blobs that did not exist. It now runs
+  with the store (same for `afork`).
+- **Verified:** Radhesh's `test_memory_loss_is_recorded_as_a_write_of_the_planted_step`
+  (was xfail) and `test_fork_writes_its_save_points_and_attributes_a_state_change`
+  both **fail on the old code and pass on the fix**. 171 tests pass.
+- **Data note:** F8 runs generated before this fix lack the write at the
+  planted step. Regenerate them (or drop F8 rows) before the final GNN
+  training.
+
 ### 13. Diagnosis GNN (scope: docs/DIAGNOSIS_GNN.md) · `aryan/gnn`
 - **What:** a relational graph network over a run (nodes = steps; 4 edge
   types: data flow and order, both directions), plain PyTorch, a 5-seed

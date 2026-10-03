@@ -98,8 +98,6 @@ def test_ten_sampled_changes_appear_in_the_forked_step(fault_type, family, trace
             assert not child.steps[reader].cached and all(s.cached for s in child.steps[:idx + 1])
 
 
-@pytest.mark.xfail(reason="recorder: a state change is applied after the fork step is closed, so the "
-                          "write is recorded on no step (RunContext._begin); raised with Aryan", strict=False)
 def test_memory_loss_is_recorded_as_a_write_of_the_planted_step(traces):
     trace = traces["math"]
     idx = allowed_steps(trace, "F8")[0]

@@ -144,3 +144,13 @@ def test_nondeterministic_agent_is_reported_as_crash_not_failure(store):
     again = replay(tr)
     assert again.run.status == "crashed" and "ReplayDivergence" in again.run.error
     assert again.run.outcome is None
+
+
+def test_fork_writes_its_save_points_and_attributes_a_state_change(store):
+    """Regressions raised by Radhesh: (1) a fork's state change must be a write of the
+    fork step; (2) a fork saved to a store must have the blobs its save-points name."""
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    child = fork(tr, 1, Change(kind="state", value={"docs": []}), store=store)
+    planted = child.steps[1]
+    assert "docs" in planted.writes and planted.state_diff["docs"]["after"] == []
+    assert all(store.has_blob(s.state_hash_after) for s in child.steps)

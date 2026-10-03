@@ -420,7 +420,7 @@ async def afork(trace: Trace, agent_fn, step_idx: int, change=None, *, store: St
     from blackbox.recorder.context import ReplayPlan
 
     plan = ReplayPlan(parent=trace, fork_idx=step_idx, change=change, reuse_after_fork=reuse_after_fork)
-    child = await _arun_function(agent_fn, task_from_run(trace.run), store=None, plan=plan,
+    child = await _arun_function(agent_fn, task_from_run(trace.run), store=store, plan=plan,
                                  parent_run_id=trace.run.run_id, fork_step_idx=step_idx, patch=change)
     child.run.stats["full_rerun_steps"] = len(trace.steps)
     if store is not None:
