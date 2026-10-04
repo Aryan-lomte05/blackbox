@@ -193,6 +193,7 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
             child.run.label = Label(root_cause_step=k, source="injected", notes="planted live in the Lab")
             store.save_trace(child)
             broken, planted = child, {"mistake": ft, "name": NAMES[ft], "step": k}
+            plant_cost = {**sv, "model_calls": child.run.stats.get("n_llm_calls", 0)}
             stage(7, "Broken answer", f"Now answers {_short(_answer(child), 160)} instead of {_short(answer, 80)}. "
                   f"Ground truth: step {k} is the guilty step.", answer=_answer(child), guilty=k)
         else:
@@ -201,7 +202,9 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
                   "Trying a different mistake.", recovered=True)
     if broken is None:
         raise RuntimeError(f"no planted mistake changed the answer ({len(attempts)} tried): the agent recovered every time")
-    card.update(broken_run=broken.run.run_id, planted=planted, attempts=attempts)
+    # flat fields for dashboards: the guilty step, the mistake, and what planting it cost (re-run vs re-used)
+    card.update(broken_run=broken.run.run_id, planted=planted, attempts=attempts, guilty_step=planted["step"],
+                mistake=f"{planted['mistake']} {planted['name']}", savings=plant_cost)
     guilty = planted["step"] if planted else None
 
     # 8 live checker on the broken run

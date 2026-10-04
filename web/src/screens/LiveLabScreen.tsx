@@ -421,36 +421,38 @@ export const LiveLabScreen: React.FC = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPI
-              label="LOCALIZATION"
-              value="PROVED"
-              context="repaired alone fixes run"
-              variant="ok"
+              label="VERIFY"
+              value={scorecard?.verified_cause != null ? `PROVED #${scorecard.verified_cause}` : scorecard ? 'NOT PROVED' : '—'}
+              context={scorecard?.verified_cause != null
+                ? (scorecard.verified_cause === scorecard.guilty_step ? 'matches the planted step' : 'repairing it alone fixes the run')
+                : scorecard ? 'no single repair fixed the run' : undefined}
+              variant={scorecard?.verified_cause != null ? 'ok' : undefined}
             />
             <KPI
               label="GUILTY STEP"
-              value={scorecard?.guilty_step !== undefined ? `STEP ${scorecard.guilty_step}` : '—'}
-              context={scorecard?.mistake ? `Plant: ${scorecard.mistake}` : 'Tool fault isolated'}
+              value={scorecard?.guilty_step != null ? `STEP ${scorecard.guilty_step}` : '—'}
+              context={scorecard?.mistake ? `planted: ${scorecard.mistake}` : undefined}
               variant="guilty"
             />
             <KPI
-              label="REPLAY SAVINGS"
-              value={scorecard?.reused_steps !== undefined ? scorecard.reused_steps : '—'}
-              unit={scorecard?.reused_steps !== undefined ? "reused" : undefined}
-              context={scorecard?.reran_steps !== undefined ? `${scorecard.reran_steps} steps re-run` : undefined}
+              label="DIAGNOSIS"
+              value={scorecard?.diagnosis_hit != null ? (scorecard.diagnosis_hit ? 'IN TOP 3' : 'MISSED') : '—'}
+              context={Array.isArray(scorecard?.suspects) ? `suspects ${scorecard.suspects.join(', ')}` : undefined}
+              variant={scorecard?.diagnosis_hit ? 'ok' : undefined}
             />
             <KPI
               label="TOTAL DURATION"
-              value={scorecard?.time ? `${scorecard.time.toFixed(1)}s` : '—'}
-              context="local 7B end-to-end"
+              value={typeof scorecard?.seconds === 'number' ? `${scorecard.seconds.toFixed(1)}s` : '—'}
+              context="14 stages, local 7B"
             />
           </div>
 
           <div className="panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <SavingsMeter
-              reranSteps={scorecard?.reran_steps ?? 0}
-              totalSteps={(scorecard?.reused_steps ?? 0) + (scorecard?.reran_steps ?? 0)}
-              modelCalls={scorecard?.model_calls ?? 0}
-              tokensSaved={scorecard?.tokens_saved ?? 0}
+              reranSteps={scorecard?.savings?.steps_executed ?? 0}
+              totalSteps={scorecard?.savings?.steps_total ?? 0}
+              modelCalls={scorecard?.savings?.model_calls ?? 0}
+              tokensSaved={scorecard?.savings?.tokens_saved ?? 0}
             />
 
             {brokenRunId && (

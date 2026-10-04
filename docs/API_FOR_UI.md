@@ -48,7 +48,7 @@ CORS allows `http://localhost:5173` (Vite) and `http://localhost:3000` (Next/CRA
 ## Streams (Server-Sent Events)
 
 Use `new EventSource(url)` and listen per event type. A late subscriber gets the full history first,
-then live events; the stream ends after `done` or `error`. Every event has `seq` and `t` (unix seconds).
+then live events; the stream ends after `done` or `error`. Every event has `seq` and `t` (unix seconds). `done` is sent exactly once, last, carrying {result}; a reconnecting client receives the history again, so skip events whose `seq` it has already seen.
 
 | Job | Event types and fields |
 |---|---|
@@ -57,9 +57,9 @@ then live events; the stream ends after `done` or `error`. Every event has `seq`
 | Repair | `proposing` {round} · `rejected` {reason} · `candidate` {change, passed, run_id, savings, answer} · `done` |
 | Advise | `advice` {step, from_model, to_model, still_passes, savings} · `done` |
 | **Lab** | `stage` {n: 1..14, title, detail, data, t} · `step` {phase: "clean", step: {idx, kind, name, node, used, output}} · `done` {result: scorecard} |
-| Causal | Verify's events, then `sufficiency` {step, sufficient (true/false/null), note, run} · `joint_search` {suspects} · `pair` {steps, passed, run} · `done` {summary}; result: {cause, steps[{step, necessary, sufficient, verdict}], joint, recovery_paths[{step, how, run}], blast_radius{contaminated, reaches_answer, money_moving_steps, severity}, summary} |
-| Crash test | `plan` {tests[{fault, step}]} · `test` {n, of, fault, step, verdict, run_id} · `done` {counts, score, stars, weak_against}; result: {stars 1-5, score, counts, weak_against, new_labelled_failures, rows[{fault, fault_name, step, verdict, run_id, answer}]} |
-| Fleet / time machine | `proposing` · `rule` {rule} · `fleet` {runs} · `run` {n, of, run_id, verdict, new_run} · `done` {counts, decision, why}; result: {decision: APPROVE\|BLOCK\|NO EFFECT, why, counts, fix_rate, failure_rate_before, failure_rate_after, rows[{run_id, family, before, after, verdict, new_run, answer, savings}]} |
+| Causal | Verify's events, then `sufficiency` {step, sufficient (true/false/null), note, run} · `joint_search` {suspects} · `pair` {steps, passed, run} · `summary` {summary} · `done` {result}; result: {cause, steps[{step, necessary, sufficient, verdict}], joint, recovery_paths[{step, how, run}], blast_radius{contaminated, reaches_answer, money_moving_steps, severity}, summary} |
+| Crash test | `plan` {tests[{fault, step}]} · `test` {n, of, fault, step, verdict, run_id} · `summary` {counts, score, stars, weak_against} · `done` {result}; result: {stars 1-5, score, counts, weak_against, new_labelled_failures, rows[{fault, fault_name, step, verdict, run_id, answer}]} |
+| Fleet / time machine | `proposing` · `rule` {rule} · `fleet` {runs} · `run` {n, of, run_id, verdict, new_run} · `summary` {counts, decision, why} · `done` {result}; result: {decision: APPROVE\|BLOCK\|NO EFFECT, why, counts, fix_rate, failure_rate_before, failure_rate_after, rows[{run_id, family, before, after, verdict, new_run, answer, savings}]} |
 
 Lab stage numbers are fixed (1 understand, 2 knowledge, 3 run live, 4 clean answer, 5 choose a mistake,
 6 plant it, 7 broken answer, 8 live checker, 9 diagnose, 10 verify, 11 repair, 12 compare, 13 incident,
