@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, RotateCcw, AlertTriangle, CheckCircle2, GitFork, Cpu, Database, Wrench, Sparkles } from 'lucide-react';
+import { motion, useScroll } from 'framer-motion';
+import { Play, RotateCcw, AlertTriangle, CheckCircle2, GitFork, Cpu, Database, Wrench, Sparkles, Sliders } from 'lucide-react';
 
 type TracePhase = 'normal' | 'failure' | 'isolating' | 'replay' | 'verified';
 
@@ -30,16 +31,36 @@ export const HeroTraceVisual: React.FC = () => {
   const [cursorPos, setCursorPos] = useState({ x: 0.5, y: 0.5 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-play narrative progression loop
+  // Scroll-interactive trace scrubbing: scrolling through the hero steps through the failure lifecycle!
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  });
+
+  useEffect(() => {
+    return scrollYProgress.on('change', (v) => {
+      // If user is actively scrolling through hero, lock phase to scroll progress
+      if (v > 0.2 && v < 0.85) {
+        setIsAutoPlaying(false);
+        if (v < 0.32) setPhase('normal');
+        else if (v < 0.46) setPhase('failure');
+        else if (v < 0.60) setPhase('isolating');
+        else if (v < 0.74) setPhase('replay');
+        else setPhase('verified');
+      }
+    });
+  }, [scrollYProgress]);
+
+  // Auto-play narrative progression loop when not scrubbing
   useEffect(() => {
     if (!isAutoPlaying) return;
 
     const sequence: { next: TracePhase; delay: number }[] = [
-      { next: 'failure', delay: 3200 },
-      { next: 'isolating', delay: 2800 },
-      { next: 'replay', delay: 3000 },
-      { next: 'verified', delay: 3500 },
-      { next: 'normal', delay: 3500 },
+      { next: 'failure', delay: 3500 },
+      { next: 'isolating', delay: 3000 },
+      { next: 'replay', delay: 3200 },
+      { next: 'verified', delay: 3800 },
+      { next: 'normal', delay: 3800 },
     ];
 
     let currentIdx = 0;

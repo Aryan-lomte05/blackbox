@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Network, Sparkles, AlertTriangle, CheckCircle, ArrowRight, ShieldCheck, Database } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { Network, Sparkles, AlertTriangle, CheckCircle, ArrowRight, ShieldCheck, Database, RotateCcw } from 'lucide-react';
 
 interface AtlasCluster {
   id: string;
@@ -85,19 +85,65 @@ const CLUSTERS: AtlasCluster[] = [
 ];
 
 export const FailureAtlasSection: React.FC = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [selectedCluster, setSelectedCluster] = useState<AtlasCluster>(CLUSTERS[0]);
+  const [isManual, setIsManual] = useState<boolean>(false);
+  const [scrubPercent, setScrubPercent] = useState<number>(0);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start 75%', 'end 25%'],
+  });
+
+  useEffect(() => {
+    return scrollYProgress.on('change', (v) => {
+      setScrubPercent(Math.round(v * 100));
+      if (isManual) return;
+
+      if (v < 0.25) setSelectedCluster(CLUSTERS[0]);
+      else if (v < 0.50) setSelectedCluster(CLUSTERS[1]);
+      else if (v < 0.75) setSelectedCluster(CLUSTERS[2]);
+      else setSelectedCluster(CLUSTERS[3]);
+    });
+  }, [scrollYProgress, isManual]);
+
+  const handleClusterClick = (cl: AtlasCluster) => {
+    setIsManual(true);
+    setSelectedCluster(cl);
+  };
+
+  const handleResume = () => {
+    setIsManual(false);
+    const v = scrollYProgress.get();
+    if (v < 0.25) setSelectedCluster(CLUSTERS[0]);
+    else if (v < 0.50) setSelectedCluster(CLUSTERS[1]);
+    else if (v < 0.75) setSelectedCluster(CLUSTERS[2]);
+    else setSelectedCluster(CLUSTERS[3]);
+  };
 
   return (
-    <section id="atlas" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
+    <section ref={sectionRef} id="atlas" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
-        <div className="flex items-center gap-2 mb-3 font-mono text-xs text-purple-400">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-2 mb-3 font-mono text-xs text-purple-400"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
           <span className="tracking-widest uppercase font-semibold">07 // PATTERN RECOGNITION</span>
-        </div>
+        </motion.div>
 
         {/* Section Headline */}
-        <div className="max-w-3xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mb-8"
+        >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             FAILURES BECOME PATTERNS.
             <br />
@@ -108,6 +154,33 @@ export const FailureAtlasSection: React.FC = () => {
             error fingerprints into morphological clusters, letting you apply proven counterfactual
             fixes across entire failure families.
           </p>
+        </motion.div>
+
+        {/* Interactive Scrub Status Bar */}
+        <div className="mb-8 p-3 rounded-lg bg-[#0b0f17] border border-[#1f2937] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+            <span className="text-zinc-400">ATLAS CONSTELLATION CLUSTER:</span>
+            <span className="text-white font-bold" style={{ color: selectedCluster.color }}>
+              [{selectedCluster.faultCode}] {selectedCluster.name}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isManual ? (
+              <button
+                onClick={handleResume}
+                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors text-[11px]"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Resume Scroll Scrub</span>
+              </button>
+            ) : (
+              <span className="text-zinc-500 text-[11px]">
+                SCROLL SCRUBBER: <span className="text-purple-400 font-bold">{scrubPercent}%</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Constellation Canvas & Cluster Inspector */}

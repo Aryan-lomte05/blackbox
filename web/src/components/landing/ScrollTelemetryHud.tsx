@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { Compass, ArrowUp, Activity } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import { scrollTo } from '../../lib/smooth';
+import { ArrowUp } from 'lucide-react';
 
 export const ScrollTelemetryHud: React.FC = () => {
-  const { scrollYProgress, scrollY } = useScroll();
+  const { scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
@@ -12,13 +13,15 @@ export const ScrollTelemetryHud: React.FC = () => {
 
   const [scrollPercent, setScrollPercent] = useState(0);
   const [currentSection, setCurrentSection] = useState('HERO');
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
   const [isVisible, setIsVisible] = useState(false);
+  const spotlightRef = useRef<HTMLDivElement>(null);
 
-  // Mouse tracking for ambient spotlight
+  // High-performance DOM-level mouse tracking for ambient spotlight (0 React re-renders)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      if (spotlightRef.current) {
+        spotlightRef.current.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(56, 189, 248, 0.04), transparent 80%)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -47,26 +50,27 @@ export const ScrollTelemetryHud: React.FC = () => {
 
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i].id);
-        if (el && y >= el.offsetTop - 200) {
-          setCurrentSection(sections[i].name);
-          break;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 250) {
+            setCurrentSection(sections[i].name);
+            break;
+          }
         }
       }
     });
   }, [scrollYProgress]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollTo(0);
   };
 
   return (
     <>
-      {/* Interactive Ambient Cursor Spotlight (Desktop only, GPU accelerated) */}
+      {/* Interactive Ambient Cursor Spotlight (Desktop only, GPU accelerated, 0 re-render lag) */}
       <div
+        ref={spotlightRef}
         className="pointer-events-none fixed inset-0 z-20 transition-opacity duration-300 hidden md:block"
-        style={{
-          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(56, 189, 248, 0.04), transparent 80%)`,
-        }}
       />
 
       {/* Top Laser Scroll Progress Bar */}

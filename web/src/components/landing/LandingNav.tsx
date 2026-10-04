@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { scrollTo } from '../../lib/smooth';
 import { Terminal, LogOut, ArrowRight, ShieldCheck, Menu, X } from 'lucide-react';
 
 interface LandingNavProps {
@@ -18,14 +19,12 @@ export const LandingNav: React.FC<LandingNavProps> = ({ onOpenAuth }) => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
 
-      const sections = ['hero', 'story', 'process', 'forensics', 'diagnosis', 'replay', 'atlas', 'guardian', 'lab', 'faq'];
-      const scrollPos = window.scrollY + 120;
+      const sections = ['faq', 'capabilities', 'lab', 'guardian', 'atlas', 'replay', 'diagnosis', 'forensics', 'process', 'story', 'hero'];
       for (const sectionId of sections) {
         const el = document.getElementById(sectionId);
         if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollPos >= top && scrollPos < top + height) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 250) {
             setActiveSection(sectionId);
             break;
           }
@@ -34,15 +33,13 @@ export const LandingNav: React.FC<LandingNavProps> = ({ onOpenAuth }) => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollTo(id);
   };
 
   const navLinks = [

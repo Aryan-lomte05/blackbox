@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowRight, Eye, ShieldAlert, Bug, Check, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { AlertCircle, ArrowRight, Eye, ShieldAlert, Bug, Check, HelpCircle, Sliders, Play, RotateCcw } from 'lucide-react';
 
 interface StepStory {
   idx: number;
@@ -62,12 +62,55 @@ const STEPS_DATA: StepStory[] = [
 ];
 
 export const FailureSection: React.FC = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [selectedIdx, setSelectedIdx] = useState<number>(2);
+  const [isManualOverride, setIsManualOverride] = useState<boolean>(false);
+  const [scrubProgress, setScrubProgress] = useState<number>(0.25);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start 75%', 'end 25%'],
+  });
+
+  // Dynamically scrub through steps 1..5 as the user scrolls
+  useEffect(() => {
+    return scrollYProgress.on('change', (v) => {
+      setScrubProgress(Math.max(0, Math.min(1, v)));
+      if (isManualOverride) return;
+
+      if (v < 0.2) {
+        setSelectedIdx(1);
+      } else if (v < 0.45) {
+        setSelectedIdx(2);
+      } else if (v < 0.70) {
+        setSelectedIdx(3);
+      } else if (v < 0.88) {
+        setSelectedIdx(4);
+      } else {
+        setSelectedIdx(5);
+      }
+    });
+  }, [scrollYProgress, isManualOverride]);
 
   const selectedStep = STEPS_DATA.find((s) => s.idx === selectedIdx) || STEPS_DATA[1];
 
+  const handleStepClick = (idx: number) => {
+    setIsManualOverride(true);
+    setSelectedIdx(idx);
+  };
+
+  const handleResumeScroll = () => {
+    setIsManualOverride(false);
+    const v = scrollYProgress.get();
+    if (v < 0.2) setSelectedIdx(1);
+    else if (v < 0.45) setSelectedIdx(2);
+    else if (v < 0.70) setSelectedIdx(3);
+    else if (v < 0.88) setSelectedIdx(4);
+    else setSelectedIdx(5);
+  };
+
   return (
-    <section id="story" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
+    <section ref={sectionRef} id="story" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -87,7 +130,7 @@ export const FailureSection: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mb-12"
+          className="max-w-3xl mb-8"
         >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             WHEN AN AGENT FAILS,
@@ -101,6 +144,33 @@ export const FailureSection: React.FC = () => {
           </p>
         </motion.div>
 
+        {/* Live Scroll-Interactive Telemetry Strip */}
+        <div className="mb-8 p-3 rounded-lg bg-[#0b0f17] border border-[#1f2937] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-zinc-400">SCROLL INTERACTIVE CAUSAL TIMELINE:</span>
+            <span className="text-white font-bold">
+              STEP #{selectedIdx} ({selectedStep.name})
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isManualOverride ? (
+              <button
+                onClick={handleResumeScroll}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-cyan-300 text-[11px] font-bold border border-zinc-700 cursor-pointer transition-all"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>RESUME SCROLL TRACKING</span>
+              </button>
+            ) : (
+              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-[10px] font-bold tracking-wider animate-pulse">
+                AUTOSCRUBBING ON SCROLL ({(scrubProgress * 100).toFixed(0)}%)
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Interactive Dual-View Comparison Instrument */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Interactive Step Chain */}
@@ -113,17 +183,17 @@ export const FailureSection: React.FC = () => {
           >
             <div className="flex items-center justify-between pb-2 border-b border-[#1f2937] text-xs font-mono text-zinc-500">
               <span>EXECUTION SEQUENCE</span>
-              <span>SELECT STEP TO INSPECT</span>
+              <span>SCRUB OR CLICK TO INSPECT</span>
             </div>
 
-            {STEPS_DATA.map((step, idx) => {
+            {STEPS_DATA.map((step) => {
               const isSelected = step.idx === selectedIdx;
               return (
                 <motion.div
                   key={step.idx}
                   whileHover={{ scale: 1.01, x: 3 }}
                   whileTap={{ scale: 0.99 }}
-                  onClick={() => setSelectedIdx(step.idx)}
+                  onClick={() => handleStepClick(step.idx)}
                   className={`p-3.5 rounded border transition-all cursor-pointer font-sans relative ${
                     isSelected
                       ? step.isGuilty

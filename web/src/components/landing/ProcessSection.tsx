@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Search, GitFork, ShieldCheck, ArrowRight, Check, Code, Cpu, HardDrive, Wrench } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { Database, Search, GitFork, ShieldCheck, ArrowRight, Check, Code, Cpu, HardDrive, Wrench, RotateCcw } from 'lucide-react';
 
 interface ProcessStage {
   num: string;
@@ -106,11 +106,46 @@ const STAGES: ProcessStage[] = [
 ];
 
 export const ProcessSection: React.FC = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [isManual, setIsManual] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start 75%', 'end 25%'],
+  });
+
+  useEffect(() => {
+    return scrollYProgress.on('change', (v) => {
+      setProgress(Math.max(0, Math.min(1, v)));
+      if (isManual) return;
+
+      if (v < 0.25) setActiveTab(0);
+      else if (v < 0.50) setActiveTab(1);
+      else if (v < 0.75) setActiveTab(2);
+      else setActiveTab(3);
+    });
+  }, [scrollYProgress, isManual]);
+
+  const handleTabClick = (idx: number) => {
+    setIsManual(true);
+    setActiveTab(idx);
+  };
+
+  const handleResume = () => {
+    setIsManual(false);
+    const v = scrollYProgress.get();
+    if (v < 0.25) setActiveTab(0);
+    else if (v < 0.50) setActiveTab(1);
+    else if (v < 0.75) setActiveTab(2);
+    else setActiveTab(3);
+  };
+
   const current = STAGES[activeTab];
 
   return (
-    <section id="process" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10] overflow-hidden">
+    <section ref={sectionRef} id="process" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10] overflow-hidden">
       {/* Background ambient beam */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-cyan-500/5 blur-[120px] pointer-events-none rounded-full" />
 
@@ -133,7 +168,7 @@ export const ProcessSection: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mb-12"
+          className="max-w-3xl mb-8"
         >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             RECORD. DIAGNOSE.
@@ -146,6 +181,42 @@ export const ProcessSection: React.FC = () => {
           </p>
         </motion.div>
 
+        {/* Interactive Scroll Progress Rail */}
+        <div className="mb-6 p-3 rounded-lg bg-[#0b0f17] border border-[#1f2937] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span className="text-zinc-400">PILLAR LIFECYCLE PROGRESS:</span>
+            <span className="text-cyan-300 font-bold uppercase">
+              STAGE {current.num} // {current.tag}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isManual ? (
+              <button
+                onClick={handleResume}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-cyan-300 text-[11px] font-bold border border-zinc-700 cursor-pointer transition-all"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>RESUME SCROLL TRACKING</span>
+              </button>
+            ) : (
+              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-[10px] font-bold tracking-wider">
+                SCRUBBING ON SCROLL ({(progress * 100).toFixed(0)}%)
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Laser Progress Beam along Tabs */}
+        <div className="w-full h-1 bg-zinc-900 rounded-full mb-4 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-300 shadow-[0_0_8px_rgba(56,189,248,0.8)]"
+            style={{ width: `${Math.max(8, progress * 100)}%` }}
+            transition={{ ease: 'easeOut', duration: 0.2 }}
+          />
+        </div>
+
         {/* Tabs Row with Scroll Stagger & Animated Pill */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {STAGES.map((s, idx) => {
@@ -155,7 +226,7 @@ export const ProcessSection: React.FC = () => {
                 key={s.num}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTab(idx)}
+                onClick={() => handleTabClick(idx)}
                 className={`relative p-4 rounded border text-left transition-all cursor-pointer font-sans overflow-hidden ${
                   isActive
                     ? 'border-cyan-500 bg-[#0b1626] shadow-lg shadow-cyan-950/30'

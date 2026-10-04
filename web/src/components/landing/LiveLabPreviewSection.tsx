@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FlaskConical, Play, CheckCircle2, AlertTriangle, ArrowRight, Terminal } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { FlaskConical, Play, CheckCircle2, AlertTriangle, ArrowRight, Terminal, RotateCcw } from 'lucide-react';
 
 interface LabStage {
   num: number;
@@ -112,21 +112,63 @@ const LAB_STAGES: LabStage[] = [
 ];
 
 export const LiveLabPreviewSection: React.FC = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [currentStageNum, setCurrentStageNum] = useState<number>(9);
+  const [isManual, setIsManual] = useState<boolean>(false);
+  const [scrubPercent, setScrubPercent] = useState<number>(0);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start 75%', 'end 25%'],
+  });
+
+  useEffect(() => {
+    return scrollYProgress.on('change', (v) => {
+      setScrubPercent(Math.round(v * 100));
+      if (isManual) return;
+
+      const stage = Math.min(14, Math.max(1, Math.floor(v * 14) + 1));
+      setCurrentStageNum(stage);
+    });
+  }, [scrollYProgress, isManual]);
+
+  const handleStageClick = (num: number) => {
+    setIsManual(true);
+    setCurrentStageNum(num);
+  };
+
+  const handleResume = () => {
+    setIsManual(false);
+    const v = scrollYProgress.get();
+    const stage = Math.min(14, Math.max(1, Math.floor(v * 14) + 1));
+    setCurrentStageNum(stage);
+  };
 
   const activeStage = LAB_STAGES.find((s) => s.num === currentStageNum) || LAB_STAGES[8];
 
   return (
-    <section id="lab" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
+    <section ref={sectionRef} id="lab" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
-        <div className="flex items-center gap-2 mb-3 font-mono text-xs text-cyan-400">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-2 mb-3 font-mono text-xs text-cyan-400"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
           <span className="tracking-widest uppercase font-semibold">09 // BENCHMARKING LAB</span>
-        </div>
+        </motion.div>
 
         {/* Section Headline */}
-        <div className="max-w-3xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mb-8"
+        >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             THE LIVE LAB.
             <br />
@@ -136,6 +178,36 @@ export const LiveLabPreviewSection: React.FC = () => {
             Watch an agent execute, inject synthetic faults, watch the step checker flag anomalies live,
             and inspect the final causal scorecard in real time.
           </p>
+        </motion.div>
+
+        {/* Interactive Scrub Status Bar */}
+        <div className="mb-6 p-3 rounded-lg bg-[#0b0f17] border border-[#1f2937] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-zinc-400">BENCHMARK PIPELINE STAGE:</span>
+            <span className="text-white font-bold">
+              #{activeStage.num} - {activeStage.title}
+            </span>
+            <span className="px-2 py-0.5 rounded bg-zinc-800 text-[10px] uppercase font-bold text-cyan-300">
+              {activeStage.category}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isManual ? (
+              <button
+                onClick={handleResume}
+                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors text-[11px]"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Resume Scroll Scrub</span>
+              </button>
+            ) : (
+              <span className="text-zinc-500 text-[11px]">
+                SCROLL SCRUBBER: <span className="text-cyan-400 font-bold">{scrubPercent}%</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 14-Stage Progress Stepper Bar */}

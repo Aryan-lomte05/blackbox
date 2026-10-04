@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
+import { scrollTo } from '../../lib/smooth';
 import { HeroTraceVisual } from './HeroTraceVisual';
 import { ArrowRight, ChevronDown, Terminal, Shield, Sparkles } from 'lucide-react';
 
@@ -10,6 +12,7 @@ interface LandingHeroProps {
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const heroRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
@@ -18,10 +21,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
   const heroY = useTransform(scrollY, [0, 600], [0, 60]);
 
   const scrollToStory = () => {
-    const el = document.getElementById('story');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollTo('story');
   };
 
   const metrics = [
@@ -100,7 +100,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
           className="flex flex-wrap items-center justify-center gap-4 mb-14"
         >
           <button
-            onClick={() => navigate('/overview')}
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate('/overview');
+              } else {
+                onOpenAuth();
+              }
+            }}
             className="group px-6 py-3 rounded bg-white hover:bg-zinc-100 text-zinc-950 font-semibold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/10 hover:shadow-cyan-400/20 hover:scale-[1.03] active:scale-[0.98]"
           >
             <span>INVESTIGATE A RUN</span>

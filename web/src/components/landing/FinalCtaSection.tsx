@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, Terminal } from 'lucide-react';
 
 interface FinalCtaSectionProps {
@@ -8,6 +9,7 @@ interface FinalCtaSectionProps {
 
 export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onOpenAuth }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className="relative py-24 md:py-36 border-t border-[#1f2937]/80 bg-[#05070b] overflow-hidden">
@@ -38,8 +40,14 @@ export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onOpenAuth }) 
         {/* Primary CTA */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <button
-            onClick={() => navigate('/overview')}
-            className="px-8 py-3.5 rounded bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/10 hover:scale-105"
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate('/overview');
+              } else {
+                onOpenAuth();
+              }
+            }}
+            className="px-8 py-3.5 rounded bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/10 hover:scale-105 active:scale-95"
           >
             <Terminal className="w-4 h-4" />
             <span>OPEN BLACK BOX →</span>

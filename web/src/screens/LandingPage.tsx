@@ -21,15 +21,9 @@ import { AuthModal } from '../components/auth/AuthModal';
 export const LandingPage: React.FC = () => {
   const { openAuthModal } = useAuth();
 
-  // Initialize smooth scrolling with Lenis
   useEffect(() => {
     document.title = 'BLACK BOX — AI Agent Flight Recorder';
-    const lenis = startSmoothScroll();
-    return () => {
-      if (lenis) {
-        lenis.destroy();
-      }
-    };
+    startSmoothScroll();
   }, []);
 
   return (

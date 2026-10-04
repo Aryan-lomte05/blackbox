@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { X, Shield, AlertTriangle, Database, CheckCircle2, Terminal } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
+  const navigate = useNavigate();
   const {
     isAuthModalOpen,
     closeAuthModal,
@@ -36,8 +38,12 @@ export const AuthModal: React.FC = () => {
 
   const handleDevLogin = async () => {
     setIsSubmitting(true);
-    await devLogin('Advay Chavan', 'advay@halfabyte.ai');
+    const success = await devLogin('Advay Chavan', 'advay@halfabyte.ai');
     setIsSubmitting(false);
+    if (success) {
+      const target = authModalReturnTo || '/overview';
+      navigate(target);
+    }
   };
 
   const isGoogleReady = authStatus?.google_configured ?? false;
