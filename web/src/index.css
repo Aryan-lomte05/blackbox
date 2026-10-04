@@ -96,3 +96,66 @@ html.lenis, html.lenis body {
   animation: dash-flow 1.2s linear infinite;
 }
 
+/* Luxury Editorial Serif & Typography (shantanav.in style) */
+.font-serif, .cormorant-garamond {
+  font-family: 'Cormorant Garamond', Georgia, Cambria, serif;
+}
+
+.playfair-display {
+  font-family: 'Playfair Display', Georgia, Cambria, serif;
+}
+
+/* Film grain noise animation */
+@keyframes noise-shift {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -5%); }
+  20% { transform: translate(-10%, 5%); }
+  30% { transform: translate(5%, -10%); }
+  40% { transform: translate(-5%, 15%); }
+  50% { transform: translate(-10%, 5%); }
+  60% { transform: translate(15%, 0); }
+  70% { transform: translate(0, 10%); }
+  80% { transform: translate(-15%, 0); }
+  90% { transform: translate(10%, 5%); }
+  100% { transform: translate(5%, 0); }
+}
+
+.animate-noise {
+  animation: noise-shift 0.2s steps(2) infinite;
+}
+
+/* Apple Pro Specular Highlights & Glass */
+.apple-glass {
+  background: rgba(14, 17, 24, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.apple-glass-card {
+  background: radial-gradient(120% 120% at 50% 0%, rgba(25, 30, 42, 0.6) 0%, rgba(9, 11, 16, 0.8) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.apple-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 35px 70px -10px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Subtle glow utility */
+.glow-amber {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.35);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.35);
+}
+
