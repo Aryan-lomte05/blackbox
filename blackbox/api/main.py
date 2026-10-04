@@ -278,6 +278,11 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         return {"job_id": job.job_id, "events": f"/api/jobs/{job.job_id}/events", "result": f"/api/jobs/{job.job_id}"}
 
     dataset_cache: dict = {}
+    from blackbox.api.snapshot import Snapshot
+    from blackbox.status import as_json
+
+    # the probe (processes, GPU, Ollama, totals) takes seconds: refreshed in the background, served instantly
+    status_snapshot = Snapshot(lambda: as_json(db()), every=10.0)
 
     @app.get("/api/dataset", tags=["Dataset"], summary="0 · Dataset: everything recorded so far")
     def dataset() -> dict:
@@ -287,12 +292,13 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         from blackbox.api.showcase import FAULT_NAMES
         from blackbox.eval.report import data_summary, health_by_family, iter_traces, model_report_card
 
-        counts = db().counts()
-        if dataset_cache.get("runs") != counts["runs"]:
+        rev = db().revision()  # cheap; changes when runs are added or re-labelled
+        counts = db().counts()  # memoized per revision
+        if dataset_cache.get("rev") != rev:
             traces = list(iter_traces(db()))
             dataset_cache.clear()
             dataset_cache.update({
-                "runs": counts["runs"],
+                "rev": rev,
                 "body": {
                     "summary": data_summary(traces),
                     "health_by_family": health_by_family(traces),
@@ -611,9 +617,7 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
     @app.get("/api/status", tags=["Status"], summary="Live status: queue, jobs, GPU, data, model results")
     def status() -> dict:
         """Queue, running jobs, GPU/Ollama, logs, data totals, model metrics and the latest eval report."""
-        from blackbox.status import as_json
-
-        return as_json(db())
+        return status_snapshot.get()
 
     @app.get("/api/incidents", tags=["Guardian"], summary="G1 · Incidents (failed / crashed / flagged runs, explained)")
     def incidents(limit: int = Query(20, le=200)) -> dict:
