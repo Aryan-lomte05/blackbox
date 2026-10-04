@@ -103,7 +103,7 @@ def fleet_test(store: Store, run_ids: list[str], *, instruction: str | None = No
               "fix_rate": round(count["fixed"] / len(failing), 3) if failing else None,
               "failure_rate_before": round(fail_before, 3), "failure_rate_after": round(fail_after, 3),
               "decision": decision, "why": why, "rows": rows}
-    emit({"type": "done", **{k: report[k] for k in ("counts", "decision", "why")}})
+    emit({"type": "summary", **{k: report[k] for k in ("counts", "decision", "why")}})
     return report
 
 

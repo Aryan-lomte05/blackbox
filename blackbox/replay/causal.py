@@ -133,7 +133,7 @@ def causal_report(trace: Trace, store: Store, suspects: list[int], *, strong_mod
                   "recovery_paths": paths, "blast_radius": blast_radius(trace, cause) if cause is not None else None,
                   "reference_run": ref.run.run_id if ref else None}
         report["summary"] = summarize(report)
-        emit({"type": "done", "summary": report["summary"]})
+        emit({"type": "summary", "summary": report["summary"]})
         return report
     finally:
         dry_run_tools.reset(token)

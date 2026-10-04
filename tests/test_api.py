@@ -128,3 +128,15 @@ def test_lab_search_queries_go_from_exact_to_the_topic_never_to_any_word():
     qs = search_queries("I am 100m away from car wash, my Car is dirty, should i walk there or go by car?")
     assert qs[0].startswith("I am 100m") and qs[-1] == "car wash"  # numbers and filler dropped; topic first
     assert all(" OR " not in q for q in qs)  # "any word" matches feed the agent unrelated pages
+
+
+def test_a_job_sends_done_exactly_once_and_last_with_the_full_result(client):
+    """Regression (4 Oct): the crash test / fleet / causal engines emitted their own `done` before the job's, so
+    the dashboard took a summary as the result (empty causal table) and closed the stream early."""
+    http, store = client
+    tr = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    job = http.post(f"/api/runs/{tr.run.run_id}/crash-test").json()
+    events = _events(http, f"/api/jobs/{job['job_id']}/events")
+    types = [e["type"] for e in events]
+    assert types.count("done") == 1 and types[-1] == "done" and "summary" in types
+    assert {"stars", "rows", "counts"} <= set(events[-1]["result"])

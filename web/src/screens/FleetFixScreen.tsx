@@ -68,8 +68,9 @@ export const FleetFixScreen: React.FC = () => {
         });
       } else if (evt.type === 'done') {
         const res = d.result || d;
+        if (!res.decision) return;  // the firewall's decision is the API's, never inferred here
         setFinalVerdict({
-          verdict: res.verdict || (res.failure_rate_after < res.failure_rate_before ? 'APPROVE' : 'REJECT'),
+          verdict: res.decision,
           failureBefore: res.failure_rate_before !== undefined ? res.failure_rate_before : 0,
           failureAfter: res.failure_rate_after !== undefined ? res.failure_rate_after : 0,
           why: res.why || '',
@@ -317,7 +318,7 @@ export const FleetFixScreen: React.FC = () => {
               label="DECISION"
               value={finalVerdict.verdict}
               context="automated fleet policy"
-              variant={finalVerdict.verdict === 'APPROVE' ? 'ok' : 'guilty'}
+              variant={finalVerdict.verdict === 'APPROVE' ? 'ok' : finalVerdict.verdict === 'BLOCK' ? 'guilty' : 'default'}
             />
             <KPI
               label="FAILURE RATE BEFORE"

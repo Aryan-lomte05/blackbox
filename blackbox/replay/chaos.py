@@ -82,7 +82,7 @@ def crash_test(trace: Trace, store: Store, *, faults: tuple[str, ...] | None = N
               "score": round(score, 3), "stars": max(1, min(5, round(1 + 4 * score))),
               "new_labelled_failures": sum(bool(r.get("labelled")) for r in rows),
               "weak_against": weakest, "rows": rows}
-    emit({"type": "done", **{k: report[k] for k in ("counts", "score", "stars", "weak_against")}})
+    emit({"type": "summary", **{k: report[k] for k in ("counts", "score", "stars", "weak_against")}})
     return report
 
 
