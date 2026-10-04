@@ -216,7 +216,7 @@ export const IncidentsScreen: React.FC = () => {
                     WHAT HAPPENED
                   </div>
                   <div className="text-xs font-sans text-[var(--text)] leading-relaxed p-3 bg-[var(--bg)] rounded-[var(--radius-sm)] border border-[var(--line)]">
-                    {current.what_happened || 'Agent output diverged from target evaluation criteria.'}
+                    {current.what_happened || '—'}
                   </div>
                 </div>
 
@@ -226,7 +226,7 @@ export const IncidentsScreen: React.FC = () => {
                     WHY IT HAPPENED
                   </div>
                   <div className="text-xs font-sans text-[var(--text)] leading-relaxed p-3 bg-[var(--bg)] rounded-[var(--radius-sm)] border border-[var(--line)]">
-                    {current.why || current.what_happened || 'Diagnostic evaluation in progress.'}
+                    {current.why || '—'}
                   </div>
                 </div>
 

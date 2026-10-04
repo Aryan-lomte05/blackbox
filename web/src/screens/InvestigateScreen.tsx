@@ -198,7 +198,7 @@ export const InvestigateScreen: React.FC = () => {
             <KPI
               label="GUILTY STEP"
               value={`STEP ${guiltyStep ?? '—'}`}
-              context={result.case?.planted_mistake?.name || 'Isolated root cause'}
+              context={result.case?.planted_mistake?.name || 'nothing planted: a real failure'}
               variant="guilty"
             />
             <KPI

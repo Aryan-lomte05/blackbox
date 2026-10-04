@@ -42,13 +42,15 @@ export const RunGraph: React.FC<RunGraphProps> = ({
   className = '',
   mini = false,
 }) => {
-  // Layout using dagre (left to right)
+  // Layout using dagre. Runs are mostly long chains and the panel is taller than a chain is wide, so steps flow
+  // top to bottom (left to right made every node a speck once a run had more than ~5 steps).
+  const direction: 'TB' | 'LR' = 'TB';
   const { layoutedNodes, layoutedEdges } = useMemo(() => {
     const g = new dagre.graphlib.Graph();
     g.setGraph({
-      rankdir: 'LR',
+      rankdir: direction,
       nodesep: mini ? 24 : 36,
-      ranksep: mini ? 48 : 64,
+      ranksep: mini ? 28 : 40,
       marginx: 20,
       marginy: 20,
     });
@@ -98,6 +100,7 @@ export const RunGraph: React.FC<RunGraphProps> = ({
           is_guilty: isGuilty,
           is_planted: d.is_planted,
           is_contaminated: isTrail,
+          direction,
         },
         selected: idx === selectedStep,
       };

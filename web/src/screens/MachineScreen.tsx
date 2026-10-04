@@ -27,7 +27,7 @@ export const MachineScreen: React.FC = () => {
 
   // Extract GPU model name
   const gpuNameMatch = gpuLine.match(/GPU\s+([^:]+):/i);
-  const gpuName = gpuNameMatch ? gpuNameMatch[1] : (gpuLine || 'Standard Hardware Node');
+  const gpuName = gpuNameMatch ? gpuNameMatch[1] : (gpuLine || 'GPU not reported');
 
   // Extract Ollama status
   const isOllamaLoaded = ollamaLine.includes('loaded') && !ollamaLine.includes('none');

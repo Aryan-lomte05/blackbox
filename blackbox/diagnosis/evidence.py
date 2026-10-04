@@ -55,7 +55,9 @@ def sentences(trace: Trace, idx: int) -> list[str]:
         if new:
             out.append(f"Its output states {', '.join(repr(x) for x in new[:4])}, found in none of the "
                        f"{len(anc)} step(s) it used or in the task.")
-    if not output_text(s).strip() or (s.output or {}).get("result") in (None, [], {}, ""):
+    out_dict = s.output or {}
+    produced_value = out_dict.get("result", out_dict.get("docs"))  # tools return `result`, searches return `docs`
+    if not output_text(s).strip() or produced_value in (None, [], {}, ""):
         if s.kind in ("tool", "retrieval"):
             out.append("It returned nothing.")
     downstream = trail(trace, idx)

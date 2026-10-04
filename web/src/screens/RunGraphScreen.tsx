@@ -166,7 +166,7 @@ export const RunGraphScreen: React.FC = () => {
               {runData?.run?.outcome?.success ? 'PASS' : 'FAILED'}
             </span>
             <span className="text-xs font-sans text-[var(--muted)] truncate max-w-xl">
-              {runData?.run?.task || 'The glee club ordered 20 pizzas and ate 70%...'}
+              {runData?.run?.task_input?.question ?? runData?.run?.task_input?.request ?? runData?.run?.task_id ?? '—'}
             </span>
           </div>
         </div>

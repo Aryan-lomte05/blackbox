@@ -258,7 +258,7 @@ export const FleetFixScreen: React.FC = () => {
           <div className="flex items-center justify-between">
             <MonoLabel index="LIVE" label="FLEET TRACE EVALUATION MATRIX" />
             <span className="text-[10px] font-mono text-[var(--faint)]">
-              {rows.length} OF {nFail + nPass} EVALUATED
+              {rows.length} OF {rows[0]?.of ?? nFail + nPass + 1} EVALUATED
             </span>
           </div>
 
