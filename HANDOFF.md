@@ -1,5 +1,19 @@
 # HANDOFF: read this first in a new session
 
+## 🎬 4 Oct ~13:10: final state for Pitch 2 (16:00)
+- **Demo video:** `data/blackbox_demo_5min.mp4` (5:00, every screen on live data, waits fast-forwarded) and its timed
+  3-person voiceover `docs/VOICEOVER.md`. Recorder + editor scripts live in the session scratchpad (`record_full.js`,
+  `edit.py`: segment log → waits ~2 s at 8-16x, results held to reach exactly 5:00).
+- **Round 1 run sheet + Q&A:** `docs/ROUND1_RUNBOOK.md`. **PyPI:** `docs/PUBLISHING.md` (built + verified; needs your
+  PyPI token; `agent-blackbox` was free).
+- **Fixed today from frame-by-frame review (#56–#65):** demo case list emptied by a test (cache now per store);
+  engines' premature `done` (empty causal table, cut-off crash test); streams now reconnect; hard-coded values
+  removed (PROVED, regressions "0", run ids, question text, invented placeholders); evidence said every search
+  "returned nothing"; run graph top-to-bottom; status 22.5 s → 5 ms, dataset 7 s → 70 ms (memoized per store
+  revision, background status snapshot, warm start, dataset stale-while-revalidate).
+- **Run it:** `py -3 -m blackbox.cli ui --port 8000` (warms its caches; wait for "caches warm") and
+  `cd web && npx vite --port 5173 --host 127.0.0.1`. Never launch these from a Claude session you might restart.
+
 ## ☀ Morning of 4 Oct (written 05:00): what to do first
 1. **Guardian is live**: email (EmailJS, flight-recorder design), WhatsApp (Twilio sandbox), Slack all delivered
    (#48–#53). Before the pitch: send "hi" to +1 415 523 8886 on WhatsApp (24 h sandbox window). Phone calls off.
