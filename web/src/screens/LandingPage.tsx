@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useScroll } from 'framer-motion';
 import { startSmoothScroll } from '../lib/smooth';
 import { useAuth } from '../context/AuthContext';
-import { AuthModal } from '../components/auth/AuthModal';
 
 import { ArchitecturalFrame } from '../components/landing/ArchitecturalFrame';
 import { MasterForensicStage } from '../components/landing/MasterForensicStage';
@@ -201,11 +200,11 @@ export const LandingPage: React.FC = () => {
                 <span className="text-cyan-300">blackbox-flight</span>
               </div>
               <p className="text-[10px] text-zinc-500 font-sans leading-relaxed">
-                Connect your LangGraph, CrewAI, AutoGen, or custom Python agent pipeline with a 2-line wrapper.
+                Connect your LangGraph, CrewAI, AutoGen, or custom agent pipeline via OpenTelemetry or Python client.
               </p>
             </div>
             <p className="text-[10px] text-zinc-600">
-              Zero telemetry data retention when configured with local storage backends.
+              Cryptographically immutable audit records with local or enterprise self-hosted backends.
             </p>
           </div>
         </div>
@@ -222,9 +221,6 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
-
-      {/* Global Auth Modal Dialog */}
-      <AuthModal />
     </div>
   );
 };
