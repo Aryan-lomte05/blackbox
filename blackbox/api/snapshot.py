@@ -8,6 +8,7 @@ good value and is reported in it.
 
 from __future__ import annotations
 
+import atexit
 import threading
 import time
 import traceback
@@ -22,6 +23,7 @@ class Snapshot:
         self._lock = threading.Lock()
         self._ready = threading.Event()
         self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
 
     def _refresh(self) -> None:
         try:
@@ -40,9 +42,16 @@ class Snapshot:
         self._ready.set()
 
     def _loop(self) -> None:
-        while True:
+        while not self._stop.is_set():
             self._refresh()
-            time.sleep(self._every)
+            self._stop.wait(self._every)
+
+    def stop(self) -> None:
+        """End the refresh thread. Also runs at interpreter exit: a refresh that writes to stderr while Python is
+        shutting down aborts the process (seen in CI: exit 134)."""
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=5)
 
     def get(self, timeout: float = 60.0) -> dict[str, Any]:
         if self._thread is None:
@@ -50,6 +59,7 @@ class Snapshot:
                 if self._thread is None:
                     self._thread = threading.Thread(target=self._loop, name="status-snapshot", daemon=True)
                     self._thread.start()
+                    atexit.register(self.stop)
         self._ready.wait(timeout)
         with self._lock:
             value = dict(self._value or {"snapshot_error": "status not computed yet"})
