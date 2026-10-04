@@ -82,7 +82,7 @@ def cmd_ui(args) -> int:
     try:
         import uvicorn
     except ImportError:
-        print("the UI needs the extra: pip install 'agent-blackbox[ui]'", file=sys.stderr)
+        print("the UI needs the extra: pip install 'halfabyte-blackbox[ui]'", file=sys.stderr)
         return 2
     import threading
 

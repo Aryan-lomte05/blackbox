@@ -3,7 +3,7 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-blackbox"            # PyPI name; import name: blackbox
+name = "halfabyte-blackbox"            # PyPI name; import name: blackbox
 version = "0.1.0"
 description = "A flight recorder for AI agents: record every step, find the step that caused a failure, prove it by replay, and fix it without regressions."
 readme = "README.md"
@@ -39,7 +39,7 @@ ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "sse-starlette>=2"]
 agents = ["rank-bm25>=0.2"]                         # our test agents
 data = ["datasets>=2.18"]                           # HotpotQA / GSM8K loaders
 dev = ["pytest>=8", "ruff>=0.5"]
-all = ["agent-blackbox[checker,ml,ui,agents,data]"]
+all = ["halfabyte-blackbox[checker,ml,ui,agents,data]"]
 
 [project.scripts]
 blackbox = "blackbox.cli:main"
