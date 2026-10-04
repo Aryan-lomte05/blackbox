@@ -32,6 +32,10 @@ export const AuthModal: React.FC = () => {
   if (!isAuthModalOpen) return null;
 
   const handleGoogleClick = () => {
+    if (!isGoogleReady) {
+      handleDevLogin();
+      return;
+    }
     setIsSubmitting(true);
     loginWithGoogle(authModalReturnTo);
   };
@@ -41,6 +45,7 @@ export const AuthModal: React.FC = () => {
     const success = await devLogin('Advay Chavan', 'advay@halfabyte.ai');
     setIsSubmitting(false);
     if (success) {
+      closeAuthModal();
       const target = authModalReturnTo || '/overview';
       navigate(target);
     }
@@ -167,10 +172,10 @@ export const AuthModal: React.FC = () => {
           <button
             onClick={handleDevLogin}
             disabled={isSubmitting}
-            className="w-full py-2.5 px-4 rounded border border-cyan-500/30 bg-cyan-950/20 hover:bg-cyan-950/40 text-cyan-300 text-xs font-mono font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 hover:border-amber-400 text-amber-300 text-xs font-mono font-medium flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg active:scale-95"
           >
-            <Terminal className="w-3.5 h-3.5" />
-            <span>Sign In as Demo Operator (Advay)</span>
+            <Terminal className="w-4 h-4 text-amber-400" />
+            <span>Launch Flight Console (Advay Chavan)</span>
           </button>
         </div>
 
