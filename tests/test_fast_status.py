@@ -41,10 +41,14 @@ def test_snapshot_serves_the_latest_value_and_survives_a_failing_refresh():
         return {"ok": True}
 
     snap = Snapshot(compute, every=0.05)
-    first = snap.get()
-    assert first["ok"] is True and "snapshot_age_s" in first
-    import time
+    try:
+        first = snap.get()
+        assert first["ok"] is True and "snapshot_age_s" in first
+        import time
 
-    time.sleep(0.3)
-    later = snap.get()
-    assert later["ok"] is True and "probe down" in later.get("snapshot_error", "")  # last good value kept
+        time.sleep(0.3)
+        later = snap.get()
+        assert later["ok"] is True and "probe down" in later.get("snapshot_error", "")  # last good value kept
+    finally:
+        snap.stop()
+    assert not snap._thread.is_alive()  # stopped: no refresh can run during interpreter shutdown
