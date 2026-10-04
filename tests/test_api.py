@@ -110,3 +110,13 @@ def test_cases_lists_only_cases_the_investigate_route_accepts(client):
     from blackbox.api.main import CaseName
 
     assert set(cases) <= set(get_args(CaseName))
+
+
+def test_the_showcase_cache_belongs_to_its_store(client, tmp_path):
+    """Regression (4 Oct): building cases for a temporary test store overwrote data/status/showcase.json, emptying
+    the demo's case list. The cache now lives inside the store it describes."""
+    from blackbox.api.showcase import cache_path
+
+    http, store = client
+    http.get("/api/cases")
+    assert cache_path(store) == tmp_path / "status" / "showcase.json" and cache_path(store).exists()
