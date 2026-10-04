@@ -15,6 +15,7 @@ import { CapabilitiesSection } from '../components/landing/CapabilitiesSection';
 import { FaqSection } from '../components/landing/FaqSection';
 import { FinalCtaSection } from '../components/landing/FinalCtaSection';
 import { LandingFooter } from '../components/landing/LandingFooter';
+import { ScrollTelemetryHud } from '../components/landing/ScrollTelemetryHud';
 import { AuthModal } from '../components/auth/AuthModal';
 
 export const LandingPage: React.FC = () => {
@@ -36,6 +37,9 @@ export const LandingPage: React.FC = () => {
       {/* Hairline Editorial Framing Rails */}
       <div className="fixed inset-y-0 left-0 w-px bg-white/[0.04] pointer-events-none z-30" />
       <div className="fixed inset-y-0 right-0 w-px bg-white/[0.04] pointer-events-none z-30" />
+
+      {/* Real-time Flight Telemetry HUD & Scroll Laser */}
+      <ScrollTelemetryHud />
 
       {/* Top Architectural Navigation */}
       <LandingNav onOpenAuth={() => openAuthModal('/overview')} />

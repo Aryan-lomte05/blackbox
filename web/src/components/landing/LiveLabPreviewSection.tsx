@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FlaskConical, Play, CheckCircle2, AlertTriangle, ArrowRight, Terminal } from 'lucide-react';
 
 interface LabStage {
@@ -163,60 +164,75 @@ export const LiveLabPreviewSection: React.FC = () => {
         </div>
 
         {/* Live Lab Console & Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#0b0f17] border border-[#1f2937] rounded-lg p-6 shadow-2xl font-mono text-xs">
-          {/* Stage Details (5 cols) */}
-          <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 font-bold text-[10px]">
-                  STAGE {activeStage.num} OF 14
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeStage.num}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#0b0f17] border border-[#1f2937] rounded-lg p-6 shadow-2xl font-mono text-xs"
+          >
+            {/* Stage Details (5 cols) */}
+            <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 font-bold text-[10px]">
+                    STAGE {activeStage.num} OF 14
+                  </span>
+                  <span className="text-xs text-zinc-500 uppercase">{activeStage.category}</span>
+                </div>
+
+                <h3 className="text-xl font-bold text-white tracking-tight font-sans">
+                  {activeStage.title}
+                </h3>
+
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                  {activeStage.description}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1f2937] flex items-center justify-between text-[11px]">
+                <span className="text-zinc-500">SSE STREAMING PIPELINE</span>
+                <button
+                  onClick={() => setCurrentStageNum((currentStageNum % 14) + 1)}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                >
+                  <span>NEXT STAGE</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Terminal Console Output (7 cols) */}
+            <div className="lg:col-span-7 bg-[#05070b] border border-zinc-800 rounded p-4 flex flex-col justify-between shadow-inner">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-900 text-[10px] text-zinc-500">
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-3 h-3 text-cyan-400" />
+                  <span>SERVER-SENT EVENTS (SSE) STREAM</span>
+                </div>
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  ● LIVE BUFFER
                 </span>
-                <span className="text-xs text-zinc-500 uppercase">{activeStage.category}</span>
               </div>
 
-              <h3 className="text-xl font-bold text-white tracking-tight font-sans">
-                {activeStage.title}
-              </h3>
-
-              <p className="text-xs text-zinc-300 font-sans leading-relaxed">
-                {activeStage.description}
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-[#1f2937] flex items-center justify-between text-[11px]">
-              <span className="text-zinc-500">SSE STREAMING PIPELINE</span>
-              <button
-                onClick={() => setCurrentStageNum((currentStageNum % 14) + 1)}
-                className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-bold"
-              >
-                <span>NEXT STAGE</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-
-          {/* Terminal Console Output (7 cols) */}
-          <div className="lg:col-span-7 bg-[#05070b] border border-zinc-800 rounded p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-900 text-[10px] text-zinc-500">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-3 h-3 text-cyan-400" />
-                <span>SERVER-SENT EVENTS (SSE) STREAM</span>
+              <div className="py-4 space-y-2 text-[11px] leading-relaxed">
+                <p className="text-zinc-500">[t=0.00s] POST /api/lab (notify=true, mistake=F1)</p>
+                <p className="text-cyan-300 font-mono flex items-center gap-1">
+                  <span>{activeStage.terminalLog}</span>
+                  <span className="w-2 h-4 bg-cyan-400 inline-block animate-pulse" />
+                </p>
+                <p className="text-zinc-600 text-[10px]">[seq: {activeStage.num}, checksum: 0x8f19b2, status: ok]</p>
               </div>
-              <span className="text-emerald-400">● LIVE BUFFER</span>
-            </div>
 
-            <div className="py-4 space-y-2 text-[11px] leading-relaxed">
-              <p className="text-zinc-500">[t=0.00s] POST /api/lab (notify=true, mistake=F1)</p>
-              <p className="text-cyan-300 font-mono">{activeStage.terminalLog}</p>
-              <p className="text-zinc-600 text-[10px]">[seq: {activeStage.num}, checksum: 0x8f19b2, status: ok]</p>
+              <div className="pt-3 border-t border-zinc-900 text-[10px] text-zinc-600 flex items-center justify-between">
+                <span>MODEL: AGENT-LOCAL-7B</span>
+                <span>CHECKER: LAYA (LOCAL)</span>
+              </div>
             </div>
-
-            <div className="pt-3 border-t border-zinc-900 text-[10px] text-zinc-600 flex items-center justify-between">
-              <span>MODEL: AGENT-LOCAL-7B</span>
-              <span>CHECKER: LAYA (LOCAL)</span>
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

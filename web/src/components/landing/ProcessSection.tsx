@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Search, GitFork, ShieldCheck, ArrowRight, Check, Code, Cpu, HardDrive, Wrench } from 'lucide-react';
 
 interface ProcessStage {
@@ -109,16 +110,31 @@ export const ProcessSection: React.FC = () => {
   const current = STAGES[activeTab];
 
   return (
-    <section id="process" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
-      <div className="max-w-[1400px] mx-auto px-6 font-sans">
+    <section id="process" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10] overflow-hidden">
+      {/* Background ambient beam */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-cyan-500/5 blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="max-w-[1400px] mx-auto px-6 font-sans relative z-10">
         {/* Section Eyebrow */}
-        <div className="flex items-center gap-2 mb-3 font-mono text-xs text-cyan-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-2 mb-3 font-mono text-xs text-cyan-400"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
           <span className="tracking-widest uppercase font-semibold">03 // THE FOUR PILLARS</span>
-        </div>
+        </motion.div>
 
         {/* Section Headline */}
-        <div className="max-w-3xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mb-12"
+        >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             RECORD. DIAGNOSE.
             <br />
@@ -128,111 +144,137 @@ export const ProcessSection: React.FC = () => {
             The complete flight recorder lifecycle. From bit-exact execution capture to causal mathematical
             proof and fleet-wide regression firewalls.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Tabs Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
+        {/* Tabs Row with Scroll Stagger & Animated Pill */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {STAGES.map((s, idx) => {
             const isActive = idx === activeTab;
             return (
-              <button
+              <motion.button
                 key={s.num}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab(idx)}
-                className={`p-4 rounded border text-left transition-all cursor-pointer font-sans ${
+                className={`relative p-4 rounded border text-left transition-all cursor-pointer font-sans overflow-hidden ${
                   isActive
-                    ? 'border-cyan-500 bg-[#0b1626] shadow-md shadow-cyan-950/20'
+                    ? 'border-cyan-500 bg-[#0b1626] shadow-lg shadow-cyan-950/30'
                     : 'border-[#1f2937] hover:border-zinc-700 bg-[#0b0f17]'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs font-mono mb-1">
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabOutline"
+                    className="absolute inset-0 border-2 border-cyan-400 rounded pointer-events-none"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <div className="flex items-center justify-between text-xs font-mono mb-1 relative z-10">
                   <span className={isActive ? 'text-cyan-400 font-bold' : 'text-zinc-500'}>
                     {s.num}
                   </span>
-                  <span className={`text-[10px] tracking-wider uppercase font-semibold ${
-                    isActive ? 'text-white' : 'text-zinc-500'
-                  }`}>
+                  <span
+                    className={`text-[10px] tracking-wider uppercase font-semibold ${
+                      isActive ? 'text-white' : 'text-zinc-500'
+                    }`}
+                  >
                     {s.tag}
                   </span>
                 </div>
-                <p className="text-xs font-semibold text-zinc-200 truncate mt-1">
+                <p className="text-xs font-semibold text-zinc-200 truncate mt-1 relative z-10">
                   {s.title.split('.')[0]}
                 </p>
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
         {/* Active Stage Editorial + Terminal Visual Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch bg-[#0b0f17] border border-[#1f2937] rounded-lg p-6 md:p-8">
-          {/* Left Column: Editorial Content */}
-          <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-cyan-300">
-                <span>STAGE {current.num}</span>
-                <span className="text-zinc-600">//</span>
-                <span className="text-zinc-400">{current.tag}</span>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.num}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch bg-[#0b0f17] border border-[#1f2937] rounded-lg p-6 md:p-8 shadow-2xl"
+          >
+            {/* Left Column: Editorial Content */}
+            <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-cyan-300">
+                  <span>STAGE {current.num}</span>
+                  <span className="text-zinc-600">//</span>
+                  <span className="text-zinc-400">{current.tag}</span>
+                </div>
+
+                <h3 className="text-2xl font-bold text-white tracking-tight leading-snug">
+                  {current.title}
+                </h3>
+
+                <p className="text-sm text-zinc-400 leading-relaxed font-sans">
+                  {current.summary}
+                </p>
+
+                <div className="space-y-2 pt-2">
+                  {current.details.map((detail, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-start gap-2.5 text-xs text-zinc-300"
+                    >
+                      <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                      <span>{detail}</span>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
-              <h3 className="text-2xl font-bold text-white tracking-tight leading-snug">
-                {current.title}
-              </h3>
-
-              <p className="text-sm text-zinc-400 leading-relaxed font-sans">
-                {current.summary}
-              </p>
-
-              <div className="space-y-2 pt-2">
-                {current.details.map((detail, i) => (
-                  <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                    <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
-                    <span>{detail}</span>
+              {/* Bottom Metadata Badges */}
+              <div className="grid grid-cols-3 gap-3 pt-6 border-t border-[#1f2937] font-mono">
+                {current.metadata.map((m, i) => (
+                  <div key={i}>
+                    <p className="text-[9px] text-zinc-500 uppercase tracking-widest">{m.label}</p>
+                    <p className="text-xs font-bold text-white mt-0.5">{m.value}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Bottom Metadata Badges */}
-            <div className="grid grid-cols-3 gap-3 pt-6 border-t border-[#1f2937] font-mono">
-              {current.metadata.map((m, i) => (
-                <div key={i}>
-                  <p className="text-[9px] text-zinc-500 uppercase tracking-widest">{m.label}</p>
-                  <p className="text-xs font-bold text-white mt-0.5">{m.value}</p>
+            {/* Right Column: Technical Code & Trace Panel */}
+            <div className="lg:col-span-6 flex flex-col justify-between rounded bg-[#05070b] border border-[#1f2937] p-5 font-mono shadow-inner">
+              {/* Window title bar */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#1f2937] text-xs text-zinc-500">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400/80 animate-pulse" />
+                  <span className="text-[11px] text-zinc-300">blackbox.{current.tag.toLowerCase()}.py</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column: Technical Code & Trace Panel */}
-          <div className="lg:col-span-6 flex flex-col justify-between rounded bg-[#05070b] border border-[#1f2937] p-5 font-mono">
-            {/* Window title bar */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#1f2937] text-xs text-zinc-500">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-zinc-700" />
-                <span className="text-[11px] text-zinc-400">blackbox.{current.tag.toLowerCase()}.py</span>
+                <span className="text-[10px] text-zinc-600 font-mono">PYTHON 3.11 // LINUX x86_64</span>
               </div>
-              <span className="text-[10px] text-zinc-600">PYTHON 3.11 / PYDANTIC v2</span>
-            </div>
 
-            {/* Code Body */}
-            <pre className="py-4 text-xs text-zinc-300 leading-relaxed overflow-x-auto whitespace-pre font-mono">
-              <code>{current.codeSnippet}</code>
-            </pre>
+              {/* Code Body */}
+              <pre className="py-4 text-xs text-zinc-300 leading-relaxed overflow-x-auto whitespace-pre font-mono">
+                <code>{current.codeSnippet}</code>
+              </pre>
 
-            {/* Visual execution status footer */}
-            <div className="pt-3 border-t border-[#1f2937] flex items-center justify-between text-[11px] text-zinc-400">
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> STAGE VERIFIED
-              </span>
-              <button
-                onClick={() => setActiveTab((activeTab + 1) % STAGES.length)}
-                className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <span>NEXT STAGE</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+              {/* Visual execution status footer */}
+              <div className="pt-3 border-t border-[#1f2937] flex items-center justify-between text-[11px] text-zinc-400">
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> STAGE VERIFIED
+                </span>
+                <button
+                  onClick={() => setActiveTab((activeTab + 1) % STAGES.length)}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                >
+                  <span>NEXT STAGE</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

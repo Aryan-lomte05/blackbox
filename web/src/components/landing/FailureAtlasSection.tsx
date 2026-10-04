@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Network, Sparkles, AlertTriangle, CheckCircle, ArrowRight, ShieldCheck, Database } from 'lucide-react';
 
 interface AtlasCluster {
@@ -143,17 +144,24 @@ export const FailureAtlasSection: React.FC = () => {
                         />
                       </g>
                     ))}
-                    {/* Outer boundary ring */}
-                    <circle
+                    {/* Outer boundary ring with dynamic orbital animation */}
+                    <motion.circle
                       cx={`${cl.cx}%`}
                       cy={`${cl.cy}%`}
                       r={isSelected ? '38' : '28'}
                       fill="none"
                       stroke={cl.color}
-                      strokeWidth="1"
-                      strokeDasharray="2 3"
-                      strokeOpacity={isSelected ? '0.8' : '0.2'}
-                      className="transition-all duration-300"
+                      strokeWidth={isSelected ? '1.5' : '1'}
+                      strokeDasharray="4 4"
+                      animate={{
+                        strokeDashoffset: [0, 50],
+                      }}
+                      transition={{
+                        duration: 14,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                      strokeOpacity={isSelected ? 0.9 : 0.3}
                     />
                   </g>
                 );
@@ -165,8 +173,10 @@ export const FailureAtlasSection: React.FC = () => {
               {CLUSTERS.map((cl) => {
                 const isSelected = selectedCluster.id === cl.id;
                 return (
-                  <button
+                  <motion.button
                     key={cl.id}
+                    whileHover={{ scale: 1.08, zIndex: 30 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedCluster(cl)}
                     className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 group focus:outline-none"
                     style={{ left: `${cl.cx}%`, top: `${cl.cy}%` }}
@@ -188,7 +198,7 @@ export const FailureAtlasSection: React.FC = () => {
                       <span>{cl.faultCode}: {cl.name}</span>
                       <span className="text-[10px] text-zinc-500 font-normal">({cl.count})</span>
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>

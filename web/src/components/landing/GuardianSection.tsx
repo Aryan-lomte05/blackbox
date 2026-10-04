@@ -1,20 +1,36 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Pause, Check, Ban, AlertCircle, PhoneCall, Mail, MessageSquare, ArrowRight } from 'lucide-react';
 
 export const GuardianSection: React.FC = () => {
   const [decision, setDecision] = useState<'pending' | 'approved' | 'blocked'>('pending');
 
   return (
-    <section id="guardian" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
-      <div className="max-w-[1400px] mx-auto px-6 font-sans">
+    <section id="guardian" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b] overflow-hidden">
+      {/* Background alarm pulse beam */}
+      <div className="absolute top-1/2 left-1/4 w-[450px] h-[300px] bg-amber-500/5 blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="max-w-[1400px] mx-auto px-6 font-sans relative z-10">
         {/* Section Eyebrow */}
-        <div className="flex items-center gap-2 mb-3 font-mono text-xs text-amber-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-2 mb-3 font-mono text-xs text-amber-400"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           <span className="tracking-widest uppercase font-semibold">08 // SAFETY INTERVENTION</span>
-        </div>
+        </motion.div>
 
         {/* Section Headline */}
-        <div className="max-w-3xl mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mb-12"
+        >
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1] uppercase">
             AUTONOMOUS AGENTS NEED
             <br />
@@ -25,7 +41,7 @@ export const GuardianSection: React.FC = () => {
             cannot wait for post-mortem reviews. Guardian monitors step safety live, freezing execution
             instantly before unauthorized high-stakes actions fire.
           </p>
-        </div>
+        </motion.div>
 
         {/* Narrative Stages Strip */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-10 text-xs font-mono">

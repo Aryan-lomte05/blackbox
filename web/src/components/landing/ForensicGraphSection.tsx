@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Cpu, Wrench, Database, CheckCircle2, AlertTriangle, Eye, ShieldCheck, ArrowRight, CornerDownRight } from 'lucide-react';
 
 interface GraphNodeData {
@@ -253,6 +254,46 @@ export const ForensicGraphSection: React.FC = () => {
                 stroke="#1f2937"
                 strokeWidth="1"
                 strokeDasharray="5 5"
+              />
+
+              {/* Animated Normal Pulse traveling 0 -> 1 -> 2 */}
+              <motion.circle
+                r="3"
+                fill="#38bdf8"
+                animate={{ cx: ['16%', '52%'], cy: ['28%', '28%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'linear' }}
+              />
+
+              {/* Animated Fault Injection Beam traveling 2 -> 3 (Guilty Root) */}
+              <motion.circle
+                r="4"
+                fill="#ef4444"
+                animate={{ cx: ['57%', '57%'], cy: ['36%', '66%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              />
+
+              {/* Animated Contamination Stream traveling 3 -> 4 */}
+              <motion.circle
+                r="3.5"
+                fill="#f59e0b"
+                animate={{ cx: ['62%', '73%'], cy: ['72%', '72%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', delay: 1.0 }}
+              />
+
+              {/* Animated Contamination Stream traveling 4 -> 5 */}
+              <motion.circle
+                r="3.5"
+                fill="#f59e0b"
+                animate={{ cx: ['81%', '90%'], cy: ['72%', '72%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', delay: 1.4 }}
+              />
+
+              {/* Crash Impact Pulse traveling 5 -> 6 */}
+              <motion.circle
+                r="4"
+                fill="#ef4444"
+                animate={{ cx: ['94%', '94%'], cy: ['66%', '36%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeIn', delay: 1.8 }}
               />
             </svg>
 
