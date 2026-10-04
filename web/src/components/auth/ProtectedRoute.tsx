@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, openAuthModal } = useAuth();
+  const { isAuthenticated, isLoading, openAuthModal, devLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -52,11 +52,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
           <div className="pt-2 space-y-2.5">
             <button
-              onClick={() => openAuthModal(location.pathname + location.search)}
-              className="w-full py-2.5 px-4 rounded bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              onClick={async () => {
+                await devLogin('Advay Chavan', 'advay@halfabyte.ai');
+              }}
+              className="w-full py-2.5 px-4 rounded bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
             >
               <Terminal className="w-3.5 h-3.5" />
-              <span>Authenticate / Sign In</span>
+              <span>Resume Flight Console (Advay Chavan)</span>
+            </button>
+
+            <button
+              onClick={() => openAuthModal(location.pathname + location.search)}
+              className="w-full py-2 px-4 rounded border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono"
+            >
+              <span>More Authentication Options</span>
             </button>
 
             <button
