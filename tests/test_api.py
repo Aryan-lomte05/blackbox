@@ -140,3 +140,12 @@ def test_a_job_sends_done_exactly_once_and_last_with_the_full_result(client):
     types = [e["type"] for e in events]
     assert types.count("done") == 1 and types[-1] == "done" and "summary" in types
     assert {"stars", "rows", "counts"} <= set(events[-1]["result"])
+
+
+def test_cases_also_name_a_passing_run_and_a_compare_pair(client):
+    """The dashboard opens screens on these instead of run ids typed into the UI."""
+    http, store = client
+    good = run_task(ToyAgent(), _task(), "fake-model", store=store)
+    body = http.get("/api/cases").json()
+    assert set(body) == {"cases", "passing_run", "compare"}
+    assert body["passing_run"] is None or body["passing_run"]["run_id"] == good.run.run_id

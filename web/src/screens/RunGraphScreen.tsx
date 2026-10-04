@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
+import { useDemoRuns } from '../lib/demoRuns';
 import { useJobStream } from '../lib/stream';
 import { RunGraphResponse, FullDiagnosisResponse } from '../types/api';
 import { RunGraph } from '../components/run/RunGraph';
@@ -29,7 +30,8 @@ import {
 export const RunGraphScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const runId = id || '37452fc329e1498f';
+  const demo = useDemoRuns();
+  const runId = id || demo.failed || '';  // no id in the URL: open the API's showcase failure, never a typed-in id
 
   // Selection & UI State
   const [selectedStepIdx, setSelectedStepIdx] = useState<number | null>(null);
@@ -39,6 +41,7 @@ export const RunGraphScreen: React.FC = () => {
   // 1. Fetch Run Trace Metadata
   const { data: runData } = useQuery<any>({
     queryKey: ['run-detail', runId],
+    enabled: !!runId,
     queryFn: async () => {
       return await api.get<any>(`/api/runs/${runId}`).catch(() => null);
     },
@@ -52,6 +55,7 @@ export const RunGraphScreen: React.FC = () => {
     refetch: refetchGraph,
   } = useQuery<RunGraphResponse>({
     queryKey: ['run-graph', runId],
+    enabled: !!runId,
     queryFn: async () => {
       return await api.get<RunGraphResponse>(`/api/runs/${runId}/graph`);
     },
@@ -60,6 +64,7 @@ export const RunGraphScreen: React.FC = () => {
   // 3. Fetch Diagnosis
   const { data: diagnosis, isLoading: isDiagnosisLoading } = useQuery<FullDiagnosisResponse | any>({
     queryKey: ['run-diagnosis', runId],
+    enabled: !!runId,
     queryFn: async () => {
       return await api.get<any>(`/api/runs/${runId}/diagnosis`).catch(() => null);
     },

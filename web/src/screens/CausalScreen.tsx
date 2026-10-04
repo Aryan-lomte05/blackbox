@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { api, ApiError } from '../lib/api';
+import { useDemoRuns } from '../lib/demoRuns';
 import { useJobStream } from '../lib/stream';
 import { MonoLabel } from '../components/common/MonoLabel';
 import { RecMark } from '../components/common/RecMark';
@@ -11,9 +12,14 @@ import { Play, RotateCw, Check, X, ArrowRight, ShieldAlert, DollarSign } from 'l
 
 export const CausalScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '37452fc329e1498f';
+  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '';
 
   const [runId, setRunId] = useState(initialRunId);
+  const demo = useDemoRuns();
+  useEffect(() => {
+    if (!runId && demo.failed) setRunId(demo.failed);  // a real failed run from the API's showcase
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo.failed]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
+import { useDemoRuns } from '../lib/demoRuns';
 import { MonoLabel } from '../components/common/MonoLabel';
 import { StepChip } from '../components/common/StepChip';
 import { KPI } from '../components/common/KPI';
@@ -10,9 +11,14 @@ import { Fingerprint, ArrowRight, ShieldCheck, Search, Sparkles } from 'lucide-r
 
 export const SimilarScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '37452fc329e1498f';
+  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '';
 
   const [runId, setRunId] = useState(initialRunId);
+  const demo = useDemoRuns();
+  useEffect(() => {
+    if (!runId && demo.failed) setRunId(demo.failed);  // a real failed run from the API's showcase
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo.failed]);
 
   const { data, isLoading, error, refetch } = useQuery<any>({
     queryKey: ['similar-failures', runId],

@@ -2,19 +2,23 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useDemoRuns } from '../lib/demoRuns';
 import { GitCompare, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export const CompareScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const runA = searchParams.get('a') || 'a94b964728bd42f8';
-  const runB = searchParams.get('b') || '37452fc329e1498f';
+  const demo = useDemoRuns();
+  // no runs in the URL: the API's showcase pair (an original run vs its copy with a planted mistake)
+  const runA = searchParams.get('a') || demo.compare?.a || '';
+  const runB = searchParams.get('b') || demo.compare?.b || '';
 
   const { data, isLoading } = useQuery<any>({
     queryKey: ['compare-runs', runA, runB],
     queryFn: async () => {
       return await api.get<any>(`/api/compare?a=${runA}&b=${runB}`);
     },
+    enabled: !!runA && !!runB,
   });
 
   const pairs: any[] = data?.pairs || [];

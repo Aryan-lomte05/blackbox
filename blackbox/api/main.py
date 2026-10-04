@@ -216,13 +216,19 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
 
     @app.get("/api/cases", tags=["Investigate"], summary="The demo cases (real recorded runs) for the Investigate picker")
     def cases() -> dict:
-        """{case name: {run_id, summary, description, guilty}} for every case POST /api/investigate/{case} accepts."""
+        """`cases`: {case name: {run_id, summary, description, guilty}} for every case POST /api/investigate/{case}
+        accepts. `passing_run`: a passing run (crash test, replay). `compare`: an original run `a` and its copy with a
+        planted mistake `b`. Screens open on these instead of run ids typed into the UI (they differ per machine)."""
         from typing import get_args
 
         from blackbox.api.showcase import load_or_build
 
-        runs = load_or_build(db()).get("runs", {})
-        return {"cases": {name: runs[name] for name in get_args(CaseName) if name in runs}}
+        show = load_or_build(db())
+        runs = show.get("runs", {})
+        pair = next(iter(show.get("compare", {}).values()), None)
+        return {"cases": {name: runs[name] for name in get_args(CaseName) if name in runs},
+                "passing_run": runs.get("passing_run"),
+                "compare": {"a": pair["a"], "b": pair["b"], "summary": pair.get("summary")} if pair else None}
 
     @app.post("/api/investigate/{case}", tags=["Investigate"],
               summary="★ Investigate a case: diagnose → verify → compare (→ repair) in one call")
