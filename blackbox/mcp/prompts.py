@@ -39,6 +39,10 @@ def list_prompts() -> list[dict]:
 
 
 def get(name: str, arguments: dict) -> list[dict]:
-    """The prompt's messages. KeyError if unknown."""
-    _, build = PROMPTS[name]
+    """The prompt's messages. KeyError if unknown; ValueError naming the required arguments that are missing."""
+    meta, build = PROMPTS[name]
+    missing = [a["name"] for a in meta["arguments"] if a.get("required") and not str(arguments.get(a["name"], "")).strip()]
+    if missing:
+        raise ValueError(f"/{name} needs: {', '.join(missing)} "
+                         f"(e.g. /blackbox:{name} " + " ".join(f"<{m}>" for m in missing) + ")")
     return [{"role": "user", "content": {"type": "text", "text": build(arguments)}}]
