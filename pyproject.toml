@@ -3,12 +3,27 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-blackbox"            # PyPI name (TBC at kickoff); import name: blackbox
+name = "agent-blackbox"            # PyPI name; import name: blackbox
 version = "0.1.0"
-description = "A flight recorder for AI agents: record, warn live, diagnose, prove and fix failing steps."
+description = "A flight recorder for AI agents: record every step, find the step that caused a failure, prove it by replay, and fix it without regressions."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Aryan Lomte" }, { name = "Radhesh" }, { name = "Aditya" }, { name = "Advay Chavan" }]
+keywords = ["ai agents", "llm", "observability", "debugging", "replay", "root cause analysis", "mcp", "evaluation"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Debuggers",
+  "Topic :: Software Development :: Testing",
+]
 dependencies = [
   "pydantic>=2.5",
   "pyyaml>=6",
