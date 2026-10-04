@@ -15,7 +15,7 @@ const CHAPTERS = [
   { id: 'ch-05', num: '05', name: 'THE PROOF' },
   { id: 'ch-06', num: '06', name: 'THE PATTERN' },
   { id: 'ch-07', num: '07', name: 'THE CONTROL' },
-  { id: 'ch-08', num: '08', name: 'OPEN BLACK BOX' },
+  { id: 'ch-08', num: '08', name: 'ENTER BLACK BOX' },
 ];
 
 export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
@@ -26,9 +26,11 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 25, restDelta: 0.001 });
 
   const [activeChapter, setActiveChapter] = useState(CHAPTERS[0]);
+  const [scrollPercent, setScrollPercent] = useState(0);
 
   useEffect(() => {
     return scrollYProgress.on('change', (p) => {
+      setScrollPercent(Math.round(p * 100));
       if (p < 0.12) setActiveChapter(CHAPTERS[0]);
       else if (p < 0.25) setActiveChapter(CHAPTERS[1]);
       else if (p < 0.38) setActiveChapter(CHAPTERS[2]);
@@ -52,12 +54,12 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
       {/* Hairline Progress Rule (Top Edge) */}
       <motion.div
         style={{ scaleX: smoothProgress, transformOrigin: '0%' }}
-        className="fixed top-0 left-0 right-0 h-[2px] bg-cyan-400 z-50 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-[2px] bg-cyan-400 z-50 pointer-events-none shadow-[0_0_8px_rgba(34,211,238,0.8)]"
       />
 
       {/* Persistent Architectural Top Rail */}
-      <header className="fixed top-0 inset-x-0 h-14 bg-[#05070b]/90 backdrop-blur-md border-b border-[#1f2937]/70 z-40 flex items-center justify-between px-4 sm:px-6 md:px-8 font-sans">
-        {/* Left: Brand Identity & Monospace Subtitle */}
+      <header className="fixed top-0 inset-x-0 h-14 bg-[#05070b]/95 backdrop-blur-md border-b border-[#1f2937]/70 z-40 flex items-center justify-between px-4 sm:px-6 md:px-8 font-sans">
+        {/* Left: Brand Identity */}
         <div className="flex items-center gap-3">
           <div
             onClick={() => scrollToChapter('ch-01')}
@@ -74,18 +76,33 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
           </span>
         </div>
 
-        {/* Center: Dynamic Active Chapter Indicator */}
-        <div className="hidden md:flex items-center gap-2 font-mono text-[11px] text-zinc-400 bg-[#090d15] px-3 py-1 rounded border border-[#1f2937]/80">
-          <span className="text-cyan-400 font-bold">{activeChapter.num}</span>
-          <span className="text-zinc-600">/ 08</span>
-          <span className="text-zinc-500 font-semibold">{activeChapter.name}</span>
-        </div>
+        {/* Center: Top Navigation Links from reference */}
+        <nav className="hidden md:flex items-center gap-8 font-mono text-xs text-zinc-400">
+          <button
+            onClick={() => scrollToChapter('ch-02')}
+            className="hover:text-cyan-400 transition-colors cursor-pointer"
+          >
+            Product
+          </button>
+          <button
+            onClick={() => scrollToChapter('ch-04')}
+            className="hover:text-cyan-400 transition-colors cursor-pointer"
+          >
+            How It Works
+          </button>
+          <button
+            onClick={() => scrollToChapter('ch-06')}
+            className="hover:text-cyan-400 transition-colors cursor-pointer"
+          >
+            Docs
+          </button>
+        </nav>
 
         {/* Right: Technical Actions */}
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenAuth}
-            className="px-3.5 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-cyan-500/10 active:scale-[0.98]"
+            className="px-4 py-1.5 rounded-full bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-cyan-500/10 active:scale-[0.98]"
           >
             <span>{isAuthenticated ? 'OPEN APP' : 'OPEN BLACK BOX'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -93,21 +110,41 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
         </div>
       </header>
 
+      {/* Persistent Sub-Bar Indicators directly under Header */}
+      <div className="fixed top-14 inset-x-0 h-9 z-35 flex items-center justify-between px-6 sm:px-12 md:px-16 pointer-events-none">
+        {/* Left: Active Chapter Pill Badge */}
+        <div className="pointer-events-auto inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#080d16]/90 border border-cyan-500/40 text-[10px] font-mono text-cyan-400 backdrop-blur-md shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="font-bold text-white">{activeChapter.num}</span>
+          <span className="text-zinc-600">/ 08</span>
+          <span className="text-zinc-500">//</span>
+          <span className="font-semibold tracking-wider">{activeChapter.name}</span>
+        </div>
+
+        {/* Right: Scroll Navigation Progress */}
+        <div className="inline-flex items-center gap-2 font-mono text-[11px] text-zinc-400 bg-[#060a10]/80 px-2.5 py-0.5 rounded border border-[#1f2937]/80 backdrop-blur-md">
+          <span className="text-zinc-500 tracking-wider uppercase text-[10px]">SCROLL NAVIGATION</span>
+          <span className="text-cyan-400 font-bold">{scrollPercent}%</span>
+        </div>
+      </div>
+
       {/* Left Hairline Framing Rail with Chapter Ticks (Desktop only) */}
       <aside className="fixed inset-y-0 left-0 w-12 pointer-events-none z-30 hidden lg:flex flex-col justify-between py-24 px-3 border-r border-[#1f2937]/40 text-[9px] font-mono text-zinc-600 select-none">
         <span className="rotate-180 [writing-mode:vertical-rl] tracking-widest text-zinc-500 uppercase">
           FORENSIC TIMELINE
         </span>
 
-        <div className="flex flex-col gap-3 pointer-events-auto">
+        <div className="flex flex-col gap-2 pointer-events-auto">
           {CHAPTERS.map((ch) => {
             const isActive = ch.id === activeChapter.id;
             return (
               <button
                 key={ch.id}
                 onClick={() => scrollToChapter(ch.id)}
-                className={`text-left transition-colors cursor-pointer ${
-                  isActive ? 'text-cyan-400 font-bold' : 'text-zinc-700 hover:text-zinc-400'
+                className={`w-6 h-6 rounded flex items-center justify-center transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/60 font-bold shadow-[0_0_8px_rgba(34,211,238,0.3)]'
+                    : 'text-zinc-600 hover:text-zinc-300 hover:bg-[#111827]/50'
                 }`}
                 title={`Chapter ${ch.num}: ${ch.name}`}
               >
@@ -127,7 +164,7 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
         </span>
 
         <div className="space-y-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/80 mx-auto animate-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/80 mx-auto animate-pulse shadow-[0_0_6px_rgba(34,211,238,0.6)]" />
           <p className="text-[8px] text-zinc-600 text-center">PASS</p>
         </div>
 
