@@ -88,6 +88,8 @@ def handle(msg: dict) -> dict | None:
             return protocol.result(mid, {"messages": prompts.get(params.get("name"), params.get("arguments") or {})})
         except KeyError:
             return protocol.error(mid, protocol.INVALID_PARAMS, f"unknown prompt {params.get('name')!r}")
+        except ValueError as exc:  # required arguments missing: say which
+            return protocol.error(mid, protocol.INVALID_PARAMS, str(exc))
     if method == "completion/complete":
         arg = params.get("argument") or {}
         values = resources.complete(arg.get("name", ""), arg.get("value", ""))

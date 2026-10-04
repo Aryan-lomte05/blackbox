@@ -154,3 +154,8 @@ def test_stdio_transport():
     replies = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
     assert [r.get("id") for r in replies] == [1, 2, None]  # the notification gets no reply
     assert len(replies[1]["result"]["tools"]) >= 28 and replies[2]["error"]["code"] == -32700
+
+
+def test_a_prompt_called_without_its_required_arguments_says_which_are_missing():
+    err = rpc("prompts/get", {"name": "what_if", "arguments": {"run_id": "r1"}})["error"]
+    assert err["code"] == -32602 and "step_idx, change" in err["message"]
