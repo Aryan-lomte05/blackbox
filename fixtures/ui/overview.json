@@ -5,7 +5,11 @@
     "labelled_failures": 859,
     "save_point_dedup": 0.801,
     "open_incidents": 8,
-    "critical_incidents": 5
+    "critical_incidents": 5,
+    "passed": 2490,
+    "failed": 3132,
+    "crashed": 31,
+    "blob_mb": 22.23
   },
   "model": {
     "name": "gnn@35f3e605",

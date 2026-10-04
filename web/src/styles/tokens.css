@@ -1,0 +1,35 @@
+:root {
+  /* surfaces (darkest → raised) */
+  --bg: #05070b;
+  --panel: #0b0f17;
+  --raised: #111827;
+  --line: #1f2937;
+  --line-strong: #374151;
+
+  /* text */
+  --text: #e5e7eb;
+  --text-strong: #ffffff;
+  --muted: #9ca3af;
+  --faint: #6b7280;
+  --ghost: #4b5563;
+
+  /* the one accent */
+  --accent: #f97316;
+
+  /* data colours (only for meaning) */
+  --guilty: #ef4444;
+  --guilty-bg: #2a0f12;   /* root cause, regressions, BLOCK, critical */
+  --trail: #f59e0b;
+  --trail-bg: #2a1f05;    /* contamination trail, paused, warnings */
+  --ok: #22c55e;
+  --ok-bg: #0b2416;       /* pass, fixed, APPROVE, robust */
+  --info: #38bdf8;        /* reused / replayed steps, links */
+  --rec: #ef4444;         /* the REC dot only */
+
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  /* fonts */
+  --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}

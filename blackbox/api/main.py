@@ -237,9 +237,11 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         """Returns a case file: `story` (numbered plain-language lines), the case, the diagnosis, every verify
         attempt with steps re-run vs re-used, the comparison with the fixed run, and repairs if asked."""
         from blackbox.api.investigate import case_file
+        from blackbox.api.showcase import load_or_build
 
+        showcase = load_or_build(db())
         if run_id is None:
-            info = cases.get("runs", {}).get(case)
+            info = showcase.get("runs", {}).get(case)
             if info is None:
                 raise HTTPException(404, f"no recorded run for case {case!r} on this machine yet")
             run_id = info["run_id"]
@@ -247,8 +249,8 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
             out = case_file(load(run_id), db(), diagnose, repeats=repeats, repair=repair, strong_model=repair_model)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from None
-        if run_id == cases.get("runs", {}).get(case, {}).get("run_id"):
-            out["case"]["why_this_case"] = cases["runs"][case]["summary"]
+        if run_id == showcase.get("runs", {}).get(case, {}).get("run_id"):
+            out["case"]["why_this_case"] = showcase["runs"][case]["summary"]
         return out
 
     @app.post("/api/lab", tags=["Investigate"],
@@ -317,11 +319,16 @@ def build_routes(app, db, load, jobs, run_jobs, cases):
         limit: int = Query(20, le=500),
         offset: int = 0,
     ) -> dict:
-        runs = db().list_runs(
+        s = db()
+        runs = s.list_runs(
             task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
             has_label=labelled, success=None if outcome is None else outcome == "pass", limit=limit, offset=offset,
         )
-        return {"runs": [r.model_dump(mode="json") for r in runs], "limit": limit, "offset": offset}
+        total = s.count_runs(
+            task_family=family, task_id=task_id, split=split, fault_type=fault, parent_run_id=parent,
+            has_label=labelled, success=None if outcome is None else outcome == "pass",
+        )
+        return {"runs": [r.model_dump(mode="json") for r in runs], "total": total, "limit": limit, "offset": offset}
 
     @app.get("/api/runs/{run_id}", tags=["Runs"], summary="2 · Open a run (steps + who-used-what links)")
     def get_run(run_id: str = PathParam(..., openapi_examples=any_run or None)) -> dict:
