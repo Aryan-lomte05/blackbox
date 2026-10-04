@@ -99,8 +99,11 @@ export const LiveLabScreen: React.FC = () => {
       }
     } else if (latest.type === 'done') {
       const d = latest.data || {};
-      if (d.scorecard || d.card) {
-        setScorecard(d.scorecard || d.card);
+      const card = d.result ?? d.scorecard ?? d.card;  // the job's `done` carries the Lab's scorecard as `result`
+      if (card) {
+        setScorecard(card);
+        if (card.clean_run) setCleanRunId(card.clean_run);
+        if (card.broken_run) setBrokenRunId(card.broken_run);
       }
     }
 

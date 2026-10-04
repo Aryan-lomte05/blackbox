@@ -182,7 +182,7 @@ export const CrashTestScreen: React.FC = () => {
             <KPI
               label="RESILIENCE SCORE"
               value={`${scorePercent}%`}
-              context={`${summary.tests || 6} fault vectors evaluated`}
+              context={`${summary.tests ?? testRows.length} fault vectors evaluated`}
               variant={scorePercent >= 80 ? 'ok' : 'trail'}
             />
 
