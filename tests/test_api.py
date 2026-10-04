@@ -120,3 +120,11 @@ def test_the_showcase_cache_belongs_to_its_store(client, tmp_path):
     http, store = client
     http.get("/api/cases")
     assert cache_path(store) == tmp_path / "status" / "showcase.json" and cache_path(store).exists()
+
+
+def test_lab_search_queries_go_from_exact_to_the_topic_never_to_any_word():
+    from blackbox.lab import search_queries
+
+    qs = search_queries("I am 100m away from car wash, my Car is dirty, should i walk there or go by car?")
+    assert qs[0].startswith("I am 100m") and qs[-1] == "car wash"  # numbers and filler dropped; topic first
+    assert all(" OR " not in q for q in qs)  # "any word" matches feed the agent unrelated pages
