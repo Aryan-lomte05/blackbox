@@ -744,12 +744,14 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
             {"name": "Experiments", "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."},
             {"name": "Jobs", "description": "Server-sent event streams and results of background jobs."},
             {"name": "Status", "description": "Machine, queue, data and model state."},
+            {"name": "Authentication", "description": "Google OAuth 2.0, session cookies, and MongoDB persistence."},
         ],
     )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=os.environ.get("BLACKBOX_CORS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
                        "http://127.0.0.1:3000").split(","),
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -780,6 +782,10 @@ def create_app(store: Store | None = None, examples: bool | None = None) -> Fast
     from blackbox.api import ui
 
     ui.register(app, db, load, diagnose)
+
+    from blackbox.api.auth import router as auth_router
+
+    app.include_router(auth_router)
 
     return app
 
