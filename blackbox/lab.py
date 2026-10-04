@@ -162,7 +162,7 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
     card.update(clean_run=clean.run.run_id, clean_answer=answer, steps=len(clean.steps))
     stage(4, "Clean answer", f"{_short(answer, 200)}  ({len(clean.steps)} steps"
           + (f"; correct per the shop's expected state: {ok}" if family == "ops" else "; this is the reference") + ")",
-          answer=answer, run_id=clean.run.run_id, steps=len(clean.steps))
+          answer=answer, run_id=clean.run.run_id, clean_run_id=clean.run.run_id, steps=len(clean.steps))
     if family == "ops" and not ok:
         stage(4, "Clean answer", "The agent got this shop request wrong on its own: investigating the real failure.")
 
@@ -195,7 +195,8 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
             broken, planted = child, {"mistake": ft, "name": NAMES[ft], "step": k}
             plant_cost = {**sv, "model_calls": child.run.stats.get("n_llm_calls", 0)}
             stage(7, "Broken answer", f"Now answers {_short(_answer(child), 160)} instead of {_short(answer, 80)}. "
-                  f"Ground truth: step {k} is the guilty step.", answer=_answer(child), guilty=k)
+                  f"Ground truth: step {k} is the guilty step.", answer=_answer(child), guilty=k,
+                  broken_run_id=child.run.run_id)
         else:
             store.save_trace(child)
             stage(7, "Broken answer", f"The agent recovered (still {_short(_answer(child), 80)}). "

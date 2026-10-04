@@ -203,9 +203,11 @@ export const InvestigateScreen: React.FC = () => {
             />
             <KPI
               label="VERDICT"
-              value="PROVED"
-              context="repaired alone fixes run"
-              variant="ok"
+              value={result.verification?.verified_cause != null ? `PROVED #${result.verification.verified_cause}` : 'NOT PROVED'}
+              context={result.verification?.verified_cause != null
+                ? (result.verification.matches_known_guilty_step ? 'matches the known guilty step' : 'repairing it alone fixes the run')
+                : 'no single repair fixed the run'}
+              variant={result.verification?.verified_cause != null ? 'ok' : 'default'}
             />
             <KPI
               label="STEPS RE-USED"

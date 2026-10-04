@@ -154,7 +154,7 @@ export const CausalScreen: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)] font-mono text-xs">
-                  {(report.single || []).map((row: any) => {
+                  {(report.steps || []).map((row: any) => {
                     const isNec = row.necessary === true;
                     const isSuff = row.sufficient === true;
 
@@ -234,7 +234,7 @@ export const CausalScreen: React.FC = () => {
                 }).map((_, idx) => {
                   const isContaminated = contaminatedSteps.includes(idx);
                   const isMoney = moneySteps.includes(idx);
-                  const isRoot = idx === (report?.root_cause_step ?? (report?.single || []).find((r: any) => r.necessary)?.step);
+                  const isRoot = idx === (report?.root_cause_step ?? (report?.steps || []).find((r: any) => r.necessary)?.step);
 
                   let barStyle = 'bg-[var(--raised)] border-[var(--line)] text-[var(--faint)]';
                   if (isMoney) {

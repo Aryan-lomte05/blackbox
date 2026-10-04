@@ -56,8 +56,9 @@ export const FleetFixScreen: React.FC = () => {
       } else if (evt.type === 'run' && d.run_id) {
         setRows((prev) => {
           const exists = prev.find((r) => r.run_id === d.run_id);
-          const beforeStr = d.verdict === 'held' ? 'PASS' : 'FAIL';
-          const afterStr = d.verdict === 'fixed' || d.verdict === 'held' ? 'PASS' : 'FAIL';
+          // the verdict defines both ends: fixed FAIL→PASS, regression PASS→FAIL, held PASS→PASS, still failing FAIL→FAIL
+          const beforeStr = d.verdict === 'held' || d.verdict === 'regression' ? 'PASS' : 'FAIL';
+          const afterStr = d.verdict === 'fixed' || d.verdict === 'held' ? 'PASS' : d.verdict === 'crashed' ? 'CRASH' : 'FAIL';
           const newRow: FleetRow = {
             n: d.n ?? prev.length + 1,
             of: d.of,
@@ -75,11 +76,21 @@ export const FleetFixScreen: React.FC = () => {
       } else if (evt.type === 'done') {
         const res = d.result || d;
         if (!res.decision) return;  // the firewall's decision is the API's, never inferred here
+        if (Array.isArray(res.rows)) {  // the final rows carry the real before / after outcomes
+          const fmt = (v: boolean | null | undefined) => (v === true ? 'PASS' : v === false ? 'FAIL' : 'CRASH');
+          setRows(res.rows.map((r: any, i: number) => ({
+            n: i + 1, of: res.rows.length, run_id: r.run_id, verdict: r.verdict, new_run: r.new_run,
+            before: fmt(r.before), after: fmt(r.after),
+          })));
+        }
         setFinalVerdict({
           verdict: res.decision,
           failureBefore: res.failure_rate_before !== undefined ? res.failure_rate_before : 0,
           failureAfter: res.failure_rate_after !== undefined ? res.failure_rate_after : 0,
           why: res.why || '',
+          fixed: res.counts?.fixed ?? 0,
+          regressions: res.counts?.regression ?? 0,
+          passesTested: res.passes_tested ?? 0,
         });
       }
     });
@@ -334,13 +345,14 @@ export const FleetFixScreen: React.FC = () => {
             <KPI
               label="FAILURE RATE AFTER"
               value={`${Math.round(finalVerdict.failureAfter * 100)}%`}
-              variant="ok"
+              variant={finalVerdict.failureAfter < finalVerdict.failureBefore ? 'ok'
+                : finalVerdict.failureAfter > finalVerdict.failureBefore ? 'guilty' : 'default'}
             />
             <KPI
               label="REGRESSIONS DETECTED"
-              value="0"
-              context="on passing runs"
-              variant="ok"
+              value={`${finalVerdict.regressions}`}
+              context={`of ${finalVerdict.passesTested} passing run${finalVerdict.passesTested === 1 ? '' : 's'} re-run`}
+              variant={finalVerdict.regressions > 0 ? 'guilty' : 'ok'}
             />
           </div>
         </div>
