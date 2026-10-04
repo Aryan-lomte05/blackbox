@@ -149,3 +149,21 @@ def test_cases_also_name_a_passing_run_and_a_compare_pair(client):
     body = http.get("/api/cases").json()
     assert set(body) == {"cases", "passing_run", "compare"}
     assert body["passing_run"] is None or body["passing_run"]["run_id"] == good.run.run_id
+
+
+def test_dataset_answers_at_once_from_the_last_computation_and_refreshes_in_the_background(client):
+    import time
+
+    http, store = client
+    run_task(ToyAgent(), _task(), "fake-model", store=store)
+    first = http.get("/api/dataset").json()
+    assert first["fresh"] is True and first["as_of_runs"] == 1
+    run_task(ToyAgent(), _task(), "fake-model", store=store)        # the store changes
+    second = http.get("/api/dataset").json()
+    assert second["as_of_runs"] in (1, 2)                            # served at once (stale or already refreshed)
+    for _ in range(50):
+        latest = http.get("/api/dataset").json()
+        if latest["fresh"]:
+            break
+        time.sleep(0.1)
+    assert latest["fresh"] is True and latest["as_of_runs"] == 2
