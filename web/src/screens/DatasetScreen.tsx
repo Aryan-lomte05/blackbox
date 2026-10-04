@@ -126,7 +126,7 @@ export const DatasetScreen: React.FC = () => {
                           {famHealth.steps_mean ? famHealth.steps_mean.toFixed(1) : '—'}
                         </td>
                         <td className="py-2.5 px-4 font-sans text-xs text-[var(--muted)] truncate max-w-xs">
-                          {data.sources?.[fam] || 'Benchmark synthetic execution suite'}
+                          {data.sources?.[fam] || '—'}
                         </td>
                       </tr>
                     );

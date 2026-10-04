@@ -21,6 +21,7 @@ export interface StepNodeData {
   is_guilty?: boolean;
   is_planted?: boolean;
   is_contaminated?: boolean;
+  direction?: 'TB' | 'LR';  // layout direction: where the connection points sit
 }
 
 const kindIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -63,7 +64,7 @@ export const StepNode = memo(({ data, selected }: { data: StepNodeData; selected
     >
       <Handle
         type="target"
-        position={Position.Left}
+        position={data.direction === 'TB' ? Position.Top : Position.Left}
         className="!w-2 !h-2 !bg-[var(--line-strong)] !border !border-[var(--bg)]"
       />
 
@@ -90,7 +91,7 @@ export const StepNode = memo(({ data, selected }: { data: StepNodeData; selected
 
       <Handle
         type="source"
-        position={Position.Right}
+        position={data.direction === 'TB' ? Position.Bottom : Position.Right}
         className="!w-2 !h-2 !bg-[var(--line-strong)] !border !border-[var(--bg)]"
       />
     </div>
