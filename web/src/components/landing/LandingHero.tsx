@@ -1,10 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { scrollTo } from '../../lib/smooth';
 import { HeroTraceVisual } from './HeroTraceVisual';
-import { ArrowRight, ChevronDown, Activity, Sparkles } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 
 interface LandingHeroProps {
   onOpenAuth: () => void;
@@ -14,25 +14,20 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const heroRef = useRef<HTMLDivElement>(null);
-  const runwayRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
+  const visualRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 1000], [0, 160]);
-  const heroHeaderOpacity = useTransform(scrollY, [0, 450, 850], [1, 0.9, 0.2]);
-  const heroHeaderY = useTransform(scrollY, [0, 800], [0, 50]);
 
-  // Connect scroll runway to trace progress
-  const { scrollYProgress: runwayProgress } = useScroll({
-    target: runwayRef,
-    offset: ['start start', 'end end'],
+  // Gentle 3D perspective tilt on natural scroll
+  const { scrollYProgress: visualScroll } = useScroll({
+    target: visualRef,
+    offset: ['start end', 'end start'],
   });
 
-  useEffect(() => {
-    return runwayProgress.on('change', (latest) => {
-      setScrollProgress(latest);
-    });
-  }, [runwayProgress]);
+  const visualY = useTransform(visualScroll, [0, 0.5, 1], [30, 0, -30]);
+  const visualRotateX = useTransform(visualScroll, [0, 0.4, 0.8], [6, 0, -3]);
+  const visualScale = useTransform(visualScroll, [0, 0.4, 0.8], [0.97, 1, 0.98]);
 
   const scrollToStory = () => {
     scrollTo('story');
@@ -45,17 +40,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
     { label: 'REGRESSION FIREWALL', value: 'Automated', desc: 'Verified across test shards', color: 'text-white' },
   ];
 
-  const STAGES = [
-    { id: '01', name: 'STREAM', range: [0, 0.22] },
-    { id: '02', name: 'CRASH', range: [0.22, 0.44] },
-    { id: '03', name: 'ISOLATE', range: [0.44, 0.66] },
-    { id: '04', name: 'FORK', range: [0.66, 0.88] },
-    { id: '05', name: 'VERIFY', range: [0.88, 1.0] },
-  ];
-
-  const currentStageIdx =
-    scrollProgress < 0.22 ? 0 : scrollProgress < 0.44 ? 1 : scrollProgress < 0.66 ? 2 : scrollProgress < 0.88 ? 3 : 4;
-
   return (
     <section ref={heroRef} id="hero" className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
       {/* Background Architectural Grid Lines & Dynamic Parallax Glow */}
@@ -66,11 +50,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
       <div className="max-w-[1400px] mx-auto px-6 relative z-10 font-sans">
-        {/* HERO HEADER: Headline, Technical Eyebrow & Dispatched CTAs */}
-        <motion.div
-          style={{ opacity: heroHeaderOpacity, y: heroHeaderY }}
-          className="text-center"
-        >
+        {/* HERO HEADER */}
+        <div className="text-center">
           {/* Top Technical Eyebrow */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -124,7 +105,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="flex flex-wrap items-center justify-center gap-4 mb-10"
+            className="flex flex-wrap items-center justify-center gap-4 mb-12"
           >
             <button
               onClick={() => {
@@ -148,66 +129,20 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
               <ChevronDown className="w-3.5 h-3.5 text-zinc-400 animate-bounce" />
             </button>
           </motion.div>
-        </motion.div>
-
-        {/* INTERACTIVE STICKY SCROLL RUNWAY FOR THE SIGNATURE HERO FLIGHT RECORDER */}
-        <div ref={runwayRef} className="relative min-h-[160vh] md:min-h-[220vh] mt-4">
-          <div className="sticky top-16 md:top-20 z-20 pt-2 pb-8">
-            {/* Mission Telemetry HUD strip right above console */}
-            <div className="flex items-center justify-between max-w-5xl mx-auto px-2 mb-2 text-[10px] font-mono text-zinc-400">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span className="text-zinc-200 font-bold uppercase tracking-wider">
-                  MISSION: APAC-SETTLEMENT-09
-                </span>
-                <span className="text-zinc-600">//</span>
-                <span className="text-cyan-400 hidden sm:inline">
-                  SCROLL-INTERACTIVE FLIGHT RECORDER DECK
-                </span>
-              </div>
-
-              {/* Scroll Prompter / Stage Indicator */}
-              <div className="flex items-center gap-2 text-zinc-400 bg-zinc-950/80 px-2.5 py-1 rounded border border-zinc-800 shadow-md">
-                <span className="text-zinc-500 hidden sm:inline">PROGRESSION:</span>
-                <span className="text-cyan-300 font-bold uppercase">
-                  {STAGES[currentStageIdx].name} ({currentStageIdx + 1}/5)
-                </span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-500 font-mono">{(scrollProgress * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-
-            {/* THE SIGNATURE HERO TRACE VISUAL */}
-            <HeroTraceVisual externalProgress={scrollProgress} />
-
-            {/* Interactive Stage Progression Micro-Notches beneath console */}
-            <div className="flex flex-wrap items-center justify-between max-w-5xl mx-auto px-2 mt-2 text-[10px] font-mono text-zinc-500 gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-zinc-600">STAGE HUD:</span>
-                {STAGES.map((s, idx) => (
-                  <span
-                    key={s.id}
-                    className={`px-1.5 py-0.5 rounded text-[9px] transition-all ${
-                      idx === currentStageIdx
-                        ? 'bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold shadow-sm shadow-cyan-500/20'
-                        : 'text-zinc-600'
-                    }`}
-                  >
-                    {s.id} {s.name}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-1 text-zinc-500">
-                <span className="hidden sm:inline">SCROLL DOWN TO PROGRESS TIMELINE</span>
-                <ChevronDown className="w-3 h-3 text-cyan-400 animate-bounce" />
-              </div>
-            </div>
-          </div>
         </div>
 
+        {/* THE SIGNATURE HERO FLIGHT RECORDER (NATURAL FLOW, NO STICKY TRAP) */}
+        <motion.div
+          ref={visualRef}
+          style={{ y: visualY, rotateX: visualRotateX, scale: visualScale }}
+          transition={{ ease: 'easeOut', duration: 0.2 }}
+          className="mt-2"
+        >
+          <HeroTraceVisual />
+        </motion.div>
+
         {/* Hairline Metrics Strip with Staggered Scroll-Triggered Reveal */}
-        <div className="mt-8 pt-8 border-t border-[#1f2937]/80 grid grid-cols-2 md:grid-cols-4 gap-6 font-mono relative z-10">
+        <div className="mt-12 pt-8 border-t border-[#1f2937]/80 grid grid-cols-2 md:grid-cols-4 gap-6 font-mono relative z-10">
           {metrics.map((m, idx) => (
             <motion.div
               key={idx}

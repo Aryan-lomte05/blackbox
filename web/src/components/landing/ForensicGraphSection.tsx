@@ -128,60 +128,18 @@ const GRAPH_NODES: GraphNodeData[] = [
 ];
 
 export const ForensicGraphSection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNodeData>(GRAPH_NODES[3]);
   const [filterMode, setFilterMode] = useState<'all' | 'guilty' | 'path'>('all');
-  const [isManual, setIsManual] = useState<boolean>(false);
-  const [scrubPercent, setScrubPercent] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubPercent(Math.round(v * 100));
-      if (isManual) return;
-
-      if (v < 0.35) {
-        setFilterMode('all');
-        setSelectedNode(GRAPH_NODES[2]);
-      } else if (v < 0.70) {
-        setFilterMode('guilty');
-        setSelectedNode(GRAPH_NODES[3]);
-      } else {
-        setFilterMode('path');
-        setSelectedNode(GRAPH_NODES[4]);
-      }
-    });
-  }, [scrollYProgress, isManual]);
 
   const handleFilterClick = (mode: 'all' | 'guilty' | 'path') => {
-    setIsManual(true);
     setFilterMode(mode);
     if (mode === 'guilty') setSelectedNode(GRAPH_NODES[3]);
     if (mode === 'path') setSelectedNode(GRAPH_NODES[4]);
     if (mode === 'all') setSelectedNode(GRAPH_NODES[2]);
   };
 
-  const handleResume = () => {
-    setIsManual(false);
-    const v = scrollYProgress.get();
-    if (v < 0.35) {
-      setFilterMode('all');
-      setSelectedNode(GRAPH_NODES[2]);
-    } else if (v < 0.70) {
-      setFilterMode('guilty');
-      setSelectedNode(GRAPH_NODES[3]);
-    } else {
-      setFilterMode('path');
-      setSelectedNode(GRAPH_NODES[4]);
-    }
-  };
-
   return (
-    <section ref={sectionRef} id="forensics" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
+    <section id="forensics" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -238,20 +196,8 @@ export const ForensicGraphSection: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] font-mono">
-              {isManual ? (
-                <button
-                  onClick={handleResume}
-                  className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Resume Scroll Scrub</span>
-                </button>
-              ) : (
-                <span className="text-zinc-500">
-                  SCROLL SCRUBBER: <span className="text-cyan-400 font-bold">{scrubPercent}%</span>
-                </span>
-              )}
+            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+              <span>{GRAPH_NODES.length} IMMUTABLE SAVE-POINTS</span>
             </div>
           </div>
         </div>

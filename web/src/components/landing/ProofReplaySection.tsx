@@ -3,40 +3,10 @@ import { motion, useScroll } from 'framer-motion';
 import { GitFork, CheckCircle2, XCircle, ArrowRight, Zap, Clock, Coins, ShieldCheck, Repeat, Sliders, RotateCcw } from 'lucide-react';
 
 export const ProofReplaySection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [divergeStep, setDivergeStep] = useState<number>(3);
-  const [isManual, setIsManual] = useState<boolean>(false);
-  const [scrubPercent, setScrubPercent] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubPercent(Math.round(v * 100));
-      if (isManual) return;
-
-      if (v < 0.25) setDivergeStep(1);
-      else if (v < 0.50) setDivergeStep(2);
-      else if (v < 0.75) setDivergeStep(3);
-      else setDivergeStep(4);
-    });
-  }, [scrollYProgress, isManual]);
 
   const handleForkClick = (stepNum: number) => {
-    setIsManual(true);
     setDivergeStep(stepNum);
-  };
-
-  const handleResume = () => {
-    setIsManual(false);
-    const v = scrollYProgress.get();
-    if (v < 0.25) setDivergeStep(1);
-    else if (v < 0.50) setDivergeStep(2);
-    else if (v < 0.75) setDivergeStep(3);
-    else setDivergeStep(4);
   };
 
   // Dynamic calculations based on divergence point
@@ -46,7 +16,7 @@ export const ProofReplaySection: React.FC = () => {
   const savingsPct = Math.round((reusedTokens / totalTokens) * 100);
 
   return (
-    <section ref={sectionRef} id="replay" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b] overflow-hidden">
+    <section id="replay" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b] overflow-hidden">
       {/* Background radial highlight */}
       <div className="absolute top-1/3 right-1/4 w-[500px] h-[300px] bg-emerald-500/5 blur-[130px] pointer-events-none rounded-full" />
 
@@ -113,19 +83,9 @@ export const ProofReplaySection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 text-[11px] font-mono">
-            {isManual ? (
-              <button
-                onClick={handleResume}
-                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Resume Scroll Scrub</span>
-              </button>
-            ) : (
-              <span className="text-zinc-500">
-                SCROLL SCRUBBER: <span className="text-cyan-400 font-bold">{scrubPercent}%</span>
-              </span>
-            )}
+            <span className="text-zinc-500">
+              REUSING STEPS 0..{divergeStep - 1}
+            </span>
             <div className="text-zinc-400 pl-2 border-l border-zinc-800">
               ACTIVE SAVINGS: <strong className="text-emerald-400 font-bold">{savingsPct}%</strong> PRESERVED
             </div>

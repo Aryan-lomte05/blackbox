@@ -85,44 +85,14 @@ const CLUSTERS: AtlasCluster[] = [
 ];
 
 export const FailureAtlasSection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [selectedCluster, setSelectedCluster] = useState<AtlasCluster>(CLUSTERS[0]);
-  const [isManual, setIsManual] = useState<boolean>(false);
-  const [scrubPercent, setScrubPercent] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubPercent(Math.round(v * 100));
-      if (isManual) return;
-
-      if (v < 0.25) setSelectedCluster(CLUSTERS[0]);
-      else if (v < 0.50) setSelectedCluster(CLUSTERS[1]);
-      else if (v < 0.75) setSelectedCluster(CLUSTERS[2]);
-      else setSelectedCluster(CLUSTERS[3]);
-    });
-  }, [scrollYProgress, isManual]);
 
   const handleClusterClick = (cl: AtlasCluster) => {
-    setIsManual(true);
     setSelectedCluster(cl);
   };
 
-  const handleResume = () => {
-    setIsManual(false);
-    const v = scrollYProgress.get();
-    if (v < 0.25) setSelectedCluster(CLUSTERS[0]);
-    else if (v < 0.50) setSelectedCluster(CLUSTERS[1]);
-    else if (v < 0.75) setSelectedCluster(CLUSTERS[2]);
-    else setSelectedCluster(CLUSTERS[3]);
-  };
-
   return (
-    <section ref={sectionRef} id="atlas" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
+    <section id="atlas" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -167,19 +137,9 @@ export const FailureAtlasSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {isManual ? (
-              <button
-                onClick={handleResume}
-                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors text-[11px]"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Resume Scroll Scrub</span>
-              </button>
-            ) : (
-              <span className="text-zinc-500 text-[11px]">
-                SCROLL SCRUBBER: <span className="text-purple-400 font-bold">{scrubPercent}%</span>
-              </span>
-            )}
+            <span className="text-zinc-500 text-[11px] font-mono">
+              INCIDENTS: <span className="text-purple-400 font-bold">{selectedCluster.count}</span>
+            </span>
           </div>
         </div>
 

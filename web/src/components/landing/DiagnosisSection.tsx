@@ -59,44 +59,16 @@ const SUSPECTS: Suspect[] = [
 ];
 
 export const DiagnosisSection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [activeRank, setActiveRank] = useState<number>(1);
-  const [isManual, setIsManual] = useState<boolean>(false);
-  const [scrubPercent, setScrubPercent] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubPercent(Math.round(v * 100));
-      if (isManual) return;
-
-      if (v < 0.5) setActiveRank(1);
-      else if (v < 0.8) setActiveRank(2);
-      else setActiveRank(3);
-    });
-  }, [scrollYProgress, isManual]);
 
   const handleRankClick = (rank: number) => {
-    setIsManual(true);
     setActiveRank(rank);
-  };
-
-  const handleResume = () => {
-    setIsManual(false);
-    const v = scrollYProgress.get();
-    if (v < 0.5) setActiveRank(1);
-    else if (v < 0.8) setActiveRank(2);
-    else setActiveRank(3);
   };
 
   const currentSuspect = SUSPECTS.find((s) => s.rank === activeRank) || SUSPECTS[0];
 
   return (
-    <section ref={sectionRef} id="diagnosis" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
+    <section id="diagnosis" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -141,19 +113,9 @@ export const DiagnosisSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {isManual ? (
-              <button
-                onClick={handleResume}
-                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors text-[11px]"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Resume Scroll Scrub</span>
-              </button>
-            ) : (
-              <span className="text-zinc-500 text-[11px]">
-                SCROLL SCRUBBER: <span className="text-cyan-400 font-bold">{scrubPercent}%</span>
-              </span>
-            )}
+            <span className="text-zinc-500 text-[11px] font-mono">
+              CONFIDENCE: <span className="text-amber-400 font-bold">{Math.round(currentSuspect.probability * 100)}%</span>
+            </span>
           </div>
         </div>
 

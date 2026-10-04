@@ -62,55 +62,16 @@ const STEPS_DATA: StepStory[] = [
 ];
 
 export const FailureSection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [selectedIdx, setSelectedIdx] = useState<number>(2);
-  const [isManualOverride, setIsManualOverride] = useState<boolean>(false);
-  const [scrubProgress, setScrubProgress] = useState<number>(0.25);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  // Dynamically scrub through steps 1..5 as the user scrolls
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubProgress(Math.max(0, Math.min(1, v)));
-      if (isManualOverride) return;
-
-      if (v < 0.2) {
-        setSelectedIdx(1);
-      } else if (v < 0.45) {
-        setSelectedIdx(2);
-      } else if (v < 0.70) {
-        setSelectedIdx(3);
-      } else if (v < 0.88) {
-        setSelectedIdx(4);
-      } else {
-        setSelectedIdx(5);
-      }
-    });
-  }, [scrollYProgress, isManualOverride]);
 
   const selectedStep = STEPS_DATA.find((s) => s.idx === selectedIdx) || STEPS_DATA[1];
 
   const handleStepClick = (idx: number) => {
-    setIsManualOverride(true);
     setSelectedIdx(idx);
   };
 
-  const handleResumeScroll = () => {
-    setIsManualOverride(false);
-    const v = scrollYProgress.get();
-    if (v < 0.2) setSelectedIdx(1);
-    else if (v < 0.45) setSelectedIdx(2);
-    else if (v < 0.70) setSelectedIdx(3);
-    else if (v < 0.88) setSelectedIdx(4);
-    else setSelectedIdx(5);
-  };
-
   return (
-    <section ref={sectionRef} id="story" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
+    <section id="story" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#05070b]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -155,19 +116,9 @@ export const FailureSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {isManualOverride ? (
-              <button
-                onClick={handleResumeScroll}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-cyan-300 text-[11px] font-bold border border-zinc-700 cursor-pointer transition-all"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>RESUME SCROLL TRACKING</span>
-              </button>
-            ) : (
-              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-[10px] font-bold tracking-wider animate-pulse">
-                AUTOSCRUBBING ON SCROLL ({(scrubProgress * 100).toFixed(0)}%)
-              </span>
-            )}
+            <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold tracking-wider">
+              {selectedStep.isGuilty ? 'CRITICAL ROOT CAUSE' : selectedStep.isCrash ? 'TERMINAL EXCEPTION' : 'EXECUTION STEP'}
+            </span>
           </div>
         </div>
 

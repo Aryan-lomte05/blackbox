@@ -112,42 +112,16 @@ const LAB_STAGES: LabStage[] = [
 ];
 
 export const LiveLabPreviewSection: React.FC = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [currentStageNum, setCurrentStageNum] = useState<number>(9);
-  const [isManual, setIsManual] = useState<boolean>(false);
-  const [scrubPercent, setScrubPercent] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start 75%', 'end 25%'],
-  });
-
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setScrubPercent(Math.round(v * 100));
-      if (isManual) return;
-
-      const stage = Math.min(14, Math.max(1, Math.floor(v * 14) + 1));
-      setCurrentStageNum(stage);
-    });
-  }, [scrollYProgress, isManual]);
 
   const handleStageClick = (num: number) => {
-    setIsManual(true);
     setCurrentStageNum(num);
-  };
-
-  const handleResume = () => {
-    setIsManual(false);
-    const v = scrollYProgress.get();
-    const stage = Math.min(14, Math.max(1, Math.floor(v * 14) + 1));
-    setCurrentStageNum(stage);
   };
 
   const activeStage = LAB_STAGES.find((s) => s.num === currentStageNum) || LAB_STAGES[8];
 
   return (
-    <section ref={sectionRef} id="lab" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
+    <section id="lab" className="relative py-20 md:py-32 border-t border-[#1f2937]/80 bg-[#070a10]">
       <div className="max-w-[1400px] mx-auto px-6 font-sans">
         {/* Section Eyebrow */}
         <motion.div
@@ -194,19 +168,9 @@ export const LiveLabPreviewSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {isManual ? (
-              <button
-                onClick={handleResume}
-                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors text-[11px]"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Resume Scroll Scrub</span>
-              </button>
-            ) : (
-              <span className="text-zinc-500 text-[11px]">
-                SCROLL SCRUBBER: <span className="text-cyan-400 font-bold">{scrubPercent}%</span>
-              </span>
-            )}
+            <span className="text-zinc-500 text-[11px] font-mono">
+              STAGE: <span className="text-cyan-400 font-bold">{activeStage.num} / 14</span>
+            </span>
           </div>
         </div>
 

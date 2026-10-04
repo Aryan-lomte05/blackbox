@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -14,13 +14,8 @@ import {
   Sliders,
   Terminal,
   Activity,
-  Zap,
-  ShieldCheck,
   Crosshair,
-  Lock,
-  ArrowRight,
-  Radio,
-  FileCode2,
+  ShieldCheck,
 } from 'lucide-react';
 
 export type TracePhase = 'normal' | 'failure' | 'isolating' | 'replay' | 'verified';
@@ -99,70 +94,43 @@ const NODES: TraceNode[] = [
   },
 ];
 
-interface HeroTraceVisualProps {
-  externalProgress?: number;
-}
+const PHASES_CONFIG: {
+  id: TracePhase;
+  label: string;
+  badge: string;
+  color: string;
+  prog: number;
+}[] = [
+  { id: 'normal', label: '01 STREAM', badge: 'PHASE 01: BIT-EXACT RECORDING', color: 'cyan', prog: 0.1 },
+  { id: 'failure', label: '02 CRASH', badge: 'PHASE 02: ANOMALOUS COLLAPSE', color: 'red', prog: 0.35 },
+  { id: 'isolating', label: '03 ISOLATE', badge: 'PHASE 03: GNN CAUSAL ISOLATION', color: 'amber', prog: 0.55 },
+  { id: 'replay', label: '04 FORK', badge: 'PHASE 04: COUNTERFACTUAL FORK', color: 'emerald', prog: 0.75 },
+  { id: 'verified', label: '05 PROVE', badge: 'PHASE 05: VERIFIED FLEET REPAIR', color: 'emerald', prog: 1.0 },
+];
 
-export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgress }) => {
-  const [phase, setPhase] = useState<TracePhase>('normal');
-  const [scrubProgress, setScrubProgress] = useState<number>(0.1);
+export const HeroTraceVisual: React.FC = () => {
+  const [phase, setPhase] = useState<TracePhase>('failure');
   const [selectedNode, setSelectedNode] = useState<TraceNode | null>(null);
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
-  const [isManualOverride, setIsManualOverride] = useState<boolean>(false);
+  const [isPlayingDemo, setIsPlayingDemo] = useState<boolean>(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { amount: 0.2 });
 
-  // Sync with external scroll progress when available
-  useEffect(() => {
-    if (externalProgress !== undefined) {
-      const clamped = Math.max(0, Math.min(1, externalProgress));
-      setScrubProgress(clamped);
+  // Optional manual demo playback (ONLY runs when explicitly started AND in view)
+  React.useEffect(() => {
+    if (!isPlayingDemo || !isInView) return;
 
-      if (!isManualOverride) {
-        if (clamped < 0.22) {
-          setPhase('normal');
-        } else if (clamped < 0.44) {
-          setPhase('failure');
-        } else if (clamped < 0.66) {
-          setPhase('isolating');
-        } else if (clamped < 0.88) {
-          setPhase('replay');
-        } else {
-          setPhase('verified');
-        }
-      }
-    }
-  }, [externalProgress, isManualOverride]);
+    const sequence: TracePhase[] = ['normal', 'failure', 'isolating', 'replay', 'verified'];
+    const currentIdx = sequence.indexOf(phase);
+    const nextIdx = (currentIdx + 1) % sequence.length;
 
-  // Autoplay loop when not manually scrubbing or scrolling
-  useEffect(() => {
-    if (!isAutoPlaying || isManualOverride || externalProgress !== undefined) return;
+    const timer = setTimeout(() => {
+      setPhase(sequence[nextIdx]);
+    }, 3800);
 
-    const sequence: { next: TracePhase; delay: number; prog: number }[] = [
-      { next: 'failure', delay: 4000, prog: 0.35 },
-      { next: 'isolating', delay: 3800, prog: 0.55 },
-      { next: 'replay', delay: 3800, prog: 0.75 },
-      { next: 'verified', delay: 4500, prog: 0.95 },
-      { next: 'normal', delay: 4500, prog: 0.10 },
-    ];
-
-    let currentIdx = 0;
-    let timer: NodeJS.Timeout;
-
-    const runNext = () => {
-      const step = sequence[currentIdx];
-      timer = setTimeout(() => {
-        setPhase(step.next);
-        setScrubProgress(step.prog);
-        currentIdx = (currentIdx + 1) % sequence.length;
-        runNext();
-      }, step.delay);
-    };
-
-    runNext();
     return () => clearTimeout(timer);
-  }, [isAutoPlaying, isManualOverride, externalProgress]);
+  }, [isPlayingDemo, isInView, phase]);
 
   // 3D Perspective Tilt on Mouse Movement
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -180,27 +148,20 @@ export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgre
     setTilt({ rotateX: 0, rotateY: 0 });
   };
 
-  const handlePhaseSelect = (targetPhase: TracePhase, prog: number) => {
-    setIsManualOverride(true);
-    setIsAutoPlaying(false);
+  const handlePhaseSelect = (targetPhase: TracePhase) => {
+    setIsPlayingDemo(false);
     setPhase(targetPhase);
-    setScrubProgress(prog);
-  };
-
-  const handleResumeAuto = () => {
-    setIsManualOverride(false);
-    setIsAutoPlaying(true);
   };
 
   const getNodeColor = (node: TraceNode) => {
     if (phase === 'normal') return { border: 'border-cyan-500/50', bg: 'bg-[#08121f]', glow: '#38bdf8' };
     if (phase === 'failure') {
-      if (node.id === 3) return { border: 'border-red-500', bg: 'bg-red-950/80', glow: '#ef4444' };
+      if (node.id === 3) return { border: 'border-red-500 shadow-lg shadow-red-500/30', bg: 'bg-red-950/80', glow: '#ef4444' };
       if (node.id > 3) return { border: 'border-red-900/60', bg: 'bg-zinc-950/80', glow: '#6b7280' };
       return { border: 'border-cyan-500/50', bg: 'bg-[#08121f]', glow: '#38bdf8' };
     }
     if (phase === 'isolating') {
-      if (node.id === 3) return { border: 'border-red-500', bg: 'bg-red-950/90', glow: '#ef4444' };
+      if (node.id === 3) return { border: 'border-red-500 ring-2 ring-red-400', bg: 'bg-red-950/90', glow: '#ef4444' };
       if (node.id > 3) return { border: 'border-amber-600/70', bg: 'bg-amber-950/40', glow: '#f59e0b' };
       return { border: 'border-cyan-500/50', bg: 'bg-[#08121f]', glow: '#38bdf8' };
     }
@@ -211,6 +172,8 @@ export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgre
     }
     return { border: 'border-zinc-800', bg: 'bg-zinc-900', glow: '#38bdf8' };
   };
+
+  const activeConfig = PHASES_CONFIG.find((p) => p.id === phase) || PHASES_CONFIG[1];
 
   return (
     <div
@@ -256,8 +219,8 @@ export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgre
             />
             <span className="text-white font-bold tracking-widest text-[11px] uppercase flex items-center gap-1.5">
               <span>BLACK BOX FLIGHT RECORDER</span>
-              <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
-                LIVE SIGNAL
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 font-mono">
+                TELEMETRY
               </span>
             </span>
           </div>
@@ -267,137 +230,61 @@ export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgre
           <span className="text-[11px] font-semibold">
             {phase === 'normal' && <span className="text-cyan-400">PHASE 01: BIT-EXACT RECORDING</span>}
             {phase === 'failure' && <span className="text-red-400 font-bold animate-pulse">PHASE 02: ANOMALOUS COLLAPSE</span>}
-            {phase === 'isolating' && <span className="text-amber-400">PHASE 03: GNN CAUSAL ISOLATION</span>}
+            {phase === 'isolating' && <span className="text-amber-400 font-bold">PHASE 03: GNN CAUSAL ISOLATION</span>}
             {phase === 'replay' && <span className="text-emerald-400">PHASE 04: COUNTERFACTUAL FORK</span>}
             {phase === 'verified' && <span className="text-emerald-300 font-bold">PHASE 05: VERIFIED FLEET REPAIR</span>}
           </span>
         </div>
 
-        {/* Right: Interactive Phase Buttons & Auto Controls */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center bg-[#090e17] p-1 rounded-md border border-[#1f2937] text-[10px]">
-            <button
-              onClick={() => handlePhaseSelect('normal', 0.1)}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'normal' ? 'bg-cyan-950 text-cyan-300 border border-cyan-700' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              RUN
-            </button>
-            <button
-              onClick={() => handlePhaseSelect('failure', 0.35)}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'failure' ? 'bg-red-950 text-red-300 border border-red-700' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              CRASH
-            </button>
-            <button
-              onClick={() => handlePhaseSelect('isolating', 0.55)}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'isolating' ? 'bg-amber-950 text-amber-300 border border-amber-700' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              DIAGNOSE
-            </button>
-            <button
-              onClick={() => handlePhaseSelect('replay', 0.75)}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'replay' ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              FORK
-            </button>
-            <button
-              onClick={() => handlePhaseSelect('verified', 0.95)}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'verified' ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/50' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              PROVE
-            </button>
+        {/* Right: Tactile Phase Navigation Buttons & Demo Playback */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-[#090e17] p-1 rounded-md border border-[#1f2937] text-[10px] gap-1">
+            {PHASES_CONFIG.map((p) => {
+              const isActive = phase === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => handlePhaseSelect(p.id)}
+                  className={`px-2.5 py-1 rounded transition-all cursor-pointer font-bold font-mono text-[10px] flex items-center gap-1 ${
+                    isActive
+                      ? p.id === 'failure'
+                        ? 'bg-red-950 text-red-300 border border-red-700 shadow-sm shadow-red-950'
+                        : p.id === 'isolating'
+                        ? 'bg-amber-950 text-amber-300 border border-amber-700 shadow-sm shadow-amber-950'
+                        : p.id === 'replay'
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                        : p.id === 'verified'
+                        ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/50'
+                        : 'bg-cyan-950 text-cyan-300 border border-cyan-700'
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50 border border-transparent'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
 
-          {isManualOverride ? (
-            <button
-              onClick={handleResumeAuto}
-              title="Resume automatic cycle"
-              className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-cyan-400 text-[10px] font-mono flex items-center gap-1 border border-zinc-700 cursor-pointer"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span className="hidden sm:inline">AUTOPLAY</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              title={isAutoPlaying ? 'Pause loop' : 'Play loop'}
-              className="p-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
-            >
-              {isAutoPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 text-cyan-400" />}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Tactile Scroll Scrubber Rail */}
-      <div className="relative z-10 pt-3 pb-1">
-        <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1.5">
-          <span className="flex items-center gap-1.5">
-            <Sliders className="w-3 h-3 text-cyan-400" />
-            <strong className="text-zinc-300 uppercase">Interactive Timeline Scrubber</strong>
-            <span className="text-zinc-600">· SCROLL WHEEL LINKED</span>
-          </span>
-          <span className="text-cyan-400 font-bold">
-            TIMESTAMP: T+0{(scrubProgress * 4.8).toFixed(2)}s // PROGRESS: {(scrubProgress * 100).toFixed(0)}%
-          </span>
-        </div>
-
-        {/* Laser Progress Track with Drag / Click scrubbing */}
-        <div
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const clickPct = (e.clientX - rect.left) / rect.width;
-            setScrubProgress(clickPct);
-            setIsManualOverride(true);
-            setIsAutoPlaying(false);
-            if (clickPct < 0.22) setPhase('normal');
-            else if (clickPct < 0.44) setPhase('failure');
-            else if (clickPct < 0.66) setPhase('isolating');
-            else if (clickPct < 0.88) setPhase('replay');
-            else setPhase('verified');
-          }}
-          className="relative h-2 w-full rounded-full bg-zinc-900/90 border border-zinc-800 cursor-pointer overflow-hidden group/bar"
-        >
-          {/* Active fill beam */}
-          <motion.div
-            className={`h-full transition-colors duration-300 ${
-              phase === 'failure'
-                ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 shadow-[0_0_14px_rgba(239,68,68,0.85)]'
-                : phase === 'verified' || phase === 'replay'
-                ? 'bg-gradient-to-r from-cyan-500 via-emerald-400 to-teal-300 shadow-[0_0_14px_rgba(34,197,94,0.85)]'
-                : 'bg-gradient-to-r from-cyan-600 via-sky-400 to-cyan-300 shadow-[0_0_14px_rgba(56,189,248,0.85)]'
+          <button
+            onClick={() => setIsPlayingDemo(!isPlayingDemo)}
+            title={isPlayingDemo ? 'Pause live demo cycle' : 'Run automated tour'}
+            className={`px-2 py-1 rounded border text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-all ${
+              isPlayingDemo
+                ? 'bg-cyan-950 text-cyan-300 border-cyan-700 shadow-sm shadow-cyan-900'
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
             }`}
-            style={{ width: `${Math.max(5, scrubProgress * 100)}%` }}
-            transition={{ ease: 'easeOut', duration: 0.15 }}
-          />
-
-          {/* Scrubber Stage Markers */}
-          <div className="absolute inset-0 flex justify-between px-2 pointer-events-none">
-            <span className="w-1 h-full bg-white/20" />
-            <span className="w-1 h-full bg-white/20" />
-            <span className="w-1 h-full bg-white/20" />
-            <span className="w-1 h-full bg-white/20" />
-            <span className="w-1 h-full bg-white/20" />
-          </div>
+          >
+            {isPlayingDemo ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 text-cyan-400" />}
+            <span className="hidden sm:inline">{isPlayingDemo ? 'PAUSE TOUR' : 'AUTO TOUR'}</span>
+          </button>
         </div>
       </div>
 
       {/* Main Execution Canvas — Dual-Lane Topology with Particle Laser Stream */}
-      <div className="relative py-7 my-2 overflow-x-auto min-h-[300px] flex flex-col justify-center">
+      <div className="relative py-8 my-1 overflow-x-auto min-h-[300px] flex flex-col justify-center">
         {/* SVG Dynamic Connection Wire Harness */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
           <defs>
-            {/* Pulsing glow filter */}
             <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3.5" result="blur" />
               <feMerge>
@@ -754,7 +641,7 @@ export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgre
                   : '#38bdf8'
               }
               strokeWidth="2"
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
             />
           </svg>
         </div>
