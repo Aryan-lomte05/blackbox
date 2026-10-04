@@ -1,6 +1,7 @@
 """Three-tier cascade: Laya → Jev → LLM. SYSTEM.md §5, X3."""
 from __future__ import annotations
 
+import json
 import os
 
 from blackbox.core.schema import Run, Step
@@ -28,6 +29,15 @@ def check_step(step: Step, run: Run, prior: list[Step]) -> dict | None:
     on_c = result["on_track"]["confidence"]
     result["alarm"] = (on_p < ALARM_THRESHOLD) and (on_c > CONFIDENCE_THRESHOLD)
     result["alarm_lead_step"] = step.idx
+    head = _checker_head()
+    if head is not None:  # the fine-tuned decision layer (monitor/finetune.py), opt-in
+        from blackbox.monitor.finetune import features, predict
+
+        x = features(result, step.kind)
+        if x is not None:
+            result["risk"] = round(predict(head, x), 4)
+            result["alarm"] = result["risk"] >= head["threshold"]
+            result["alarm_source"] = "fine-tuned head"
 
     # Canonical nested 'answers' dict for Laya/Jev/Autopilot compatibility
     m_choice = "none"
@@ -121,3 +131,16 @@ def _cascade(state: str) -> dict | None:
         return laya_result  # best we have (low-confidence Laya)
 
     return None
+
+
+def _checker_head() -> dict | None:
+    """The fine-tuned decision layer when BLACKBOX_CHECKER_HEAD=1 and data/models/checker_head.json exists.
+    Off by default: on the held-out Shop tasks it ranks worse than the hand-set rule (see monitor/finetune.py)."""
+    if os.environ.get("BLACKBOX_CHECKER_HEAD") != "1":
+        return None
+    from blackbox.monitor.finetune import HEAD_PATH
+
+    try:
+        return json.loads(HEAD_PATH.read_text(encoding="utf-8")) if HEAD_PATH.exists() else None
+    except (OSError, ValueError):
+        return None
