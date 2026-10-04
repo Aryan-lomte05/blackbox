@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -15,19 +15,21 @@ import {
   Terminal,
   Activity,
   Zap,
-  ShieldAlert,
-  CornerDownRight,
+  ShieldCheck,
+  Crosshair,
+  Lock,
+  ArrowRight,
   Radio,
   FileCode2,
 } from 'lucide-react';
 
-type TracePhase = 'normal' | 'failure' | 'isolating' | 'replay' | 'verified';
+export type TracePhase = 'normal' | 'failure' | 'isolating' | 'replay' | 'verified';
 
-interface TraceNode {
+export interface TraceNode {
   id: number;
   label: string;
   kind: 'input' | 'retrieval' | 'llm' | 'tool' | 'final';
-  x: number; // percentage
+  x: number; // percentage along the horizontal track
   tokens: number;
   latencyMs: number;
   desc: string;
@@ -42,7 +44,7 @@ const NODES: TraceNode[] = [
     x: 8,
     tokens: 42,
     latencyMs: 12,
-    desc: 'Multi-table settlement inquiry dispatched to autonomous agent',
+    desc: 'Multi-table settlement inquiry dispatched to autonomous agent runtime',
     payload: '{"task": "Calculate Q3 APAC settlements across customer margin tiers"}',
   },
   {
@@ -52,8 +54,8 @@ const NODES: TraceNode[] = [
     x: 25,
     tokens: 340,
     latencyMs: 84,
-    desc: 'Vector index retrieval for database schemas and business rules',
-    payload: '{"query": "APAC FX rates & tier rules", "chunks_returned": 4}',
+    desc: 'Vector index retrieval for database schemas, ledger rules, and currency pairs',
+    payload: '{"query": "APAC FX rates & tier rules", "chunks_returned": 4, "top_k_score": 0.94}',
   },
   {
     id: 2,
@@ -62,8 +64,8 @@ const NODES: TraceNode[] = [
     x: 42,
     tokens: 520,
     latencyMs: 410,
-    desc: 'Constructs SQL query strategy and parameter bindings',
-    payload: '{"plan": "query_warehouse(sql=SELECT account, currency, amount)"}',
+    desc: 'Constructs SQL query strategy and parameter bindings (Save-Point #2 Anchor)',
+    payload: '{"plan": "query_warehouse(sql=SELECT account, currency, amount)", "model": "claude-3-5-sonnet"}',
   },
   {
     id: 3,
@@ -72,8 +74,8 @@ const NODES: TraceNode[] = [
     x: 59,
     tokens: 180,
     latencyMs: 290,
-    desc: 'Database execution against analytics warehouse (drops column silently)',
-    payload: '{"sql": "SELECT account, amount FROM apac_ledger", "missing": ["currency"]}',
+    desc: 'Database execution against analytics warehouse (drops required column silently)',
+    payload: '{"sql": "SELECT account, amount FROM apac_ledger", "missing_column": ["currency"], "status": "200_OK"}',
   },
   {
     id: 4,
@@ -82,8 +84,8 @@ const NODES: TraceNode[] = [
     x: 76,
     tokens: 680,
     latencyMs: 512,
-    desc: 'Formats numerical output; contaminated by null currency fallback',
-    payload: '{"parsed_records": 12, "warning": "currency key missing, defaulted 0.0"}',
+    desc: 'Formats numerical output; contaminated by null currency fallback (defaulted 0.0)',
+    payload: '{"parsed_records": 12, "warning": "currency key missing, defaulted 0.0", "total_usd": 0.0}',
   },
   {
     id: 5,
@@ -92,12 +94,16 @@ const NODES: TraceNode[] = [
     x: 93,
     tokens: 95,
     latencyMs: 24,
-    desc: 'Terminal exception triggered by downstream division error',
-    payload: '{"status": "crashed", "error": "ZeroRevenueThresholdException: zero total"}',
+    desc: 'Terminal exception triggered by downstream division error (symptom of Step #3)',
+    payload: '{"status": "crashed", "error": "ZeroRevenueThresholdException: total calculated 0.0 USD"}',
   },
 ];
 
-export const HeroTraceVisual: React.FC = () => {
+interface HeroTraceVisualProps {
+  externalProgress?: number;
+}
+
+export const HeroTraceVisual: React.FC<HeroTraceVisualProps> = ({ externalProgress }) => {
   const [phase, setPhase] = useState<TracePhase>('normal');
   const [scrubProgress, setScrubProgress] = useState<number>(0.1);
   const [selectedNode, setSelectedNode] = useState<TraceNode | null>(null);
@@ -107,44 +113,38 @@ export const HeroTraceVisual: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Direct scroll-scrubbing connected to the window/hero position
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start 85%', 'end 15%'],
-  });
-
+  // Sync with external scroll progress when available
   useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      const clamped = Math.max(0, Math.min(1, v));
+    if (externalProgress !== undefined) {
+      const clamped = Math.max(0, Math.min(1, externalProgress));
       setScrubProgress(clamped);
 
-      if (isManualOverride) return;
-
-      // Scrub phases directly according to scroll position
-      if (clamped < 0.22) {
-        setPhase('normal');
-      } else if (clamped < 0.44) {
-        setPhase('failure');
-      } else if (clamped < 0.66) {
-        setPhase('isolating');
-      } else if (clamped < 0.88) {
-        setPhase('replay');
-      } else {
-        setPhase('verified');
+      if (!isManualOverride) {
+        if (clamped < 0.22) {
+          setPhase('normal');
+        } else if (clamped < 0.44) {
+          setPhase('failure');
+        } else if (clamped < 0.66) {
+          setPhase('isolating');
+        } else if (clamped < 0.88) {
+          setPhase('replay');
+        } else {
+          setPhase('verified');
+        }
       }
-    });
-  }, [scrollYProgress, isManualOverride]);
+    }
+  }, [externalProgress, isManualOverride]);
 
-  // Auto-play timer loop when user is not manually scrubbing
+  // Autoplay loop when not manually scrubbing or scrolling
   useEffect(() => {
-    if (!isAutoPlaying || isManualOverride) return;
+    if (!isAutoPlaying || isManualOverride || externalProgress !== undefined) return;
 
     const sequence: { next: TracePhase; delay: number; prog: number }[] = [
-      { next: 'failure', delay: 3500, prog: 0.35 },
-      { next: 'isolating', delay: 3200, prog: 0.55 },
-      { next: 'replay', delay: 3400, prog: 0.75 },
-      { next: 'verified', delay: 4000, prog: 0.95 },
-      { next: 'normal', delay: 4000, prog: 0.10 },
+      { next: 'failure', delay: 4000, prog: 0.35 },
+      { next: 'isolating', delay: 3800, prog: 0.55 },
+      { next: 'replay', delay: 3800, prog: 0.75 },
+      { next: 'verified', delay: 4500, prog: 0.95 },
+      { next: 'normal', delay: 4500, prog: 0.10 },
     ];
 
     let currentIdx = 0;
@@ -162,17 +162,17 @@ export const HeroTraceVisual: React.FC = () => {
 
     runNext();
     return () => clearTimeout(timer);
-  }, [isAutoPlaying, isManualOverride]);
+  }, [isAutoPlaying, isManualOverride, externalProgress]);
 
-  // Subtle 3D perspective tilt on mouse move
+  // 3D Perspective Tilt on Mouse Movement
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setTilt({
-      rotateX: -y * 6,
-      rotateY: x * 6,
+      rotateX: -y * 5,
+      rotateY: x * 5,
     });
   };
 
@@ -221,21 +221,24 @@ export const HeroTraceVisual: React.FC = () => {
         transform: `perspective(1200px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
         transition: 'transform 0.15s ease-out',
       }}
-      className="relative w-full max-w-5xl mx-auto rounded-xl bg-[#06090f] border border-[#1f2937] shadow-[0_20px_70px_rgba(0,0,0,0.85)] p-5 md:p-7 font-sans select-none overflow-hidden group/board"
+      className="relative w-full max-w-5xl mx-auto rounded-xl bg-[#06090f] border border-[#1f2937] shadow-[0_25px_80px_rgba(0,0,0,0.95)] p-5 md:p-7 font-sans select-none overflow-hidden group/board"
     >
       {/* Background Circuit Grid & Atmospheric Ambient Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(#1f293725_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
       <div
-        className="absolute -top-24 left-1/2 -translate-x-1/2 w-[650px] h-[350px] rounded-full blur-[130px] pointer-events-none transition-colors duration-700"
+        className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[380px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700"
         style={{
           background:
             phase === 'failure' || phase === 'isolating'
-              ? 'rgba(239, 68, 68, 0.15)'
+              ? 'rgba(239, 68, 68, 0.18)'
               : phase === 'verified'
-              ? 'rgba(34, 197, 94, 0.15)'
-              : 'rgba(56, 189, 248, 0.12)',
+              ? 'rgba(34, 197, 94, 0.18)'
+              : 'rgba(56, 189, 248, 0.14)',
         }}
       />
+
+      {/* Cybernetic Scanlines Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[size:100%_4px] pointer-events-none opacity-40" />
 
       {/* Cybernetic Flight HUD Header */}
       <div className="relative z-10 flex flex-wrap items-center justify-between pb-4 border-b border-[#1f2937] text-xs font-mono text-zinc-400 gap-3">
@@ -251,8 +254,11 @@ export const HeroTraceVisual: React.FC = () => {
                   : 'bg-cyan-400 shadow-cyan-400 animate-pulse'
               }`}
             />
-            <span className="text-white font-bold tracking-widest text-[11px] uppercase">
-              BLACK BOX FLIGHT RECORDER
+            <span className="text-white font-bold tracking-widest text-[11px] uppercase flex items-center gap-1.5">
+              <span>BLACK BOX FLIGHT RECORDER</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                LIVE SIGNAL
+              </span>
             </span>
           </div>
 
@@ -305,7 +311,7 @@ export const HeroTraceVisual: React.FC = () => {
             <button
               onClick={() => handlePhaseSelect('verified', 0.95)}
               className={`px-2 py-0.5 rounded transition-all cursor-pointer font-bold ${
-                phase === 'verified' ? 'bg-emerald-500 text-black' : 'text-zinc-500 hover:text-zinc-300'
+                phase === 'verified' ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/50' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               PROVE
@@ -342,7 +348,7 @@ export const HeroTraceVisual: React.FC = () => {
             <span className="text-zinc-600">· SCROLL WHEEL LINKED</span>
           </span>
           <span className="text-cyan-400 font-bold">
-            PROGRESS: {(scrubProgress * 100).toFixed(0)}%
+            TIMESTAMP: T+0{(scrubProgress * 4.8).toFixed(2)}s // PROGRESS: {(scrubProgress * 100).toFixed(0)}%
           </span>
         </div>
 
@@ -366,10 +372,10 @@ export const HeroTraceVisual: React.FC = () => {
           <motion.div
             className={`h-full transition-colors duration-300 ${
               phase === 'failure'
-                ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 shadow-[0_0_14px_rgba(239,68,68,0.85)]'
                 : phase === 'verified' || phase === 'replay'
-                ? 'bg-gradient-to-r from-cyan-500 via-emerald-400 to-teal-300 shadow-[0_0_12px_rgba(34,197,94,0.8)]'
-                : 'bg-gradient-to-r from-cyan-600 via-sky-400 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.8)]'
+                ? 'bg-gradient-to-r from-cyan-500 via-emerald-400 to-teal-300 shadow-[0_0_14px_rgba(34,197,94,0.85)]'
+                : 'bg-gradient-to-r from-cyan-600 via-sky-400 to-cyan-300 shadow-[0_0_14px_rgba(56,189,248,0.85)]'
             }`}
             style={{ width: `${Math.max(5, scrubProgress * 100)}%` }}
             transition={{ ease: 'easeOut', duration: 0.15 }}
@@ -387,13 +393,13 @@ export const HeroTraceVisual: React.FC = () => {
       </div>
 
       {/* Main Execution Canvas — Dual-Lane Topology with Particle Laser Stream */}
-      <div className="relative py-8 my-2 overflow-x-auto min-h-[300px] flex flex-col justify-center">
+      <div className="relative py-7 my-2 overflow-x-auto min-h-[300px] flex flex-col justify-center">
         {/* SVG Dynamic Connection Wire Harness */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
           <defs>
             {/* Pulsing glow filter */}
             <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -551,12 +557,12 @@ export const HeroTraceVisual: React.FC = () => {
                 {isGuilty && (
                   <>
                     <motion.div
-                      animate={{ scale: [1, 2.2], opacity: [0.9, 0] }}
+                      animate={{ scale: [1, 2.3], opacity: [0.9, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
                       className="absolute -inset-4 rounded-xl border-2 border-red-500 pointer-events-none"
                     />
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-red-600 text-white font-mono text-[9px] font-black tracking-widest uppercase animate-bounce whitespace-nowrap shadow-lg shadow-red-900">
-                      GUILTY ROOT
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-red-600 text-white font-mono text-[9px] font-black tracking-widest uppercase animate-bounce whitespace-nowrap shadow-lg shadow-red-900 flex items-center gap-1">
+                      <Crosshair className="w-2.5 h-2.5" /> GUILTY ROOT
                     </div>
                   </>
                 )}
@@ -645,7 +651,7 @@ export const HeroTraceVisual: React.FC = () => {
             >
               <div className="w-24 md:w-28 p-2.5 rounded-lg border-2 border-emerald-500 bg-[#081e13] text-center shadow-lg shadow-emerald-950/50">
                 <div className="flex items-center justify-between text-[9px] font-mono text-emerald-300 mb-1">
-                  <span>#3' REPAIR</span>
+                  <span>#3&apos; REPAIR</span>
                   <span className="font-bold text-white">140ms</span>
                 </div>
                 <Wrench className="w-4 h-4 text-emerald-400 mx-auto my-1" />
@@ -663,7 +669,7 @@ export const HeroTraceVisual: React.FC = () => {
             >
               <div className="w-24 md:w-28 p-2.5 rounded-lg border border-emerald-600 bg-[#081e13] text-center">
                 <div className="flex items-center justify-between text-[9px] font-mono text-emerald-300 mb-1">
-                  <span>#4' CLEAN</span>
+                  <span>#4&apos; CLEAN</span>
                   <span className="font-bold text-white">395ms</span>
                 </div>
                 <Cpu className="w-4 h-4 text-emerald-400 mx-auto my-1" />
@@ -681,7 +687,7 @@ export const HeroTraceVisual: React.FC = () => {
             >
               <div className="w-24 md:w-28 p-2.5 rounded-lg border-2 border-emerald-400 bg-emerald-950 text-center ring-2 ring-emerald-500/40 shadow-xl shadow-emerald-950">
                 <div className="flex items-center justify-between text-[9px] font-mono text-emerald-300 mb-1">
-                  <span>#5' PROVEN</span>
+                  <span>#5&apos; PROVEN</span>
                   <span className="font-bold text-white">18ms</span>
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-emerald-300 mx-auto my-1" />
@@ -866,8 +872,9 @@ export const HeroTraceVisual: React.FC = () => {
           </div>
         </div>
 
-        <div className="text-[10px] text-zinc-500">
-          CLICK ANY NODE TO INSPECT BIT-EXACT SAVE-POINT
+        <div className="text-[10px] text-zinc-500 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span>CLICK ANY NODE TO INSPECT BIT-EXACT SAVE-POINT</span>
         </div>
       </div>
 
