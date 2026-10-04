@@ -16,9 +16,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onOpenAuth }) => {
   const heroRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 800], [0, 180]);
-  const heroOpacity = useTransform(scrollY, [0, 600], [1, 0.35]);
-  const heroY = useTransform(scrollY, [0, 600], [0, 60]);
+  const bgY = useTransform(scrollY, [0, 1000], [0, 160]);
+  const heroOpacity = useTransform(scrollY, [0, 900, 1500], [1, 1, 0.4]);
+  const heroY = useTransform(scrollY, [0, 1000], [0, 40]);
 
   const scrollToStory = () => {
     scrollTo('story');
