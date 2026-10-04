@@ -16,10 +16,10 @@ import json
 import logging
 import os
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 from typing import Any
-
-import httpx
 
 from blackbox.auth.jwt_session import _get_secret
 
@@ -114,6 +114,62 @@ def get_authorization_url(return_to: str = "/") -> str:
     return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
 
 
+def _fetch_token_and_user(code: str, client_id: str, client_secret: str, redirect_uri: str) -> dict[str, Any]:
+    """Synchronous network requests to Google OAuth endpoints."""
+    token_req_data = urllib.parse.urlencode({
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        GOOGLE_TOKEN_URL,
+        data=token_req_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            token_data = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="replace")
+        logger.error(f"Google token exchange failed: {exc.code} - {err_body}")
+        raise RuntimeError(f"Google token exchange failed: {err_body}") from exc
+
+    access_token = token_data.get("access_token")
+    if not access_token:
+        raise RuntimeError("No access_token returned by Google OAuth.")
+
+    user_req = urllib.request.Request(
+        GOOGLE_USERINFO_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(user_req, timeout=10.0) as resp:
+            user_info = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="replace")
+        logger.error(f"Google userinfo query failed: {exc.code} - {err_body}")
+        raise RuntimeError(f"Failed to fetch user profile from Google: {err_body}") from exc
+
+    sub = user_info.get("sub")
+    email = user_info.get("email")
+
+    if not sub or not email:
+        raise RuntimeError("Google user profile missing sub or email.")
+
+    return {
+        "provider": "google",
+        "provider_user_id": str(sub),
+        "email": str(email),
+        "name": str(user_info.get("name") or user_info.get("given_name") or email.split("@")[0]),
+        "avatar": str(user_info.get("picture") or ""),
+    }
+
+
 async def exchange_code_for_user(code: str) -> dict[str, Any]:
     """Exchanges authorization code for tokens and fetches Google user profile."""
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
@@ -123,43 +179,6 @@ async def exchange_code_for_user(code: str) -> dict[str, Any]:
     if not client_id or not client_secret:
         raise ValueError("Google OAuth credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET) missing.")
 
-    data = {
-        "code": code,
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
-        "grant_type": "authorization_code",
-    }
+    import asyncio
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        token_res = await client.post(GOOGLE_TOKEN_URL, data=data)
-        if token_res.status_code != 200:
-            logger.error(f"Google token exchange failed: {token_res.status_code} - {token_res.text}")
-            raise RuntimeError(f"Google token exchange failed: {token_res.text}")
-
-        token_data = token_res.json()
-        access_token = token_data.get("access_token")
-        if not access_token:
-            raise RuntimeError("No access_token returned by Google OAuth.")
-
-        # Query user profile
-        headers = {"Authorization": f"Bearer {access_token}"}
-        user_res = await client.get(GOOGLE_USERINFO_URL, headers=headers)
-        if user_res.status_code != 200:
-            logger.error(f"Google userinfo query failed: {user_res.status_code} - {user_res.text}")
-            raise RuntimeError(f"Failed to fetch user profile from Google: {user_res.text}")
-
-        user_info = user_res.json()
-        sub = user_info.get("sub")
-        email = user_info.get("email")
-
-        if not sub or not email:
-            raise RuntimeError("Google user profile missing sub or email.")
-
-        return {
-            "provider": "google",
-            "provider_user_id": str(sub),
-            "email": str(email),
-            "name": str(user_info.get("name") or user_info.get("given_name") or email.split("@")[0]),
-            "avatar": str(user_info.get("picture") or ""),
-        }
+    return await asyncio.to_thread(_fetch_token_and_user, code, client_id, client_secret, redirect_uri)
