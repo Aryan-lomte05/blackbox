@@ -1,86 +1,58 @@
 import React, { useEffect } from 'react';
 import { startSmoothScroll } from '../lib/smooth';
 import { useAuth } from '../context/AuthContext';
-import { LandingNav } from '../components/landing/LandingNav';
-import { LandingHero } from '../components/landing/LandingHero';
-import { FailureSection } from '../components/landing/FailureSection';
-import { ProcessSection } from '../components/landing/ProcessSection';
-import { ForensicGraphSection } from '../components/landing/ForensicGraphSection';
-import { DiagnosisSection } from '../components/landing/DiagnosisSection';
-import { ProofReplaySection } from '../components/landing/ProofReplaySection';
-import { FailureAtlasSection } from '../components/landing/FailureAtlasSection';
-import { GuardianSection } from '../components/landing/GuardianSection';
-import { LiveLabPreviewSection } from '../components/landing/LiveLabPreviewSection';
-import { CapabilitiesSection } from '../components/landing/CapabilitiesSection';
-import { FaqSection } from '../components/landing/FaqSection';
-import { FinalCtaSection } from '../components/landing/FinalCtaSection';
-import { LandingFooter } from '../components/landing/LandingFooter';
-import { ScrollTelemetryHud } from '../components/landing/ScrollTelemetryHud';
 import { AuthModal } from '../components/auth/AuthModal';
 
+import { ArchitecturalFrame } from '../components/landing/ArchitecturalFrame';
+import { Chapter01Trace } from '../components/landing/Chapter01Trace';
+import { Chapter02Run } from '../components/landing/Chapter02Run';
+import { Chapter03Failure } from '../components/landing/Chapter03Failure';
+import { Chapter04Cause } from '../components/landing/Chapter04Cause';
+import { Chapter05Proof } from '../components/landing/Chapter05Proof';
+import { Chapter06Pattern } from '../components/landing/Chapter06Pattern';
+import { Chapter07Control } from '../components/landing/Chapter07Control';
+import { Chapter08Destination } from '../components/landing/Chapter08Destination';
+
 export const LandingPage: React.FC = () => {
-  const { openAuthModal } = useAuth();
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   useEffect(() => {
     document.title = 'BLACK BOX — AI Agent Flight Recorder';
     startSmoothScroll();
   }, []);
 
+  const handleOpenAuth = () => {
+    openAuthModal('/overview');
+  };
+
+  const handleExploreRun = () => {
+    const el = document.getElementById('ch-02');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#05070b] text-[#e5e7eb] relative selection:bg-cyan-500/20 selection:text-cyan-300 font-sans">
-      {/* Hairline Editorial Framing Rails */}
-      <div className="fixed inset-y-0 left-0 w-px bg-white/[0.04] pointer-events-none z-30" />
-      <div className="fixed inset-y-0 right-0 w-px bg-white/[0.04] pointer-events-none z-30" />
+      {/* Persistent Architectural Framing Rails & Top Navigation */}
+      <ArchitecturalFrame
+        onOpenAuth={handleOpenAuth}
+        isAuthenticated={isAuthenticated}
+      />
 
-      {/* Real-time Flight Telemetry HUD & Scroll Laser */}
-      <ScrollTelemetryHud />
-
-      {/* Top Architectural Navigation */}
-      <LandingNav onOpenAuth={() => openAuthModal('/overview')} />
-
-      {/* Main Narrative Progression */}
+      {/* Unified 8-Chapter Continuous Forensic Investigation Sequence */}
       <main className="relative z-10">
-        {/* Section 1: Hero with Signature Living Trace */}
-        <LandingHero onOpenAuth={() => openAuthModal('/overview')} />
-
-        {/* Section 2: The Failure (Error != Cause) */}
-        <FailureSection />
-
-        {/* Section 3: Record -> Diagnose -> Prove -> Fix */}
-        <ProcessSection />
-
-        {/* Section 4: Forensic Execution Graph */}
-        <ForensicGraphSection />
-
-        {/* Section 5: Diagnosis & Evidence */}
-        <DiagnosisSection />
-
-        {/* Section 6: Proof & Counterfactual Replay */}
-        <ProofReplaySection />
-
-        {/* Section 7: Failure Atlas Constellation */}
-        <FailureAtlasSection />
-
-        {/* Section 8: Guardian Autonomous Safety Brake */}
-        <GuardianSection />
-
-        {/* Section 9: Live Lab Staged Benchmark Preview */}
-        <LiveLabPreviewSection />
-
-        {/* Section 10: System Architecture & Capabilities */}
-        <CapabilitiesSection />
-
-        {/* Section 11: Technical FAQ */}
-        <FaqSection />
-
-        {/* Section 12: Final Memorable CTA */}
-        <FinalCtaSection onOpenAuth={() => openAuthModal('/overview')} />
+        <Chapter01Trace onOpenAuth={handleOpenAuth} onExploreClick={handleExploreRun} />
+        <Chapter02Run />
+        <Chapter03Failure />
+        <Chapter04Cause />
+        <Chapter05Proof />
+        <Chapter06Pattern />
+        <Chapter07Control />
+        <Chapter08Destination onOpenAuth={handleOpenAuth} isAuthenticated={isAuthenticated} />
       </main>
 
-      {/* Minimal Footer */}
-      <LandingFooter />
-
-      {/* Global Auth Dialog */}
+      {/* Global Auth Modal Dialog */}
       <AuthModal />
     </div>
   );
