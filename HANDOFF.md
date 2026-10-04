@@ -5,7 +5,7 @@
   3-person voiceover `docs/VOICEOVER.md`. Recorder + editor scripts live in the session scratchpad (`record_full.js`,
   `edit.py`: segment log → waits ~2 s at 8-16x, results held to reach exactly 5:00).
 - **Round 1 run sheet + Q&A:** `docs/ROUND1_RUNBOOK.md`. **PyPI:** `docs/PUBLISHING.md` (built + verified; needs your
-  PyPI token; `agent-blackbox` was free).
+  PyPI token; `halfabyte-blackbox` was free).
 - **Fixed today from frame-by-frame review (#56–#65):** demo case list emptied by a test (cache now per store);
   engines' premature `done` (empty causal table, cut-off crash test); streams now reconnect; hard-coded values
   removed (PROVED, regressions "0", run ids, question text, invented placeholders); evidence said every search

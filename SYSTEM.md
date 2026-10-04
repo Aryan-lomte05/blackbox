@@ -60,7 +60,7 @@ Black Box is **not a standalone app. It is a subsystem you add to an
 existing agent project.** By the pitch (tomorrow, 4 pm) it must be:
 
 ```bash
-pip install agent-blackbox[all]        # name TBC; import name: blackbox
+pip install "halfabyte-blackbox[all]"   # import name: blackbox
 ```
 
 and work on a project we did not write. There are three ways in, from least

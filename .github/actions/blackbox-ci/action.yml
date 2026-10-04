@@ -14,7 +14,7 @@ inputs:
     default: ""
   install:
     description: pip install target for Black Box.
-    default: "agent-blackbox"
+    default: "halfabyte-blackbox"
   comment:
     description: Post the report as a pull request comment.
     default: "true"
