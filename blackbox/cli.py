@@ -84,11 +84,39 @@ def cmd_ui(args) -> int:
     except ImportError:
         print("the UI needs the extra: pip install 'agent-blackbox[ui]'", file=sys.stderr)
         return 2
+    import threading
+
     from blackbox.api.main import create_app
 
     print(f"Black Box on http://{args.host}:{args.port}  (data: {args.data})")
+    threading.Thread(target=_warm_caches, args=(args.host, args.port), daemon=True).start()
     uvicorn.run(create_app(Store(args.data), examples=True), host=args.host, port=args.port)
     return 0
+
+
+WARM_PATHS = ("/api/status", "/api/dataset", "/api/ui/overview", "/api/cases")
+
+
+def _warm_caches(host: str, port: int) -> None:
+    """Once the server answers, request the slow-to-compute pages once, so the first visitor gets them at once."""
+    import time
+    import urllib.request
+
+    base = f"http://{'127.0.0.1' if host in ('0.0.0.0', '::') else host}:{port}"
+    for _ in range(120):
+        try:
+            urllib.request.urlopen(base + "/api/health", timeout=5).read()
+            break
+        except OSError:
+            time.sleep(1)
+    else:
+        return
+    for path in WARM_PATHS:
+        try:
+            urllib.request.urlopen(base + path, timeout=300).read()
+        except OSError as exc:
+            print(f"cache warm-up: {path} failed ({exc})", file=sys.stderr)
+    print("caches warm: status, dataset, overview, cases", file=sys.stderr)
 
 
 def _export_test(args) -> int:
