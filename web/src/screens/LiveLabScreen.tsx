@@ -427,29 +427,29 @@ export const LiveLabScreen: React.FC = () => {
             />
             <KPI
               label="GUILTY STEP"
-              value={`STEP ${scorecard?.guilty_step ?? 4}`}
+              value={scorecard?.guilty_step !== undefined ? `STEP ${scorecard.guilty_step}` : '—'}
               context={scorecard?.mistake ? `Plant: ${scorecard.mistake}` : 'Tool fault isolated'}
               variant="guilty"
             />
             <KPI
               label="REPLAY SAVINGS"
-              value={scorecard?.reused_steps ?? 32}
-              unit="reused"
-              context={`${scorecard?.reran_steps ?? 9} steps re-run`}
+              value={scorecard?.reused_steps !== undefined ? scorecard.reused_steps : '—'}
+              unit={scorecard?.reused_steps !== undefined ? "reused" : undefined}
+              context={scorecard?.reran_steps !== undefined ? `${scorecard.reran_steps} steps re-run` : undefined}
             />
             <KPI
               label="TOTAL DURATION"
-              value={scorecard?.time ? `${scorecard.time.toFixed(1)}s` : '18.4s'}
+              value={scorecard?.time ? `${scorecard.time.toFixed(1)}s` : '—'}
               context="local 7B end-to-end"
             />
           </div>
 
           <div className="panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <SavingsMeter
-              reranSteps={scorecard?.reran_steps ?? 9}
-              totalSteps={(scorecard?.reused_steps ?? 32) + (scorecard?.reran_steps ?? 9)}
-              modelCalls={0}
-              tokensSaved={1526}
+              reranSteps={scorecard?.reran_steps ?? 0}
+              totalSteps={(scorecard?.reused_steps ?? 0) + (scorecard?.reran_steps ?? 0)}
+              modelCalls={scorecard?.model_calls ?? 0}
+              tokensSaved={scorecard?.tokens_saved ?? 0}
             />
 
             {brokenRunId && (

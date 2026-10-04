@@ -21,14 +21,15 @@ export const OverviewScreen: React.FC = () => {
   });
 
   const kpis = data?.kpis || {};
-  const totalRuns = kpis.runs ?? 5653;
-  const totalSteps = kpis.steps ?? 56122;
-  const labelledFailures = kpis.labelled_failures ?? 859;
-  const provedCauses = Math.round(labelledFailures * 0.924);
-  const openIncidents = kpis.open_incidents ?? 8;
-  const criticalIncidents = kpis.critical_incidents ?? 5;
-  const dedupRatio = kpis.save_point_dedup ?? 0.801;
-  const blobMb = kpis.blob_mb ?? 22.2;
+  const totalRuns = kpis.runs !== undefined ? kpis.runs.toLocaleString() : (isLoading ? '—' : '0');
+  const totalSteps = kpis.steps !== undefined ? kpis.steps.toLocaleString() : (isLoading ? '—' : '0');
+  const labelledFailures = kpis.labelled_failures !== undefined ? kpis.labelled_failures.toLocaleString() : (isLoading ? '—' : '0');
+  const openIncidents = kpis.open_incidents !== undefined ? kpis.open_incidents.toString() : (isLoading ? '—' : '0');
+  const criticalIncidents = kpis.critical_incidents !== undefined ? kpis.critical_incidents : 0;
+  const dedupRatio = kpis.save_point_dedup !== undefined ? Math.round(kpis.save_point_dedup * 100) : null;
+  const blobMb = kpis.blob_mb !== undefined ? kpis.blob_mb : null;
+  const passedCount = kpis.passed !== undefined ? kpis.passed.toLocaleString() : '—';
+  const failedCount = kpis.failed !== undefined ? kpis.failed.toLocaleString() : '—';
 
   // Filter recent failures from recent_runs or recent_failures
   const failuresList = (data?.recent_runs || data?.recent_failures || [])
@@ -69,25 +70,25 @@ export const OverviewScreen: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KPI
           label="RECORDED RUNS"
-          value={totalRuns.toLocaleString()}
-          context={`${totalSteps.toLocaleString()} recorded steps`}
+          value={totalRuns}
+          context={totalSteps !== '—' ? `${totalSteps} recorded steps` : undefined}
         />
         <KPI
           label="LABELLED FAILURES"
-          value={labelledFailures.toLocaleString()}
+          value={labelledFailures}
           context="ground truth test suite"
           variant="guilty"
         />
         <KPI
-          label="PROVED CAUSES"
-          value={provedCauses.toLocaleString()}
-          context="92.4% verified via replay"
+          label="STORAGE DEDUP"
+          value={dedupRatio !== null ? `${dedupRatio}%` : '—'}
+          context="immutable DAG save points"
           variant="ok"
         />
         <KPI
           label="OPEN INCIDENTS"
-          value={openIncidents.toString()}
-          context={`${criticalIncidents} requiring human approval`}
+          value={openIncidents}
+          context={criticalIncidents > 0 ? `${criticalIncidents} requiring human approval` : 'Active fleet protection'}
           variant={criticalIncidents > 0 ? 'trail' : 'default'}
         />
       </div>
@@ -97,15 +98,15 @@ export const OverviewScreen: React.FC = () => {
         <div className="flex items-center gap-2.5 text-xs font-mono text-[var(--info)]">
           <HardDrive className="w-4 h-4 shrink-0" />
           <span>
-            {Math.round(dedupRatio * 100)}% save-point deduplication · {blobMb} MB storage footprint · zero tokens spent on cached replays
+            {dedupRatio !== null ? `${dedupRatio}% save-point deduplication` : 'Telemetry deduplication active'} · {blobMb !== null ? `${blobMb} MB storage footprint` : 'Active DAG storage'} · zero tokens spent on cached replays
           </span>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono text-[var(--faint)]">
           <span>RUN STATUS:</span>
-          <span className="text-[var(--ok)] font-semibold">{kpis.passed ?? 2490} PASS</span>
+          <span className="text-[var(--ok)] font-semibold">{passedCount} PASS</span>
           <span>·</span>
-          <span className="text-[var(--guilty)] font-semibold">{kpis.failed ?? 3132} FAIL</span>
+          <span className="text-[var(--guilty)] font-semibold">{failedCount} FAIL</span>
         </div>
       </div>
 

@@ -10,15 +10,17 @@ export const CheckerScreen: React.FC = () => {
   });
 
   const counts = status?.counts || {};
-  const stepsCount = counts.steps ? counts.steps.toLocaleString() : (isLoading ? '—' : '56,856');
-  const runsCount = counts.runs ? counts.runs.toLocaleString() : (isLoading ? '—' : '5,735');
-  const alarmsCount = counts.labelled_failures ? counts.labelled_failures.toLocaleString() : (isLoading ? '—' : '863');
+  const stepsCount = counts.steps !== undefined ? counts.steps.toLocaleString() : (isLoading ? '—' : '0');
+  const runsCount = counts.runs !== undefined ? counts.runs.toLocaleString() : (isLoading ? '—' : '0');
+  const alarmsCount = counts.labelled_failures !== undefined ? counts.labelled_failures.toLocaleString() : (isLoading ? '—' : '0');
+  const passRatio = (counts.passed && counts.runs) ? `${Math.round((counts.passed / counts.runs) * 100)}%` : '—';
+  const dedupRatio = counts.save_point_dedup !== undefined ? `${Math.round(counts.save_point_dedup * 100)}%` : '—';
 
   const checkerStats = [
     { label: 'Checked Steps', value: stepsCount, note: `${runsCount} recorded runs audited` },
-    { label: 'Consistency Confidence', value: '98.4%', note: 'Fact-checker entailment alignment' },
+    { label: 'Fleet Pass Rate', value: passRatio, note: `${counts.passed?.toLocaleString() || 0} passing traces verified` },
     { label: 'Alarms Raised', value: alarmsCount, note: 'Ground-truth divergences flagged' },
-    { label: 'Average Checker Latency', value: '34ms', note: 'Real-time step invariant monitor' },
+    { label: 'Dedup Invariant', value: dedupRatio, note: 'State cache deduplication ratio' },
   ];
 
   return (

@@ -226,7 +226,7 @@ export const IncidentsScreen: React.FC = () => {
                     WHY IT HAPPENED
                   </div>
                   <div className="text-xs font-sans text-[var(--text)] leading-relaxed p-3 bg-[var(--bg)] rounded-[var(--radius-sm)] border border-[var(--line)]">
-                    {current.why || 'Step 4 returned null, propagating failure through downstream steps.'}
+                    {current.why || current.what_happened || 'Diagnostic evaluation in progress.'}
                   </div>
                 </div>
 

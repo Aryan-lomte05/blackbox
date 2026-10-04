@@ -16,11 +16,11 @@ export const ModelsScreen: React.FC = () => {
   });
 
   const totalRuns = status?.counts?.runs || overview?.kpis?.runs || 0;
-  const gnnModel = overview?.model?.name || 'gnn@35f3e605';
-  const gnnVariant = overview?.model?.variant || 'with_real_failures';
+  const gnnModel = overview?.model?.name || '—';
+  const gnnVariant = overview?.model?.variant || 'standard';
   const newTasksResults = overview?.model?.results?.test_new_tasks;
-  const top1Pct = newTasksResults ? (newTasksResults.top1 * 100).toFixed(1) : '63.4';
-  const top3Pct = newTasksResults ? (newTasksResults.top3 * 100).toFixed(1) : '79.5';
+  const top1Pct = newTasksResults ? (newTasksResults.top1 * 100).toFixed(1) : null;
+  const top3Pct = newTasksResults ? (newTasksResults.top3 * 100).toFixed(1) : null;
 
   const models = [
     {
@@ -28,8 +28,8 @@ export const ModelsScreen: React.FC = () => {
       role: 'Autonomous Diagnosis Engine',
       type: `Graph Neural Network (${gnnVariant})`,
       architecture: '3 Layers GNN · 128 Hidden · Graph Structure Features',
-      accuracy: `Top-3: ${top3Pct}% · Top-1: ${top1Pct}% (Generalization across unseen tasks)`,
-      status: 'Loaded & Calibrated',
+      accuracy: (top3Pct && top1Pct) ? `Top-3: ${top3Pct}% · Top-1: ${top1Pct}% (Generalization across unseen tasks)` : 'Calibrated on recorded runs',
+      status: overview?.model ? 'Loaded & Calibrated' : 'Standby',
       location: 'data/models/gnn.pt',
     },
     {

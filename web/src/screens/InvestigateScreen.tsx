@@ -13,39 +13,6 @@ import { SavingsMeter } from '../components/common/SavingsMeter';
 import { EmptyState } from '../components/common/EmptyState';
 import { Play, RotateCw, ArrowRight, ExternalLink, Compass } from 'lucide-react';
 
-const FALLBACK_CASES: Record<string, { run_id: string; summary: string; description: string; guilty?: number }> = {
-  model_finds_it: {
-    run_id: '37452fc329e1498f',
-    summary: "Math failure: model's #1 suspect is the guilty step",
-    description: "Planted tool fault F3 at step 4; GNN ranker puts step 4 at #1. Verify proves it.",
-    guilty: 4,
-  },
-  math_failure: {
-    run_id: '37452fc329e1498f',
-    summary: 'Calculator step failure in math problem',
-    description: 'Step 4 returned null; counterfactual replay isolates and proves the regression.',
-    guilty: 4,
-  },
-  shop_new_task_type: {
-    run_id: 'a1b2c3d4e5f67890',
-    summary: 'Shop task type unseen during training',
-    description: 'Evaluation across unseen task family; model isolates root cause with zero priors.',
-    guilty: 2,
-  },
-  model_misses_it: {
-    run_id: 'b2c3d4e5f6a17890',
-    summary: "Model misses top rank; Verify catches",
-    description: 'Guilty step is ranked #3 by model, but Verify tests all suspects and proves the true cause.',
-    guilty: 5,
-  },
-  real_failure_verified: {
-    run_id: 'c3d4e5f6a1b27890',
-    summary: 'Natural unplanted failure verified',
-    description: 'Real production agent error with no planted defect; counterfactual replay proves cause.',
-    guilty: 3,
-  },
-};
-
 export const InvestigateScreen: React.FC = () => {
   const [selectedCase, setSelectedCase] = useState<string>('model_finds_it');
 
@@ -53,18 +20,11 @@ export const InvestigateScreen: React.FC = () => {
   const { data: casesData, isLoading: isCasesLoading } = useQuery<{ cases: Record<string, any> }>({
     queryKey: ['investigate-cases'],
     queryFn: async () => {
-      try {
-        return await api.get<{ cases: Record<string, any> }>('/api/cases');
-      } catch {
-        return { cases: FALLBACK_CASES };
-      }
+      return await api.get<{ cases: Record<string, any> }>('/api/cases');
     },
   });
 
-  const availableCases = casesData?.cases && Object.keys(casesData.cases).length > 0
-    ? casesData.cases
-    : FALLBACK_CASES;
-
+  const availableCases = casesData?.cases || {};
   const currentCaseInfo = availableCases[selectedCase] || Object.values(availableCases)[0];
 
   // 2. Investigate mutation calling POST /api/investigate/{case}
@@ -100,9 +60,9 @@ export const InvestigateScreen: React.FC = () => {
   });
 
   const guiltyStep = result?.case?.known_guilty_step ?? result?.verification?.verified_cause ?? result?.diagnosis?.top3?.[0] ?? currentCaseInfo?.guilty;
-  const reUsed = result?.verification?.steps_re_used_total ?? 32;
-  const reRan = result?.verification?.steps_re_run_total ?? 9;
-  const elapsedSec = result?.seconds ?? 1.84;
+  const reUsed = result?.verification?.steps_re_used_total ?? 0;
+  const reRan = result?.verification?.steps_re_run_total ?? 0;
+  const elapsedSec = result?.seconds !== undefined ? result.seconds : 0;
 
   return (
     <div className="space-y-8 pb-20">

@@ -79,8 +79,8 @@ export const Sidebar: React.FC = () => {
   const machineLines: string[] = status?.machine || [];
   const gpuLine = machineLines.find((l) => l.toLowerCase().includes('gpu')) || '';
   const counts = status?.counts || overview?.kpis || {};
-  const totalRuns = counts.runs ? Number(counts.runs).toLocaleString() : '5,735';
-  const totalMb = counts.blob_mb ? `${counts.blob_mb}MB` : '22MB';
+  const totalRuns = counts.runs ? Number(counts.runs).toLocaleString() : '—';
+  const totalMb = counts.blob_mb ? `${counts.blob_mb}MB` : '—';
   const queueLen = status?.queue?.length ?? 0;
 
   return (

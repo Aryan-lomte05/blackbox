@@ -20,7 +20,7 @@ export const AtlasScreen: React.FC = () => {
   });
 
   const patterns: AtlasPattern[] = data?.patterns || [];
-  const totalFailures = data?.total_failures ?? 859;
+  const totalFailures = data?.total_failures !== undefined ? data.total_failures : (isLoading ? '—' : 0);
 
   const families = useMemo(() => {
     const set = new Set<string>();

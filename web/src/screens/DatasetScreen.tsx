@@ -14,15 +14,24 @@ export const DatasetScreen: React.FC = () => {
     },
   });
 
+  const { data: overview } = useQuery<any>({
+    queryKey: ['overview-telemetry'],
+    queryFn: async () => {
+      return await api.get<any>('/api/ui/overview');
+    },
+  });
+
   const summary = data?.summary || {};
   const storage = data?.storage || {};
   const health = data?.health_by_family || {};
   const reportCard = data?.model_report_card || {};
+  const modelResults = overview?.model?.results || {};
 
-  const totalRuns = summary.runs ?? 5653;
-  const labelledTotal = summary.labelled_failures ?? 859;
-  const dedupRatio = storage.save_point_dedup ?? 0.801;
-  const blobMb = storage.blob_mb ?? 22.23;
+  const totalRuns = summary.runs !== undefined ? summary.runs.toLocaleString() : (isLoading ? '—' : '0');
+  const labelledTotal = summary.labelled_failures !== undefined ? summary.labelled_failures.toLocaleString() : (isLoading ? '—' : '0');
+  const dedupRatio = storage.save_point_dedup !== undefined ? Math.round(storage.save_point_dedup * 100) : null;
+  const blobMb = storage.blob_mb !== undefined ? storage.blob_mb : null;
+  const savePoints = storage.save_points !== undefined ? storage.save_points.toLocaleString() : (isLoading ? '—' : '0');
 
   return (
     <div className="space-y-8 pb-24">
@@ -48,24 +57,24 @@ export const DatasetScreen: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KPI
           label="TOTAL TRACES"
-          value={totalRuns.toLocaleString()}
-          context={`${storage.save_points ?? 56122} execution states`}
+          value={totalRuns}
+          context={`${savePoints} execution states`}
         />
         <KPI
           label="GROUND TRUTH CAUSES"
-          value={labelledTotal.toLocaleString()}
+          value={labelledTotal}
           context="injected + verified labels"
           variant="guilty"
         />
         <KPI
           label="STORAGE DEDUPLICATION"
-          value={`${Math.round(dedupRatio * 100)}%`}
+          value={dedupRatio !== null ? `${dedupRatio}%` : '—'}
           context="immutable DAG save points"
           variant="ok"
         />
         <KPI
           label="DATABASE FOOTPRINT"
-          value={`${blobMb} MB`}
+          value={blobMb !== null ? `${blobMb} MB` : '—'}
           context="total compressed blob storage"
         />
       </div>
@@ -143,29 +152,40 @@ export const DatasetScreen: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)] font-mono text-xs">
-                  {[
-                    { split: 'test_known', n: 67, top1: '59.7%', top3: '82.1%', note: 'Planted mistakes on known tasks' },
-                    { split: 'test_new_tasks', n: 112, top1: '63.4%', top3: '79.5%', note: 'Unseen task families' },
-                    { split: 'test_natural', n: 17, top1: '0.0%', top3: '23.5%', note: 'Natural failures (experimentally labelled)' },
-                  ].map((row) => (
-                    <tr key={row.split} className="hover:bg-[var(--raised)]/40 transition-colors">
-                      <td className="py-2.5 px-4 font-bold text-[var(--text-strong)] font-mono">
-                        {row.split}
-                      </td>
-                      <td className="py-2.5 px-4 text-right tabular-nums text-[var(--faint)]">
-                        {row.n}
-                      </td>
-                      <td className="py-2.5 px-4 text-right tabular-nums text-[var(--ok)] font-semibold">
-                        {row.top1}
-                      </td>
-                      <td className="py-2.5 px-4 text-right tabular-nums text-[var(--ok)] font-semibold">
-                        {row.top3}
-                      </td>
-                      <td className="py-2.5 px-4 font-sans text-xs text-[var(--muted)]">
-                        {row.note}
+                  {Object.keys(modelResults).length > 0 ? (
+                    Object.entries(modelResults).map(([splitName, splitData]: [string, any]) => {
+                      const note = splitName === 'test_known'
+                        ? 'Planted mistakes on known tasks'
+                        : splitName === 'test_new_tasks'
+                        ? 'Unseen task families'
+                        : 'Natural failures (experimentally labelled)';
+                      return (
+                        <tr key={splitName} className="hover:bg-[var(--raised)]/40 transition-colors">
+                          <td className="py-2.5 px-4 font-bold text-[var(--text-strong)] font-mono">
+                            {splitName}
+                          </td>
+                          <td className="py-2.5 px-4 text-right tabular-nums text-[var(--faint)]">
+                            {splitData.n}
+                          </td>
+                          <td className="py-2.5 px-4 text-right tabular-nums text-[var(--ok)] font-semibold">
+                            {(splitData.top1 * 100).toFixed(1)}%
+                          </td>
+                          <td className="py-2.5 px-4 text-right tabular-nums text-[var(--ok)] font-semibold">
+                            {(splitData.top3 * 100).toFixed(1)}%
+                          </td>
+                          <td className="py-2.5 px-4 font-sans text-xs text-[var(--muted)]">
+                            {note}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-4 text-center text-[var(--muted)] font-mono text-xs">
+                        {isLoading ? 'Loading benchmark splits...' : 'No benchmark splits evaluated.'}
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

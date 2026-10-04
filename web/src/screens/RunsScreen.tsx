@@ -73,7 +73,7 @@ export const RunsScreen: React.FC = () => {
         status: statusText,
         run_id: r.run_id,
         task: taskName,
-        agent: r.agent || 'agent-small',
+        agent: r.agent || r.model_id || '—',
         steps: stepsCount,
         duration: durationStr,
         mistake_type: mistake,

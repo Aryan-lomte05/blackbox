@@ -216,17 +216,19 @@ export const CausalScreen: React.FC = () => {
               <MonoLabel index="02" label="DOWNSTREAM BLAST RADIUS" />
               {blastRadius && (
                 <span className="text-[10px] font-mono text-[var(--faint)]">
-                  {contaminatedSteps.length} OF {blastRadius.of_later_steps ?? 9} STEPS CONTAMINATED
+                  {contaminatedSteps.length} OF {blastRadius.of_later_steps ?? contaminatedSteps.length} STEPS CONTAMINATED
                 </span>
               )}
             </div>
 
             <div className="panel p-4 space-y-3">
               <div className="flex items-center gap-1.5 overflow-x-auto pb-2" data-lenis-prevent>
-                {Array.from({ length: 14 }).map((_, idx) => {
+                {Array.from({
+                  length: report?.total_steps || (blastRadius ? Math.max(...contaminatedSteps, ...moneySteps, (report?.root_cause_step ?? 0)) + 1 : 0),
+                }).map((_, idx) => {
                   const isContaminated = contaminatedSteps.includes(idx);
                   const isMoney = moneySteps.includes(idx);
-                  const isRoot = idx === 4;
+                  const isRoot = idx === (report?.root_cause_step ?? (report?.single || []).find((r: any) => r.necessary)?.step);
 
                   let barStyle = 'bg-[var(--raised)] border-[var(--line)] text-[var(--faint)]';
                   if (isMoney) {

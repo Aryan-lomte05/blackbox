@@ -100,8 +100,8 @@ export const CrashTestScreen: React.FC = () => {
     }
   };
 
-  const starsCount = summary?.stars ?? 5;
-  const scorePercent = summary?.score !== undefined ? Math.round(summary.score * 100) : 100;
+  const starsCount = summary?.stars ?? 0;
+  const scorePercent = summary?.score !== undefined ? Math.round(summary.score * 100) : 0;
   const weakAgainstList: string[] = summary?.weak_against || [];
 
   return (

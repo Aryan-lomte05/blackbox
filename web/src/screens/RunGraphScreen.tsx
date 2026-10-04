@@ -124,9 +124,9 @@ export const RunGraphScreen: React.FC = () => {
   }, [verifyEvents]);
 
   // Contamination trail and suspects
-  const suspectsList: number[] = diagnosis?.suspects || graphData?.suspects || [4, 12, 0];
-  const guiltyStep = graphData?.guilty_step ?? runData?.run?.label?.root_cause_step ?? 4;
-  const trailSteps = graphData?.contamination_trail || [5, 6, 7, 8, 9, 10, 11, 12, 13];
+  const suspectsList: number[] = diagnosis?.suspects || graphData?.suspects || [];
+  const guiltyStep = graphData?.guilty_step ?? runData?.run?.label?.root_cause_step;
+  const trailSteps = graphData?.contamination_trail || [];
 
   const handleStepSelect = (idx: number) => {
     setSelectedStepIdx(idx);
@@ -318,9 +318,9 @@ export const RunGraphScreen: React.FC = () => {
 
             <div className="panel p-4 space-y-3">
               {suspectsList.map((stepIdx, rankIdx) => {
-                const isTop = rankIdx === 0;
                 const isTrueGuilty = stepIdx === guiltyStep;
-                const pVal = isTop ? 0.758 : rankIdx === 1 ? 0.198 : 0.044;
+                const scoreObj = (diagnosis?.scores || []).find((s: any) => s.idx === stepIdx);
+                const pVal = scoreObj?.p !== undefined ? scoreObj.p : (1 / (rankIdx + 1));
 
                 return (
                   <div
@@ -346,7 +346,7 @@ export const RunGraphScreen: React.FC = () => {
                       </div>
 
                       <span className="font-mono text-xs text-[var(--muted)] tabular-nums">
-                        p = {pVal.toFixed(3)}
+                        {scoreObj?.p !== undefined ? `p = ${pVal.toFixed(3)}` : `rank #${rankIdx + 1}`}
                       </span>
                     </div>
 
@@ -390,19 +390,8 @@ export const RunGraphScreen: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="space-y-2 text-[var(--muted)] leading-relaxed">
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-[var(--guilty)] font-bold">›</span>
-                    <span>Step 4 tool execution returned empty string.</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-[var(--trail)] font-bold">›</span>
-                    <span>The final answer directly depends on step 4 output across 9 subsequent steps.</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-[var(--faint)] font-bold">›</span>
-                    <span>No downstream error was raised; mathematical drift propagated to final response.</span>
-                  </div>
+                <div className="p-3 text-xs font-mono text-[var(--faint)]">
+                  {isDiagnosisLoading ? 'Loading forensic analysis...' : 'No forensic evidence sentences recorded for this run.'}
                 </div>
               )}
             </div>

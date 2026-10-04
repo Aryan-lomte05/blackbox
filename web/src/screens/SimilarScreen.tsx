@@ -24,10 +24,10 @@ export const SimilarScreen: React.FC = () => {
 
   const fingerprint = data?.fingerprint;
   const isNovel = data?.novel === true;
-  const sameCount = data?.same_fingerprint ?? 14;
-  const libSize = data?.library_size ?? 858;
-  const causesMap = data?.same_fingerprint_causes || { F3: 14 };
-  const primaryFault = Object.keys(causesMap)[0] || 'F3';
+  const sameCount = data?.same_fingerprint !== undefined ? data.same_fingerprint : (isLoading ? '—' : 0);
+  const libSize = data?.library_size !== undefined ? data.library_size : (isLoading ? '—' : 0);
+  const causesMap = data?.same_fingerprint_causes || {};
+  const primaryFault = Object.keys(causesMap)[0] || '—';
 
   return (
     <div className="space-y-8 pb-24">

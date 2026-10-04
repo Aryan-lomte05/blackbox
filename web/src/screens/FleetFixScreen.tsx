@@ -69,10 +69,10 @@ export const FleetFixScreen: React.FC = () => {
       } else if (evt.type === 'done') {
         const res = d.result || d;
         setFinalVerdict({
-          verdict: res.verdict || 'APPROVE',
-          failureBefore: res.failure_rate_before ?? 0.67,
-          failureAfter: res.failure_rate_after ?? 0.33,
-          why: res.why || 'Failure rate dropped below tolerance threshold without breaking passing runs.',
+          verdict: res.verdict || (res.failure_rate_after < res.failure_rate_before ? 'APPROVE' : 'REJECT'),
+          failureBefore: res.failure_rate_before !== undefined ? res.failure_rate_before : 0,
+          failureAfter: res.failure_rate_after !== undefined ? res.failure_rate_after : 0,
+          why: res.why || '',
         });
       }
     });
