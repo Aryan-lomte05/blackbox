@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { api, ApiError } from '../lib/api';
+import { useDemoRuns } from '../lib/demoRuns';
 import { useJobStream } from '../lib/stream';
 import { MonoLabel } from '../components/common/MonoLabel';
 import { RecMark } from '../components/common/RecMark';
@@ -21,9 +22,14 @@ interface FleetRow {
 
 export const FleetFixScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '37452fc329e1498f';
+  const initialRunId = searchParams.get('run') || searchParams.get('run_id') || '';
 
   const [runId, setRunId] = useState(initialRunId);
+  const demo = useDemoRuns();
+  useEffect(() => {
+    if (!runId && demo.failed) setRunId(demo.failed);  // a real failed run from the API's showcase
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo.failed]);
   const [ruleText, setRuleText] = useState('');
   const [nFail, setNFail] = useState(4);
   const [nPass, setNPass] = useState(3);
