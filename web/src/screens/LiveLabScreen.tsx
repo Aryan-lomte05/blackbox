@@ -84,7 +84,8 @@ export const LiveLabScreen: React.FC = () => {
         n: d.n,
         title: d.title || `Stage ${d.n}`,
         detail: d.detail || '',
-        t: d.t,
+        // the job layer stamps events with wall-clock seconds: show time since this run's first event
+        t: typeof d.t === 'number' && typeof events[0]?.data?.t === 'number' ? d.t - events[0].data.t : undefined,
         data: d.data,
       };
 

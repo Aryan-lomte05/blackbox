@@ -47,6 +47,26 @@ def guess_family(question: str) -> str:
     return "math" if _MATHY.search(question) and _MATH_WORDS.search(question) else "qa"
 
 
+_STOPWORDS = frozenset(
+    "a an the i im i'm me my mine we our you your he she it its they them their is am are was were be been being do "
+    "does did have has had should would could can will shall may might must to of in on at by for from with about "
+    "into over under than then so and or but if not no yes what which who whom whose when where why how this that "
+    "these those there here away there's it's go going get got make made way faster fast slower more most less very "
+    "just also too only some any much many".split())
+
+
+def search_queries(question: str) -> list[str]:
+    """Wikipedia queries from exact to forgiving: the question; its content words, dropping the last one at a time
+    down to the first two (the topic usually comes first: "car wash dirty walk" -> "car wash"); any content word."""
+    words = [w.strip(".,?!:;\"'()").lower() for w in question.split()]
+    keywords = list(dict.fromkeys(w for w in words if len(w) >= 3 and w not in _STOPWORDS
+                                  and not any(c.isdigit() for c in w)))
+    out = [question.strip()]
+    out += [" ".join(keywords[:n]) for n in range(len(keywords), 1, -1)]
+    # No "any word" fallback: it finds pages that share one word with the question and feeds the agent noise.
+    return [q for q in dict.fromkeys(out) if q]
+
+
 def wikipedia_paragraphs(question: str, k: int = 8) -> list[dict]:
     """Lead paragraphs of the top Wikipedia articles for the question (the QA agent's knowledge)."""
     def get(params: dict) -> dict:
@@ -55,8 +75,12 @@ def wikipedia_paragraphs(question: str, k: int = 8) -> list[dict]:
         with urllib.request.urlopen(req, timeout=15) as r:
             return json.load(r)
 
-    hits = get({"action": "query", "list": "search", "srsearch": question, "srlimit": k})["query"]["search"]
-    titles = [h["title"] for h in hits]
+    titles: list[str] = []
+    for query in search_queries(question):  # a conversational question rarely matches every word: broaden
+        hits = get({"action": "query", "list": "search", "srsearch": query, "srlimit": k})["query"]["search"]
+        titles = [h["title"] for h in hits]
+        if titles:
+            break
     if not titles:
         return []
     pages = get({"action": "query", "prop": "extracts", "exintro": 1, "explaintext": 1,
@@ -102,7 +126,9 @@ def run_lab(question: str = "", *, family: str | None = None, mistake: str = "au
     if family == "qa":
         paragraphs = wikipedia_paragraphs(question)
         if not paragraphs:
-            raise ValueError("Wikipedia returned nothing for this question; try rephrasing it")
+            raise ValueError("No Wikipedia article matches this question. The QA agent answers from encyclopedia "
+                             "articles: ask about a person, place, organisation or event (e.g. \"Who founded Canada Goose?\"), "
+                             "or a word problem with numbers for the math agent.")
         task = Task("qa", task_id, {"question": question, "paragraphs": paragraphs}, expected={"answer": None})
         stage(2, "Gather knowledge", f"Fetched {len(paragraphs)} Wikipedia paragraphs for the agent to search.",
               titles=[p["title"] for p in paragraphs])
