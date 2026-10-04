@@ -28,17 +28,15 @@ export const ArchitecturalFrame: React.FC<ArchitecturalFrameProps> = ({
   const [activeChapter, setActiveChapter] = useState(CHAPTERS[0]);
 
   useEffect(() => {
-    return scrollYProgress.on('change', () => {
-      for (let i = CHAPTERS.length - 1; i >= 0; i--) {
-        const el = document.getElementById(CHAPTERS[i].id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= window.innerHeight * 0.45) {
-            setActiveChapter(CHAPTERS[i]);
-            break;
-          }
-        }
-      }
+    return scrollYProgress.on('change', (p) => {
+      if (p < 0.12) setActiveChapter(CHAPTERS[0]);
+      else if (p < 0.25) setActiveChapter(CHAPTERS[1]);
+      else if (p < 0.38) setActiveChapter(CHAPTERS[2]);
+      else if (p < 0.52) setActiveChapter(CHAPTERS[3]);
+      else if (p < 0.66) setActiveChapter(CHAPTERS[4]);
+      else if (p < 0.79) setActiveChapter(CHAPTERS[5]);
+      else if (p < 0.91) setActiveChapter(CHAPTERS[6]);
+      else setActiveChapter(CHAPTERS[7]);
     });
   }, [scrollYProgress]);
 
