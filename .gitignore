@@ -3,7 +3,7 @@
 .env.*
 !.env.example
 # data + artifacts
-data/
+/data/
 *.db
 *.db-journal
 *.npy
@@ -27,3 +27,7 @@ Thumbs.db
 .vscode/
 .idea/
 
+
+# python build output
+/build/
+/dist/

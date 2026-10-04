@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[ui,agents,dev]" lightgbm shap scikit-learn
+      - run: ruff check blackbox tests --select E9,F63,F7,F82   # syntax errors / undefined names only, for now
+      - run: pytest -q -m "not live"
+
+  blackbox-ci:
+    # Dogfooding: our own agents' recorded runs are replayed against every change (docs/CI.md).
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: ./.github/actions/blackbox-ci
+        with:
+          install: -e ".[agents]"
+          comment: "false"
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: has_web
+        run: echo "present=$([ -f web/package.json ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - if: steps.has_web.outputs.present == 'yes'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - if: steps.has_web.outputs.present == 'yes'
+        run: npm ci && npm run build
+        working-directory: web
+      - if: steps.has_web.outputs.present != 'yes'
+        run: echo "no web/ yet - skipped"

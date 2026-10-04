@@ -1,0 +1,278 @@
+{
+  "summary": {
+    "runs": 5653,
+    "crashed": 11,
+    "labelled_failures": 859,
+    "natural_failures_unlabelled": 314,
+    "mistake_types": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F8",
+      "F9",
+      "F10"
+    ],
+    "by_family": {
+      "qa": 1435,
+      "math": 3357,
+      "ops": 848,
+      "trading": 9,
+      "smolagents": 4
+    },
+    "by_split": {
+      "test_new_mistakes": 3,
+      "train": 3203,
+      "none": 106,
+      "test_known": 683,
+      "calib": 451,
+      "test_new_tasks": 846,
+      "val": 361
+    },
+    "labelled_by_split": {
+      "train": 515,
+      "calib": 76,
+      "val": 70,
+      "test_known": 71,
+      "none": 4,
+      "test_new_tasks": 123
+    },
+    "labelled_by_source": {
+      "injected": 815,
+      "verified": 44
+    },
+    "machines": {
+      "aryan-4060": 5653
+    }
+  },
+  "health_by_family": {
+    "math": {
+      "runs": 3357,
+      "clean": 2176,
+      "clean_passed": 558,
+      "clean_failed": 1615,
+      "crashed": 4,
+      "labelled": 407,
+      "steps_mean": 10.6,
+      "faults": {
+        "F1": {
+          "runs": 171,
+          "failed": 69,
+          "recovered": 102,
+          "crashed": 0,
+          "flip_pct": 40.4
+        },
+        "F2": {
+          "runs": 195,
+          "failed": 63,
+          "recovered": 132,
+          "crashed": 0,
+          "flip_pct": 32.3
+        },
+        "F3": {
+          "runs": 196,
+          "failed": 17,
+          "recovered": 179,
+          "crashed": 0,
+          "flip_pct": 8.7
+        },
+        "F6": {
+          "runs": 619,
+          "failed": 225,
+          "recovered": 393,
+          "crashed": 1,
+          "flip_pct": 36.4
+        }
+      }
+    },
+    "ops": {
+      "runs": 848,
+      "clean": 607,
+      "clean_passed": 158,
+      "clean_failed": 447,
+      "crashed": 2,
+      "labelled": 123,
+      "steps_mean": 9.3,
+      "faults": {
+        "F1": {
+          "runs": 19,
+          "failed": 16,
+          "recovered": 3,
+          "crashed": 0,
+          "flip_pct": 84.2
+        },
+        "F3": {
+          "runs": 137,
+          "failed": 72,
+          "recovered": 65,
+          "crashed": 0,
+          "flip_pct": 52.6
+        },
+        "F6": {
+          "runs": 85,
+          "failed": 24,
+          "recovered": 61,
+          "crashed": 0,
+          "flip_pct": 28.2
+        }
+      }
+    },
+    "qa": {
+      "runs": 1435,
+      "clean": 561,
+      "clean_passed": 286,
+      "clean_failed": 273,
+      "crashed": 2,
+      "labelled": 329,
+      "steps_mean": 8.7,
+      "faults": {
+        "F4": {
+          "runs": 191,
+          "failed": 113,
+          "recovered": 78,
+          "crashed": 0,
+          "flip_pct": 59.2
+        },
+        "F5": {
+          "runs": 183,
+          "failed": 26,
+          "recovered": 157,
+          "crashed": 0,
+          "flip_pct": 14.2
+        },
+        "F6": {
+          "runs": 497,
+          "failed": 190,
+          "recovered": 307,
+          "crashed": 0,
+          "flip_pct": 38.2
+        },
+        "F8": {
+          "runs": 1,
+          "failed": 0,
+          "recovered": 1,
+          "crashed": 0,
+          "flip_pct": 0.0
+        },
+        "F9": {
+          "runs": 1,
+          "failed": 0,
+          "recovered": 1,
+          "crashed": 0,
+          "flip_pct": 0.0
+        },
+        "F10": {
+          "runs": 1,
+          "failed": 0,
+          "recovered": 1,
+          "crashed": 0,
+          "flip_pct": 0.0
+        }
+      }
+    },
+    "smolagents": {
+      "runs": 4,
+      "clean": 4,
+      "clean_passed": 4,
+      "clean_failed": 0,
+      "crashed": 0,
+      "labelled": 0,
+      "steps_mean": 6.0,
+      "faults": {}
+    },
+    "trading": {
+      "runs": 9,
+      "clean": 9,
+      "clean_passed": 1,
+      "clean_failed": 5,
+      "crashed": 3,
+      "labelled": 0,
+      "steps_mean": 6.2,
+      "faults": {}
+    }
+  },
+  "model_report_card": {
+    "agent-local-7b": {
+      "runs": 5640,
+      "clean_runs": 1030,
+      "clean_pass_rate": 0.6544,
+      "clean_pass_rate_by_family": {
+        "math": 0.6622,
+        "ops": 0.8529,
+        "qa": 0.5946
+      },
+      "mean_steps": 9.4,
+      "mean_tokens_per_clean_run": 1667,
+      "planted_runs": 2295,
+      "planted_fail_rate": 0.3551,
+      "failures_by_mistake": {
+        "F1": 85,
+        "F2": 63,
+        "F3": 89,
+        "F4": 113,
+        "F5": 26,
+        "F6": 439
+      },
+      "guilty_step_position": {
+        "early": 324,
+        "middle": 183,
+        "late": 352
+      }
+    },
+    "app": {
+      "runs": 13,
+      "clean_runs": 7,
+      "clean_pass_rate": 0.7143,
+      "clean_pass_rate_by_family": {
+        "smolagents": 1,
+        "trading": 0.3333
+      },
+      "mean_steps": 6.6,
+      "mean_tokens_per_clean_run": 4322,
+      "planted_runs": 0,
+      "planted_fail_rate": null,
+      "failures_by_mistake": {},
+      "guilty_step_position": {
+        "early": 0,
+        "middle": 0,
+        "late": 0
+      }
+    }
+  },
+  "storage": {
+    "runs": 5653,
+    "steps": 56122,
+    "labelled_failures": 859,
+    "save_points": 56122,
+    "unique_save_points": 11190,
+    "blob_mb": 10.35,
+    "save_point_dedup": 0.801
+  },
+  "sources": {
+    "qa": "HotpotQA distractor questions (downloaded); every run generated by our QA agent",
+    "math": "GSM8K problems (downloaded); every run generated by our Math agent",
+    "ops": "Shop tasks generated by script; never used for training (test_new_tasks)",
+    "external": "Who&When failure logs (downloaded); outside test only"
+  },
+  "mistakes": {
+    "F1": "wrong tool argument",
+    "F2": "wrong tool result",
+    "F3": "tool returned nothing",
+    "F4": "misleading paragraph",
+    "F5": "missing paragraph",
+    "F6": "wrong fact",
+    "F7": "wrong tool",
+    "F8": "lost memory",
+    "F9": "dropped instruction",
+    "F10": "answered too early"
+  },
+  "kept_out_of_training": [
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "all Shop (ops) tasks"
+  ]
+}

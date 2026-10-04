@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-blackbox"            # PyPI name; import name: blackbox
+version = "0.1.0"
+description = "A flight recorder for AI agents: record every step, find the step that caused a failure, prove it by replay, and fix it without regressions."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Aryan Lomte" }, { name = "Radhesh" }, { name = "Aditya" }, { name = "Advay Chavan" }]
+keywords = ["ai agents", "llm", "observability", "debugging", "replay", "root cause analysis", "mcp", "evaluation"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Debuggers",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "pydantic>=2.5",
+  "pyyaml>=6",
+  "python-dotenv>=1",
+  "openai>=1.40",
+]
+
+[project.optional-dependencies]
+checker = ["laya", "system-one-adapter[openai]"]   # step-checker cascade (Laya local -> Jev -> LLM)
+jev = ["typesafe-sdk"]
+ml = ["lightgbm>=4", "scikit-learn>=1.4", "shap>=0.45", "sentence-transformers>=3", "numpy"]
+ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "sse-starlette>=2"]
+agents = ["rank-bm25>=0.2"]                         # our test agents
+data = ["datasets>=2.18"]                           # HotpotQA / GSM8K loaders
+dev = ["pytest>=8", "ruff>=0.5"]
+all = ["agent-blackbox[checker,ml,ui,agents,data]"]
+
+[project.scripts]
+blackbox = "blackbox.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["blackbox*"]
+
+[tool.setuptools.package-data]
+"blackbox.api" = ["static/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: hits a real provider; needs keys (deselect with -m 'not live')"]
+
+[tool.ruff]
+line-length = 120

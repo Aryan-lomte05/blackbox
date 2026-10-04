@@ -1,0 +1,1065 @@
+{
+  "time": "2026-10-04T02:51:19",
+  "queue": [
+    {
+      "name": "Farm QA (150 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_qa_aryan.log",
+      "note": "399 runs, 79 labelled failures, 0 crashes"
+    },
+    {
+      "name": "Farm Math (300 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_math_aryan.log",
+      "note": "864 runs, 200 labelled failures, 0 crashes"
+    },
+    {
+      "name": "Farm Shop (100 tasks, qwen2.5:7b)",
+      "state": "done",
+      "log": "data/logs/farm_ops_aryan.log",
+      "note": "unseen task type test set (test_new_tasks)"
+    },
+    {
+      "name": "Label natural failures by experiment (40 runs, repair model qwen2.5:14b)",
+      "state": "running",
+      "log": "data/logs/label_natural_aryan.log",
+      "note": "resumed with agent-strong (free OpenRouter) as the repair model, so the local 7B stays loaded and demos stay fast; unbuffered log"
+    },
+    {
+      "name": "GNN cross-validation (5 variants x 5 folds, train+val only)",
+      "state": "done",
+      "log": "data/logs/gnn_cv.log",
+      "note": "chose graph features without message passing; final Top-1 0.607 / Top-3 0.929 on test_known"
+    },
+    {
+      "name": "Train the chosen GNN variant (5 seeds) and evaluate every test set once",
+      "state": "done",
+      "note": "Shop (never trained) Top-1 0.626 [0.53, 0.71], n=115"
+    },
+    {
+      "name": "Regenerate F8 runs made before the recorder fix (PR #15)",
+      "state": "queued",
+      "note": "or drop them from training"
+    },
+    {
+      "name": "Merge teammates' shards into this DB (Radhesh ~600 runs)",
+      "state": "queued",
+      "note": "waiting for shards on Drive"
+    },
+    {
+      "name": "Attach Black Box to an open-source agent we did not write (smolagents)",
+      "state": "done",
+      "note": "smolagents: replay 0 calls; fork flips the answer re-running 2/6 steps (PR #26)"
+    },
+    {
+      "name": "End-to-end check of every /docs use case",
+      "state": "done",
+      "note": "58/58 passed (scripts/e2e_docs.py)"
+    },
+    {
+      "name": "Guardian: incidents for operators (email / WhatsApp / outbox, approval)",
+      "state": "done",
+      "note": "PRs #27, #28; money-safety bug found with the trader bot and fixed"
+    },
+    {
+      "name": "Live Twilio / SMTP delivery test",
+      "state": "queued",
+      "note": "needs credentials in .env"
+    },
+    {
+      "name": "Re-run eval on all test sets incl. real failures",
+      "state": "queued",
+      "note": "after the labeller finishes"
+    },
+    {
+      "name": "Overnight 1: farm Math, balanced tool mistakes (offset 1100-1319)",
+      "state": "done",
+      "note": "F6         302        100       201       1    33.2\r \r shard: data\\shards\\aryan-4060_20261003T193728Z.jsonl.gz\r "
+    },
+    {
+      "name": "Overnight 2: farm QA, balanced search mistakes (offset 2300-2550)",
+      "state": "done",
+      "note": "F6         342        146       196       0    42.7\r \r shard: data\\shards\\aryan-4060_20261003T201811Z.jsonl.gz\r "
+    },
+    {
+      "name": "Overnight 3: checker (Laya) backfill on every recorded step",
+      "state": "done",
+      "note": "[monitor] tier_errors={'laya': 'RuntimeError: Expected all tensors to be on the same device, but got index is on cpu, different from other tensors on cuda:0 (when checking argument in method wrapper_CUDA__index_select)',"
+    },
+    {
+      "name": "Overnight 4: retrain diagnosis model (CV-chosen variant) + evaluate",
+      "state": "done",
+      "note": "test_known by mistake type: F1 0.11 (n=9), F2 0.40 (n=5), F3 1.00 (n=5), F4 0.69 (n=13), F5 0.00 (n=2), F6 0.70 (n=33)\r \r saved data\\models\\gnn.pt and data\\models\\gnn_metrics.json (982s)\r "
+    },
+    {
+      "name": "Overnight 5: dataset export for the team",
+      "state": "done",
+      "note": "5629 runs, 859 labelled failures, 35303 save-points -> data/dataset/blackbox-3k\r "
+    }
+  ],
+  "running": [
+    "pid   3172    330 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui",
+    "pid  31068     75 min  cpu   0.0%  ram  0.0 GB  blackbox.cli ui --port 8001"
+  ],
+  "machine": [
+    "GPU NVIDIA GeForce RTX 4060 Laptop GPU: 0% busy, 4.7/8.0 GB",
+    "Ollama loaded: qwen2.5:7b (5.1 GB on GPU)"
+  ],
+  "logs": [
+    "overnight_export.log           8m ago  5629 runs, 859 labelled failures, 35303 save-points -> data/dataset/blackbox-3k",
+    "overnight_retrain.log          9m ago  saved data\\models\\gnn.pt and data\\models\\gnn_metrics.json (982s)",
+    "export_fixtures.log           10m ago  ModuleNotFoundError: No module named 'blackbox.diagnosis.fingerprint'",
+    "overnight_backfill.log        26m ago  done: 854 runs, 7354 steps checked, 0 skipped, 2210 s",
+    "e2e_docs_v2.log               61m ago  62/66 passed -> data\\reports\\e2e_docs.md",
+    "ui_8001.log                   61m ago  INFO:     127.0.0.1:54315 - \"GET / HTTP/1.1\" 200 OK",
+    "overnight_farm_qa.log         62m ago  shard: data\\shards\\aryan-4060_20261003T201811Z.jsonl.gz",
+    "overnight_farm_math.log      103m ago  shard: data\\shards\\aryan-4060_20261003T193728Z.jsonl.gz",
+    "overnight.log                  2h ago  (empty: output may be buffered)",
+    "lab_qa.log                     2h ago  lab exit 0",
+    "label_natural_aryan_2.log      3h ago  77c7d7139eb4430f: cause = step 0",
+    "label_natural_aryan.log        4h ago  {\"tried\": 40, \"labelled\": 17, \"bad_luck\": 3, \"unresolved\": 20, \"errors\": 0}",
+    "e2e_docs.log                   4h ago  58/58 passed -> data\\reports\\e2e_docs.md",
+    "ui.log                         5h ago  INFO:     127.0.0.1:55148 - \"POST /api/investigate/model_finds_it HTTP/1.1\" 200 OK",
+    "gnn_cv.log                     7h ago  chosen by CV (top1 + top3): no_text  -> train it with: train --variant no_text",
+    "farm_ops_aryan.log             7h ago  shard: data\\shards\\aryan-4060_20261003T134155Z.jsonl.gz",
+    "farm_math_aryan.log            7h ago  shard: data\\shards\\aryan-4060_20261003T132824Z.jsonl.gz",
+    "farm_qa_aryan.log              8h ago  shard: data\\shards\\aryan-4060_20261003T125624Z.jsonl.gz"
+  ],
+  "data": [
+    "runs 5653  (math 3357, ops 848, qa 1435, smolagents 4, trading 9)   steps 56122",
+    "labelled failures 859  (by source: {'injected': 815, 'verified': 44})",
+    "labelled by split: {'calib': 76, 'test_known': 71, 'test_new_tasks': 123, 'train': 515, 'val': 70, None: 4}",
+    "save-points 56122 stored as 11190 files (80% de-duplicated)"
+  ],
+  "counts": {
+    "runs": 5653,
+    "steps": 56122,
+    "labelled_failures": 859,
+    "save_points": 56122,
+    "unique_save_points": 11190,
+    "blob_mb": 10.35
+  },
+  "metrics": {
+    "gnn_metrics": {
+      "config": {
+        "hidden": 128,
+        "layers": 3,
+        "dropout": 0.2,
+        "use_text": false,
+        "text_dim": 64,
+        "graph_features": true,
+        "verified_weight": 5.0,
+        "n_features": 37,
+        "edge_types": [],
+        "aux_weight": 0.3,
+        "lr": 0.002,
+        "weight_decay": 0.0001,
+        "epochs": 150,
+        "patience": 25,
+        "batch": 32,
+        "seeds": 5
+      },
+      "variant": "with_real_failures",
+      "model": "gnn@35f3e605",
+      "data": {
+        "calib|unlabelled": 375,
+        "calib|labelled": 76,
+        "test_known|unlabelled": 594,
+        "test_known|labelled": 71,
+        "test_new_tasks|unlabelled": 721,
+        "test_new_tasks|labelled": 123,
+        "train|unlabelled": 2683,
+        "train|labelled": 514,
+        "val|unlabelled": 291,
+        "val|labelled": 70,
+        "None|unlabelled": 96,
+        "None|labelled": 4
+      },
+      "device": "cuda",
+      "splits": {
+        "val": {
+          "n": 66,
+          "top1": 0.6061,
+          "top1_ci95": [
+            0.4848,
+            0.7273
+          ],
+          "top3": 0.8485,
+          "top3_ci95": [
+            0.7576,
+            0.9242
+          ],
+          "pm1": 0.6818,
+          "mrr": 0.7392
+        },
+        "test_known": {
+          "n": 67,
+          "top1": 0.597,
+          "top1_ci95": [
+            0.4776,
+            0.7015
+          ],
+          "top3": 0.8209,
+          "top3_ci95": [
+            0.7313,
+            0.9104
+          ],
+          "pm1": 0.6567,
+          "mrr": 0.7408
+        },
+        "test_new_tasks": {
+          "n": 112,
+          "top1": 0.6339,
+          "top1_ci95": [
+            0.5446,
+            0.7143
+          ],
+          "top3": 0.7946,
+          "top3_ci95": [
+            0.7143,
+            0.8661
+          ],
+          "pm1": 0.6696,
+          "mrr": 0.7314
+        },
+        "test_natural": {
+          "n": 17,
+          "top1": 0.0,
+          "top1_ci95": [
+            0.0,
+            0.0
+          ],
+          "top3": 0.2353,
+          "top3_ci95": [
+            0.0588,
+            0.4118
+          ],
+          "pm1": 0.5294,
+          "mrr": 0.2271
+        }
+      },
+      "by_fault": {
+        "F1": {
+          "n": 9,
+          "top1": 0.1111,
+          "top1_ci95": [
+            0.0,
+            0.3333
+          ],
+          "top3": 0.7778,
+          "top3_ci95": [
+            0.4444,
+            1.0
+          ],
+          "pm1": 0.2222,
+          "mrr": 0.4944
+        },
+        "F2": {
+          "n": 5,
+          "top1": 0.4,
+          "top1_ci95": [
+            0.0,
+            0.8
+          ],
+          "top3": 0.8,
+          "top3_ci95": [
+            0.4,
+            1.0
+          ],
+          "pm1": 0.4,
+          "mrr": 0.6167
+        },
+        "F3": {
+          "n": 5,
+          "top1": 1.0,
+          "top1_ci95": [
+            1.0,
+            1.0
+          ],
+          "top3": 1.0,
+          "top3_ci95": [
+            1.0,
+            1.0
+          ],
+          "pm1": 1.0,
+          "mrr": 1.0
+        },
+        "F4": {
+          "n": 13,
+          "top1": 0.6923,
+          "top1_ci95": [
+            0.4615,
+            0.9231
+          ],
+          "top3": 0.8462,
+          "top3_ci95": [
+            0.6154,
+            1.0
+          ],
+          "pm1": 0.6923,
+          "mrr": 0.8077
+        },
+        "F5": {
+          "n": 2,
+          "top1": 0.0,
+          "top1_ci95": [
+            0.0,
+            0.0
+          ],
+          "top3": 0.5,
+          "top3_ci95": [
+            0.0,
+            1.0
+          ],
+          "pm1": 0.0,
+          "mrr": 0.3125
+        },
+        "F6": {
+          "n": 33,
+          "top1": 0.697,
+          "top1_ci95": [
+            0.5152,
+            0.8485
+          ],
+          "top3": 0.8182,
+          "top3_ci95": [
+            0.697,
+            0.9394
+          ],
+          "pm1": 0.7879,
+          "mrr": 0.7872
+        }
+      },
+      "baselines": {
+        "val": {
+          "last_model_call": {
+            "n": 66,
+            "top1": 0.3636,
+            "top1_ci95": [
+              0.2424,
+              0.4848
+            ],
+            "top3": 0.4242,
+            "top3_ci95": [
+              0.303,
+              0.5455
+            ],
+            "pm1": 0.3939,
+            "mrr": 0.4671
+          },
+          "first_model_call": {
+            "n": 66,
+            "top1": 0.0152,
+            "top1_ci95": [
+              0.0,
+              0.0455
+            ],
+            "top3": 0.1818,
+            "top3_ci95": [
+              0.0909,
+              0.2727
+            ],
+            "pm1": 0.1818,
+            "mrr": 0.2255
+          },
+          "fallback_order": {
+            "n": 66,
+            "top1": 0.3485,
+            "top1_ci95": [
+              0.2273,
+              0.4697
+            ],
+            "top3": 0.4242,
+            "top3_ci95": [
+              0.303,
+              0.5455
+            ],
+            "pm1": 0.3788,
+            "mrr": 0.4595
+          },
+          "random": {
+            "n": 66,
+            "top1": 0.1209,
+            "top3": 0.3626
+          }
+        },
+        "test_known": {
+          "last_model_call": {
+            "n": 67,
+            "top1": 0.2537,
+            "top1_ci95": [
+              0.1493,
+              0.3582
+            ],
+            "top3": 0.3284,
+            "top3_ci95": [
+              0.2239,
+              0.4478
+            ],
+            "pm1": 0.2687,
+            "mrr": 0.3812
+          },
+          "first_model_call": {
+            "n": 67,
+            "top1": 0.0149,
+            "top1_ci95": [
+              0.0,
+              0.0448
+            ],
+            "top3": 0.1791,
+            "top3_ci95": [
+              0.0896,
+              0.2836
+            ],
+            "pm1": 0.2537,
+            "mrr": 0.2281
+          },
+          "fallback_order": {
+            "n": 67,
+            "top1": 0.2537,
+            "top1_ci95": [
+              0.1493,
+              0.3582
+            ],
+            "top3": 0.3284,
+            "top3_ci95": [
+              0.2239,
+              0.4478
+            ],
+            "pm1": 0.2687,
+            "mrr": 0.3812
+          },
+          "random": {
+            "n": 67,
+            "top1": 0.1228,
+            "top3": 0.3685
+          }
+        },
+        "test_new_tasks": {
+          "last_model_call": {
+            "n": 112,
+            "top1": 0.0,
+            "top1_ci95": [
+              0.0,
+              0.0
+            ],
+            "top3": 0.1696,
+            "top3_ci95": [
+              0.1071,
+              0.2411
+            ],
+            "pm1": 0.1071,
+            "mrr": 0.2189
+          },
+          "first_model_call": {
+            "n": 112,
+            "top1": 0.0357,
+            "top1_ci95": [
+              0.0089,
+              0.0714
+            ],
+            "top3": 0.1161,
+            "top3_ci95": [
+              0.0625,
+              0.1786
+            ],
+            "pm1": 0.0357,
+            "mrr": 0.1999
+          },
+          "fallback_order": {
+            "n": 112,
+            "top1": 0.0,
+            "top1_ci95": [
+              0.0,
+              0.0
+            ],
+            "top3": 0.1696,
+            "top3_ci95": [
+              0.1071,
+              0.2411
+            ],
+            "pm1": 0.1071,
+            "mrr": 0.2128
+          },
+          "random": {
+            "n": 112,
+            "top1": 0.1425,
+            "top3": 0.4275
+          }
+        },
+        "test_natural": {
+          "last_model_call": {
+            "n": 17,
+            "top1": 0.0,
+            "top1_ci95": [
+              0.0,
+              0.0
+            ],
+            "top3": 0.2353,
+            "top3_ci95": [
+              0.0588,
+              0.4706
+            ],
+            "pm1": 0.0,
+            "mrr": 0.2407
+          },
+          "first_model_call": {
+            "n": 17,
+            "top1": 0.6471,
+            "top1_ci95": [
+              0.4118,
+              0.8824
+            ],
+            "top3": 0.7647,
+            "top3_ci95": [
+              0.5294,
+              0.9412
+            ],
+            "pm1": 0.7647,
+            "mrr": 0.7647
+          },
+          "fallback_order": {
+            "n": 17,
+            "top1": 0.0,
+            "top1_ci95": [
+              0.0,
+              0.0
+            ],
+            "top3": 0.2353,
+            "top3_ci95": [
+              0.0588,
+              0.4706
+            ],
+            "pm1": 0.0,
+            "mrr": 0.2348
+          },
+          "random": {
+            "n": 17,
+            "top1": 0.1285,
+            "top3": 0.3856
+          }
+        }
+      },
+      "suspect_set_90": {
+        "k": 5,
+        "target": 0.9,
+        "n_calib": 74,
+        "coverage_on_calib": 0.932
+      },
+      "policy_model_plus_first_decision": {
+        "val": {
+          "n": 66,
+          "top1": 0.6061,
+          "top1_ci95": [
+            0.4848,
+            0.7273
+          ],
+          "top3": 0.8182,
+          "top3_ci95": [
+            0.7121,
+            0.9091
+          ],
+          "pm1": 0.6818,
+          "mrr": 0.7334
+        },
+        "test_known": {
+          "n": 67,
+          "top1": 0.597,
+          "top1_ci95": [
+            0.4776,
+            0.7015
+          ],
+          "top3": 0.791,
+          "top3_ci95": [
+            0.6866,
+            0.8806
+          ],
+          "pm1": 0.6567,
+          "mrr": 0.7339
+        },
+        "test_new_tasks": {
+          "n": 112,
+          "top1": 0.6339,
+          "top1_ci95": [
+            0.5446,
+            0.7143
+          ],
+          "top3": 0.7143,
+          "top3_ci95": [
+            0.625,
+            0.7946
+          ],
+          "pm1": 0.6696,
+          "mrr": 0.7223
+        },
+        "test_natural": {
+          "n": 17,
+          "top1": 0.0,
+          "top1_ci95": [
+            0.0,
+            0.0
+          ],
+          "top3": 0.6471,
+          "top3_ci95": [
+            0.4118,
+            0.8824
+          ],
+          "pm1": 0.5294,
+          "mrr": 0.2673
+        }
+      },
+      "suspect_set_90_coverage": {
+        "val": {
+          "k": 5,
+          "n": 66,
+          "coverage": 0.939
+        },
+        "test_known": {
+          "k": 5,
+          "n": 67,
+          "coverage": 0.94
+        },
+        "test_new_tasks": {
+          "k": 5,
+          "n": 112,
+          "coverage": 0.884
+        },
+        "test_natural": {
+          "k": 5,
+          "n": 17,
+          "coverage": 0.706
+        }
+      }
+    },
+    "gnn_cv": {
+      "folds": 5,
+      "pool": 997,
+      "results": {
+        "no_text_no_message_passing": {
+          "config": {
+            "use_text": false,
+            "edge_types": []
+          },
+          "folds": [
+            {
+              "n": 45,
+              "top1": 0.4667,
+              "top3": 0.8222
+            },
+            {
+              "n": 34,
+              "top1": 0.5882,
+              "top3": 0.9118
+            },
+            {
+              "n": 61,
+              "top1": 0.6393,
+              "top3": 0.8852
+            },
+            {
+              "n": 41,
+              "top1": 0.5854,
+              "top3": 0.7561
+            },
+            {
+              "n": 43,
+              "top1": 0.3953,
+              "top3": 0.6977
+            }
+          ],
+          "top1": 0.5402,
+          "top3": 0.817,
+          "n": 224
+        },
+        "no_graph_at_all": {
+          "config": {
+            "use_text": false,
+            "edge_types": [],
+            "graph_features": false
+          },
+          "folds": [
+            {
+              "n": 45,
+              "top1": 0.2889,
+              "top3": 0.5556
+            },
+            {
+              "n": 34,
+              "top1": 0.4412,
+              "top3": 0.5882
+            },
+            {
+              "n": 61,
+              "top1": 0.4754,
+              "top3": 0.7377
+            },
+            {
+              "n": 41,
+              "top1": 0.3415,
+              "top3": 0.5854
+            },
+            {
+              "n": 43,
+              "top1": 0.3023,
+              "top3": 0.6047
+            }
+          ],
+          "top1": 0.375,
+          "top3": 0.625,
+          "n": 224
+        }
+      },
+      "chosen": "no_text_no_message_passing"
+    }
+  },
+  "report": {
+    "generated_at": "2026-10-03T14:36:39.719364+00:00",
+    "data": {
+      "runs": 1808,
+      "crashed": 2,
+      "labelled_failures": 395,
+      "natural_failures_unlabelled": 188,
+      "mistake_types": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ],
+      "by_family": {
+        "ops": 517,
+        "math": 864,
+        "qa": 427
+      },
+      "by_split": {
+        "test_new_tasks": 517,
+        "train": 884,
+        "calib": 158,
+        "test_known": 137,
+        "val": 112
+      },
+      "labelled_by_split": {
+        "test_new_tasks": 116,
+        "calib": 28,
+        "train": 190,
+        "val": 33,
+        "test_known": 28
+      },
+      "labelled_by_source": {
+        "injected": 391,
+        "verified": 4
+      },
+      "machines": {
+        "aryan-4060": 1808
+      }
+    },
+    "health": {
+      "math": {
+        "runs": 864,
+        "clean": 300,
+        "clean_passed": 188,
+        "clean_failed": 112,
+        "crashed": 0,
+        "labelled": 200,
+        "steps_mean": 11.1,
+        "faults": {
+          "F1": {
+            "runs": 75,
+            "failed": 30,
+            "recovered": 45,
+            "crashed": 0,
+            "flip_pct": 40.0
+          },
+          "F2": {
+            "runs": 88,
+            "failed": 34,
+            "recovered": 54,
+            "crashed": 0,
+            "flip_pct": 38.6
+          },
+          "F3": {
+            "runs": 85,
+            "failed": 12,
+            "recovered": 73,
+            "crashed": 0,
+            "flip_pct": 14.1
+          },
+          "F6": {
+            "runs": 316,
+            "failed": 124,
+            "recovered": 192,
+            "crashed": 0,
+            "flip_pct": 39.2
+          }
+        }
+      },
+      "ops": {
+        "runs": 517,
+        "clean": 276,
+        "clean_passed": 106,
+        "clean_failed": 168,
+        "crashed": 2,
+        "labelled": 116,
+        "steps_mean": 9.9,
+        "faults": {
+          "F1": {
+            "runs": 19,
+            "failed": 16,
+            "recovered": 3,
+            "crashed": 0,
+            "flip_pct": 84.2
+          },
+          "F3": {
+            "runs": 137,
+            "failed": 72,
+            "recovered": 65,
+            "crashed": 0,
+            "flip_pct": 52.6
+          },
+          "F6": {
+            "runs": 85,
+            "failed": 24,
+            "recovered": 61,
+            "crashed": 0,
+            "flip_pct": 28.2
+          }
+        }
+      },
+      "qa": {
+        "runs": 427,
+        "clean": 178,
+        "clean_passed": 93,
+        "clean_failed": 85,
+        "crashed": 0,
+        "labelled": 79,
+        "steps_mean": 8.8,
+        "faults": {
+          "F4": {
+            "runs": 54,
+            "failed": 32,
+            "recovered": 22,
+            "crashed": 0,
+            "flip_pct": 59.3
+          },
+          "F5": {
+            "runs": 44,
+            "failed": 6,
+            "recovered": 38,
+            "crashed": 0,
+            "flip_pct": 13.6
+          },
+          "F6": {
+            "runs": 151,
+            "failed": 41,
+            "recovered": 110,
+            "crashed": 0,
+            "flip_pct": 27.2
+          }
+        }
+      }
+    },
+    "model_report_card": {
+      "agent-local-7b": {
+        "runs": 1808,
+        "clean_runs": 550,
+        "clean_pass_rate": 0.6509,
+        "clean_pass_rate_by_family": {
+          "math": 0.6267,
+          "ops": 0.85,
+          "qa": 0.5667
+        },
+        "mean_steps": 9.5,
+        "mean_tokens_per_clean_run": 1727,
+        "planted_runs": 1054,
+        "planted_fail_rate": 0.371,
+        "failures_by_mistake": {
+          "F1": 46,
+          "F2": 34,
+          "F3": 84,
+          "F4": 32,
+          "F5": 6,
+          "F6": 189
+        },
+        "guilty_step_position": {
+          "early": 112,
+          "middle": 108,
+          "late": 175
+        }
+      }
+    },
+    "guilty_step": {
+      "test_known": {
+        "question": "does it work?",
+        "n_labelled": 28,
+        "methods": {
+          "random": {
+            "n": 28,
+            "top1": 0.1141,
+            "top1_ci95": null,
+            "top3": 0.3422,
+            "pm1": 0.3071,
+            "mrr": 0.3164
+          },
+          "last_step": {
+            "n": 28,
+            "top1": 0.25,
+            "top1_ci95": [
+              0.1071,
+              0.4286
+            ],
+            "top3": 0.3571,
+            "pm1": 0.25,
+            "mrr": 0.3858
+          },
+          "first_error": {
+            "n": 28,
+            "top1": 0.0357,
+            "top1_ci95": [
+              0.0,
+              0.1071
+            ],
+            "top3": 0.4286,
+            "pm1": 0.2143,
+            "mrr": 0.2825
+          },
+          "gnn": {
+            "n": 28,
+            "top1": 0.6071,
+            "top1_ci95": [
+              0.4286,
+              0.7857
+            ],
+            "top3": 0.9286,
+            "pm1": 0.6786,
+            "mrr": 0.7611
+          }
+        }
+      },
+      "test_new_tasks": {
+        "question": "does it handle a new kind of task?",
+        "n_labelled": 116,
+        "methods": {
+          "random": {
+            "n": 116,
+            "top1": 0.1419,
+            "top1_ci95": null,
+            "top3": 0.4258,
+            "pm1": 0.4161,
+            "mrr": 0.3633
+          },
+          "last_step": {
+            "n": 116,
+            "top1": 0.0,
+            "top1_ci95": [
+              0.0,
+              0.0
+            ],
+            "top3": 0.7931,
+            "pm1": 0.1034,
+            "mrr": 0.3153
+          },
+          "first_error": {
+            "n": 116,
+            "top1": 0.069,
+            "top1_ci95": [
+              0.0259,
+              0.1121
+            ],
+            "top3": 0.3017,
+            "pm1": 0.069,
+            "mrr": 0.2683
+          },
+          "gnn": {
+            "n": 116,
+            "top1": 0.6207,
+            "top1_ci95": [
+              0.5345,
+              0.7069
+            ],
+            "top3": 0.7414,
+            "pm1": 0.6897,
+            "mrr": 0.7246
+          }
+        }
+      }
+    },
+    "guilty_step_top1_by_mistake": {
+      "F1": {
+        "n": 18,
+        "random": 0.1193,
+        "last_step": 0.0,
+        "first_error": 0.0,
+        "gnn": 0.0
+      },
+      "F2": {
+        "n": 3,
+        "random": 0.1323,
+        "last_step": 0.0,
+        "first_error": 0.0,
+        "gnn": 0.0
+      },
+      "F3": {
+        "n": 76,
+        "random": 0.1493,
+        "last_step": 0.0,
+        "first_error": 0.0,
+        "gnn": 1.0
+      },
+      "F4": {
+        "n": 4,
+        "random": 0.125,
+        "last_step": 0.0,
+        "first_error": 0.0,
+        "gnn": 0.75
+      },
+      "F5": {
+        "n": 1,
+        "random": 0.125,
+        "last_step": 0.0,
+        "first_error": 0.0,
+        "gnn": 0.0
+      },
+      "F6": {
+        "n": 38,
+        "random": 0.1221,
+        "last_step": 0.1842,
+        "first_error": 0.1316,
+        "gnn": 0.2632
+      }
+    },
+    "methods": [
+      "random",
+      "last_step",
+      "first_error",
+      "gnn"
+    ],
+    "judge": null,
+    "suspect_list_top3": {
+      "gnn": {
+        "test_known": {
+          "n": 28,
+          "hit_rate": 0.9286,
+          "mean_list_length": 3
+        },
+        "test_new_tasks": {
+          "n": 116,
+          "hit_rate": 0.7414,
+          "mean_list_length": 3
+        }
+      }
+    },
+    "absent": {
+      "ranker": "blackbox.diagnosis.predict is not in this checkout yet (Aditya)",
+      "llm_judge": "not requested (run with --judge)",
+      "guilty_step.test_new_mistakes": "no labelled failure in this set yet",
+      "guilty_step.test_natural": "no natural failure has a verified label yet (blackbox.replay.label_natural)",
+      "guilty_step.test_outside": "Who&When is not imported (py -3 -m blackbox.data.importers.who_and_when)",
+      "live_warning": "no recorded run carries step-checker answers",
+      "jev_vs_llm": "no recorded run carries step-checker answers",
+      "verify": "needs verification results joined to suspect lists (Aryan + a trained method)",
+      "repair": "needs repair results (Aryan)",
+      "report_citations": "needs generated incident reports (Aditya)"
+    }
+  }
+}

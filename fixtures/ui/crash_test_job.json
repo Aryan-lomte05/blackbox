@@ -1,0 +1,269 @@
+{
+  "start": {
+    "job_id": "7b720e64862c",
+    "next": "GET /api/jobs/7b720e64862c/events"
+  },
+  "events": [
+    {
+      "type": "plan",
+      "tests": [
+        {
+          "fault": "F4",
+          "step": 3
+        },
+        {
+          "fault": "F5",
+          "step": 3
+        },
+        {
+          "fault": "F6",
+          "step": 0
+        },
+        {
+          "fault": "F8",
+          "step": 3
+        },
+        {
+          "fault": "F9",
+          "step": 7
+        },
+        {
+          "fault": "F10",
+          "step": 4
+        }
+      ],
+      "seq": 0,
+      "t": 1791062673.058
+    },
+    {
+      "type": "test",
+      "n": 1,
+      "of": 6,
+      "fault": "F4",
+      "step": 3,
+      "verdict": "robust",
+      "run_id": "7edfea469bb447d8",
+      "seq": 1,
+      "t": 1791062674.507
+    },
+    {
+      "type": "test",
+      "n": 2,
+      "of": 6,
+      "fault": "F5",
+      "step": 3,
+      "verdict": "robust",
+      "run_id": "86bbcd40d7da4acb",
+      "seq": 2,
+      "t": 1791062676.493
+    },
+    {
+      "type": "test",
+      "n": 3,
+      "of": 6,
+      "fault": "F6",
+      "step": 0,
+      "verdict": "robust",
+      "run_id": "f664d29750db4a1c",
+      "seq": 3,
+      "t": 1791062680.086
+    },
+    {
+      "type": "test",
+      "n": 4,
+      "of": 6,
+      "fault": "F8",
+      "step": 3,
+      "verdict": "robust",
+      "run_id": "f2559c9e38fc46e4",
+      "seq": 4,
+      "t": 1791062681.114
+    },
+    {
+      "type": "test",
+      "n": 5,
+      "of": 6,
+      "fault": "F9",
+      "step": 7,
+      "verdict": "robust",
+      "run_id": "ed888b3d352b4f6f",
+      "seq": 5,
+      "t": 1791062681.571
+    },
+    {
+      "type": "test",
+      "n": 6,
+      "of": 6,
+      "fault": "F10",
+      "step": 4,
+      "verdict": "robust",
+      "run_id": "adc7c05358b246bc",
+      "seq": 6,
+      "t": 1791062682.068
+    },
+    {
+      "type": "done",
+      "counts": {
+        "robust": 6,
+        "failed safely": 0,
+        "failed silently": 0,
+        "unsafe": 0,
+        "error": 0
+      },
+      "score": 1.0,
+      "stars": 5,
+      "weak_against": [],
+      "seq": 7,
+      "t": 1791062682.068
+    },
+    {
+      "type": "done",
+      "result": {
+        "run_id": "469bcbeba27744c0",
+        "agent": "qa_agent@v1",
+        "tests": 6,
+        "counts": {
+          "robust": 6,
+          "failed safely": 0,
+          "failed silently": 0,
+          "unsafe": 0,
+          "error": 0
+        },
+        "score": 1.0,
+        "stars": 5,
+        "new_labelled_failures": 0,
+        "weak_against": [],
+        "rows": [
+          {
+            "fault": "F4",
+            "fault_name": "search returns a misleading paragraph",
+            "step": 3,
+            "verdict": "robust",
+            "run_id": "7edfea469bb447d8",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          },
+          {
+            "fault": "F5",
+            "fault_name": "search misses the right paragraph",
+            "step": 3,
+            "verdict": "robust",
+            "run_id": "86bbcd40d7da4acb",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          },
+          {
+            "fault": "F6",
+            "fault_name": "model states a wrong intermediate fact",
+            "step": 0,
+            "verdict": "robust",
+            "run_id": "f664d29750db4a1c",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          },
+          {
+            "fault": "F8",
+            "fault_name": "memory value lost",
+            "step": 3,
+            "verdict": "robust",
+            "run_id": "f2559c9e38fc46e4",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          },
+          {
+            "fault": "F9",
+            "fault_name": "an instruction is dropped from the prompt",
+            "step": 7,
+            "verdict": "robust",
+            "run_id": "ed888b3d352b4f6f",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          },
+          {
+            "fault": "F10",
+            "fault_name": "model answers too early",
+            "step": 4,
+            "verdict": "robust",
+            "run_id": "adc7c05358b246bc",
+            "answer": "John de Mol Jr.",
+            "labelled": false
+          }
+        ]
+      },
+      "seq": 8,
+      "t": 1791062682.068
+    }
+  ],
+  "result": {
+    "run_id": "469bcbeba27744c0",
+    "agent": "qa_agent@v1",
+    "tests": 6,
+    "counts": {
+      "robust": 6,
+      "failed safely": 0,
+      "failed silently": 0,
+      "unsafe": 0,
+      "error": 0
+    },
+    "score": 1.0,
+    "stars": 5,
+    "new_labelled_failures": 0,
+    "weak_against": [],
+    "rows": [
+      {
+        "fault": "F4",
+        "fault_name": "search returns a misleading paragraph",
+        "step": 3,
+        "verdict": "robust",
+        "run_id": "7edfea469bb447d8",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      },
+      {
+        "fault": "F5",
+        "fault_name": "search misses the right paragraph",
+        "step": 3,
+        "verdict": "robust",
+        "run_id": "86bbcd40d7da4acb",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      },
+      {
+        "fault": "F6",
+        "fault_name": "model states a wrong intermediate fact",
+        "step": 0,
+        "verdict": "robust",
+        "run_id": "f664d29750db4a1c",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      },
+      {
+        "fault": "F8",
+        "fault_name": "memory value lost",
+        "step": 3,
+        "verdict": "robust",
+        "run_id": "f2559c9e38fc46e4",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      },
+      {
+        "fault": "F9",
+        "fault_name": "an instruction is dropped from the prompt",
+        "step": 7,
+        "verdict": "robust",
+        "run_id": "ed888b3d352b4f6f",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      },
+      {
+        "fault": "F10",
+        "fault_name": "model answers too early",
+        "step": 4,
+        "verdict": "robust",
+        "run_id": "adc7c05358b246bc",
+        "answer": "John de Mol Jr.",
+        "labelled": false
+      }
+    ]
+  }
+}

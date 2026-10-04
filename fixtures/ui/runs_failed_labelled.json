@@ -1,0 +1,1137 @@
+{
+  "runs": [
+    {
+      "run_id": "55d7974475004f18",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "task_input": {
+        "question": "Who founded the Canadian manufacturer of winter clothing which is a major sponsor of Polar Bears International?",
+        "paragraphs": [
+          {
+            "title": "Polar Bears International",
+            "text": "Polar Bears International (PBI) is the world's leading polar bear conservation organization. Their research, education, and action programs address the issues that are endangering polar bears. Polar Bears International is a non-profit organization that works closely with Frontiers North Adventures, a commercial tour company that operates a fleet of tundra buggies in Churchill, Manitoba, Canada. Other major sponsors include Canada Goose and Natural Exposures Photography. Their Chief Scientist is Steven Amstrup."
+          },
+          {
+            "title": "Polar bear",
+            "text": "The polar bear (\"Ursus maritimus\") is a carnivorous bear whose native range lies largely within the Arctic Circle, encompassing the Arctic Ocean, its surrounding seas and surrounding land masses. It is a large bear, approximately the same size as the omnivorous Kodiak bear (\"Ursus arctos middendorffi\"). A boar (adult male) weighs around 350 – , while a sow (adult female) is about half that size. Although it is the sister species of the brown bear, it has evolved to occupy a narrower ecological niche, with many body characteristics adapted for cold temperatures, for moving across snow, ice and open water, and for hunting seals, which make up most of its diet. Although most polar bears are born on land, they spend most of their time on the sea ice. Their scientific name means \"maritime bear\" and derives from this fact. Polar bears hunt their preferred food of seals from the edge of sea ice, often living off fat reserves when no sea ice is present. Because of their dependence on the sea ice, polar bears are classified as marine mammals."
+          },
+          {
+            "title": "Ian Stirling (biologist)",
+            "text": "Ian Grote Stirling {'1': \", '2': \", '3': \", '4': \"} (born September 26, 1941) is a research scientist emeritus with Environment and Climate Change Canada and an adjunct professor in the University of Alberta Department of Biological Sciences. His research has focused mostly on Arctic and Antarctic zoology and ecology, and he is one of the world's top authorities on polar bears. Stirling has written five books and more than 150 articles published in peer-reviewed scientific journals. He has written and spoken extensively about the danger posed to polar bears by global warming."
+          },
+          {
+            "title": "Phoenix Polar Bears",
+            "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011."
+          },
+          {
+            "title": "Kermode bear",
+            "text": "The Kermode bear (\"Ursus americanus kermodei\"), also known as the \"spirit bear\" (particularly in British Columbia), is a rare subspecies of the American black bear living in the Central and North Coast regions of British Columbia, Canada. It is the official provincial mammal of British Columbia. It is noted for about one-tenth of its population having white or cream-coloured coats like polar bears. This colour is due to a double recessive gene unique in the subspecies. They are not albinos and not any more related to polar bears or the \"blonde\" brown bears of Alaska's \"ABC Islands\" than other members of their species. Sometimes, a mother black bear can have a white cub."
+          },
+          {
+            "title": "Canada Goose (clothing)",
+            "text": "Canada Goose Inc. is a Canadian manufacturer of winter clothing. The company was founded in 1957 by Sam Tick, under the name Metro Sportswear Ltd. Canada Goose manufactures a wide range of jackets, parkas, vests, hats, gloves, shells and other apparel. Some Canada Goose jackets use coyote fur on the hoods and are often filled with down which is purchased from Hutterite farmers in rural Canada\". Duck down is used for most models. The jackets retail between $600 and $1,275; the \"Kensington\", its best-selling women's coat, retails for approximately $745."
+          },
+          {
+            "title": "Mitchell Taylor",
+            "text": "Mitchell Taylor, Ph.D., is a Canadian biologist specializing in polar bears who claims that Canada's polar bear population is higher now than it was 30 years ago and that polar bears are not currently threatened by climate change. He is currently a contract adjunct professor at Lakehead University , and he is affiliated with the Heartland Institute ."
+          },
+          {
+            "title": "Agreement on the Conservation of Polar Bears",
+            "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters."
+          },
+          {
+            "title": "The Real Bears",
+            "text": "The Real Bears is an anti-soft-drink advertising campaign by the Center for Science in the Public Interest, which debuted in October 2012. It is a parody of the Coca-Cola Company's ad campaigns depicting polar bears, in particular the \"Open Happiness\" ads, and was produced with the help of Alex Bogusky. Michael Jacobson said that the ad was \"...our attempt to reposition soft drinks from a source of happiness to a major cause of disease.\" CSPI chose Bogusky to direct the ad because, they said, they had long admired his work in creating anti-tobacco ads through his agency, Crispin Porter + Bogusky. The song playing throughout the CSPI ad is by Jason Mraz and is entitled \"Sugar.\" The ad depicts polar bears suffering from a wide variety of health problems as a result of soda consumption, such as type II diabetes and erectile dysfunction. In response to the ad, Coca-Cola spokeswoman Susan Stribling stated that the ad was \"irresponsible and the usual grandstanding from CSPI,” and Karen Hanretty, a spokeswoman for the American Beverage Association, noted that soda consumption has decreased over the last decade or so, whereas obesity rates have still risen over the same time period, saying, \"CSPI is better at producing videos than they are doing math.\" The video has over 2 million views on YouTube."
+          },
+          {
+            "title": "Polar Bears (band)",
+            "text": "Polar Bears are an indie rock band from Santa Rosa, California who currently play in and around the North Bay music scene. They have toured nationally with longtime friends The Velvet Teen and have done numerous West Coast tours since their inception in 2001. In March 2004, they released an EP, \"Shorts Are for Warm\", on Petaluma-based record label, Pandacide. More recently, in early 2007, Polar Bears self-released their full-length album, \"The Future King\". Currently this album is only available directly from the band at their live shows and from The Last Record Store in Santa Rosa, CA. Polar Bears are notable in the Sonoma County music scene for being one of the biggest drawing and intensely furious live bands in the area. Their following has steadily grown during their existence, being prominently featured in publications such as the North Bay Bohemian and Metroactive.com. Bands that Polar Bears have shared the stage with include: Victims Family, Cursive (band), Nomeansno, The Casket Lottery and Aloha (band)."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Sam Tick",
+        "supporting_titles": [
+          "Canada Goose (clothing)",
+          "Polar Bears International"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "97829374efd64a80",
+      "fork_step_idx": 1,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "docs": [
+            {
+              "id": 5,
+              "title": "Phoenix Polar Bears",
+              "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011.",
+              "score": 7.6088
+            },
+            {
+              "id": 0,
+              "title": "Agreement on the Conservation of Polar Bears",
+              "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters.",
+              "score": 5.6692
+            }
+          ]
+        },
+        "note": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+      },
+      "fault": {
+        "type": "F4",
+        "step_idx": 1,
+        "params": {
+          "change_kind": "output",
+          "note": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "No",
+        "expected": "Sam Tick",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 1,
+        "source": "injected",
+        "notes": "F4: 'Canada Goose (clothing)' -> 'Phoenix Polar Bears'; 'Polar Bears International' -> 'Agreement on the Conservation of Polar Bears'"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 7,
+        "n_reused": 1,
+        "n_llm_calls": 4,
+        "tokens_in": 1280,
+        "tokens_out": 66,
+        "latency_ms": 17235.13,
+        "tokens_saved": 78,
+        "seconds_saved": 0.79,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1585
+      },
+      "created_at": "2026-10-03T21:18:17.228957+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "53f0d78b38154249",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "task_input": {
+        "question": "Who founded the Canadian manufacturer of winter clothing which is a major sponsor of Polar Bears International?",
+        "paragraphs": [
+          {
+            "title": "Polar Bears International",
+            "text": "Polar Bears International (PBI) is the world's leading polar bear conservation organization. Their research, education, and action programs address the issues that are endangering polar bears. Polar Bears International is a non-profit organization that works closely with Frontiers North Adventures, a commercial tour company that operates a fleet of tundra buggies in Churchill, Manitoba, Canada. Other major sponsors include Canada Goose and Natural Exposures Photography. Their Chief Scientist is Steven Amstrup."
+          },
+          {
+            "title": "Polar bear",
+            "text": "The polar bear (\"Ursus maritimus\") is a carnivorous bear whose native range lies largely within the Arctic Circle, encompassing the Arctic Ocean, its surrounding seas and surrounding land masses. It is a large bear, approximately the same size as the omnivorous Kodiak bear (\"Ursus arctos middendorffi\"). A boar (adult male) weighs around 350 – , while a sow (adult female) is about half that size. Although it is the sister species of the brown bear, it has evolved to occupy a narrower ecological niche, with many body characteristics adapted for cold temperatures, for moving across snow, ice and open water, and for hunting seals, which make up most of its diet. Although most polar bears are born on land, they spend most of their time on the sea ice. Their scientific name means \"maritime bear\" and derives from this fact. Polar bears hunt their preferred food of seals from the edge of sea ice, often living off fat reserves when no sea ice is present. Because of their dependence on the sea ice, polar bears are classified as marine mammals."
+          },
+          {
+            "title": "Ian Stirling (biologist)",
+            "text": "Ian Grote Stirling {'1': \", '2': \", '3': \", '4': \"} (born September 26, 1941) is a research scientist emeritus with Environment and Climate Change Canada and an adjunct professor in the University of Alberta Department of Biological Sciences. His research has focused mostly on Arctic and Antarctic zoology and ecology, and he is one of the world's top authorities on polar bears. Stirling has written five books and more than 150 articles published in peer-reviewed scientific journals. He has written and spoken extensively about the danger posed to polar bears by global warming."
+          },
+          {
+            "title": "Phoenix Polar Bears",
+            "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011."
+          },
+          {
+            "title": "Kermode bear",
+            "text": "The Kermode bear (\"Ursus americanus kermodei\"), also known as the \"spirit bear\" (particularly in British Columbia), is a rare subspecies of the American black bear living in the Central and North Coast regions of British Columbia, Canada. It is the official provincial mammal of British Columbia. It is noted for about one-tenth of its population having white or cream-coloured coats like polar bears. This colour is due to a double recessive gene unique in the subspecies. They are not albinos and not any more related to polar bears or the \"blonde\" brown bears of Alaska's \"ABC Islands\" than other members of their species. Sometimes, a mother black bear can have a white cub."
+          },
+          {
+            "title": "Canada Goose (clothing)",
+            "text": "Canada Goose Inc. is a Canadian manufacturer of winter clothing. The company was founded in 1957 by Sam Tick, under the name Metro Sportswear Ltd. Canada Goose manufactures a wide range of jackets, parkas, vests, hats, gloves, shells and other apparel. Some Canada Goose jackets use coyote fur on the hoods and are often filled with down which is purchased from Hutterite farmers in rural Canada\". Duck down is used for most models. The jackets retail between $600 and $1,275; the \"Kensington\", its best-selling women's coat, retails for approximately $745."
+          },
+          {
+            "title": "Mitchell Taylor",
+            "text": "Mitchell Taylor, Ph.D., is a Canadian biologist specializing in polar bears who claims that Canada's polar bear population is higher now than it was 30 years ago and that polar bears are not currently threatened by climate change. He is currently a contract adjunct professor at Lakehead University , and he is affiliated with the Heartland Institute ."
+          },
+          {
+            "title": "Agreement on the Conservation of Polar Bears",
+            "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters."
+          },
+          {
+            "title": "The Real Bears",
+            "text": "The Real Bears is an anti-soft-drink advertising campaign by the Center for Science in the Public Interest, which debuted in October 2012. It is a parody of the Coca-Cola Company's ad campaigns depicting polar bears, in particular the \"Open Happiness\" ads, and was produced with the help of Alex Bogusky. Michael Jacobson said that the ad was \"...our attempt to reposition soft drinks from a source of happiness to a major cause of disease.\" CSPI chose Bogusky to direct the ad because, they said, they had long admired his work in creating anti-tobacco ads through his agency, Crispin Porter + Bogusky. The song playing throughout the CSPI ad is by Jason Mraz and is entitled \"Sugar.\" The ad depicts polar bears suffering from a wide variety of health problems as a result of soda consumption, such as type II diabetes and erectile dysfunction. In response to the ad, Coca-Cola spokeswoman Susan Stribling stated that the ad was \"irresponsible and the usual grandstanding from CSPI,” and Karen Hanretty, a spokeswoman for the American Beverage Association, noted that soda consumption has decreased over the last decade or so, whereas obesity rates have still risen over the same time period, saying, \"CSPI is better at producing videos than they are doing math.\" The video has over 2 million views on YouTube."
+          },
+          {
+            "title": "Polar Bears (band)",
+            "text": "Polar Bears are an indie rock band from Santa Rosa, California who currently play in and around the North Bay music scene. They have toured nationally with longtime friends The Velvet Teen and have done numerous West Coast tours since their inception in 2001. In March 2004, they released an EP, \"Shorts Are for Warm\", on Petaluma-based record label, Pandacide. More recently, in early 2007, Polar Bears self-released their full-length album, \"The Future King\". Currently this album is only available directly from the band at their live shows and from The Last Record Store in Santa Rosa, CA. Polar Bears are notable in the Sonoma County music scene for being one of the biggest drawing and intensely furious live bands in the area. Their following has steadily grown during their existence, being prominently featured in publications such as the North Bay Bohemian and Metroactive.com. Bands that Polar Bears have shared the stage with include: Victims Family, Cursive (band), Nomeansno, The Casket Lottery and Aloha (band)."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Sam Tick",
+        "supporting_titles": [
+          "Canada Goose (clothing)",
+          "Polar Bears International"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "97829374efd64a80",
+      "fork_step_idx": 7,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "ANSWER: Polar Bears (band)",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: Sam Tick -> Polar Bears (band)"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 7,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: Sam Tick -> Polar Bears (band)"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "Polar Bears (band)",
+        "expected": "Sam Tick",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 7,
+        "source": "injected",
+        "notes": "F6: Sam Tick -> Polar Bears (band)"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 1,
+        "n_reused": 7,
+        "n_llm_calls": 1,
+        "tokens_in": null,
+        "tokens_out": null,
+        "latency_ms": 0.01,
+        "tokens_saved": 1410,
+        "seconds_saved": 8.158,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1585
+      },
+      "created_at": "2026-10-03T20:18:11.380505+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "eda7e5bead634228",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8ae00e5542992d82986fc7",
+      "task_input": {
+        "question": "Who founded the Canadian manufacturer of winter clothing which is a major sponsor of Polar Bears International?",
+        "paragraphs": [
+          {
+            "title": "Polar Bears International",
+            "text": "Polar Bears International (PBI) is the world's leading polar bear conservation organization. Their research, education, and action programs address the issues that are endangering polar bears. Polar Bears International is a non-profit organization that works closely with Frontiers North Adventures, a commercial tour company that operates a fleet of tundra buggies in Churchill, Manitoba, Canada. Other major sponsors include Canada Goose and Natural Exposures Photography. Their Chief Scientist is Steven Amstrup."
+          },
+          {
+            "title": "Polar bear",
+            "text": "The polar bear (\"Ursus maritimus\") is a carnivorous bear whose native range lies largely within the Arctic Circle, encompassing the Arctic Ocean, its surrounding seas and surrounding land masses. It is a large bear, approximately the same size as the omnivorous Kodiak bear (\"Ursus arctos middendorffi\"). A boar (adult male) weighs around 350 – , while a sow (adult female) is about half that size. Although it is the sister species of the brown bear, it has evolved to occupy a narrower ecological niche, with many body characteristics adapted for cold temperatures, for moving across snow, ice and open water, and for hunting seals, which make up most of its diet. Although most polar bears are born on land, they spend most of their time on the sea ice. Their scientific name means \"maritime bear\" and derives from this fact. Polar bears hunt their preferred food of seals from the edge of sea ice, often living off fat reserves when no sea ice is present. Because of their dependence on the sea ice, polar bears are classified as marine mammals."
+          },
+          {
+            "title": "Ian Stirling (biologist)",
+            "text": "Ian Grote Stirling {'1': \", '2': \", '3': \", '4': \"} (born September 26, 1941) is a research scientist emeritus with Environment and Climate Change Canada and an adjunct professor in the University of Alberta Department of Biological Sciences. His research has focused mostly on Arctic and Antarctic zoology and ecology, and he is one of the world's top authorities on polar bears. Stirling has written five books and more than 150 articles published in peer-reviewed scientific journals. He has written and spoken extensively about the danger posed to polar bears by global warming."
+          },
+          {
+            "title": "Phoenix Polar Bears",
+            "text": "The Phoenix Polar Bears was a USA Hockey-sanctioned Junior A Tier III ice hockey team based out of Phoenix, Arizona. Their host facility was the Desert Schools Coytotes Center in Chandler, Arizona. The Polar Bears was a member of the Western States Hockey League but vacated their membership in the league when the WSHL moved away from USA Hockey sanctioning in 2011."
+          },
+          {
+            "title": "Kermode bear",
+            "text": "The Kermode bear (\"Ursus americanus kermodei\"), also known as the \"spirit bear\" (particularly in British Columbia), is a rare subspecies of the American black bear living in the Central and North Coast regions of British Columbia, Canada. It is the official provincial mammal of British Columbia. It is noted for about one-tenth of its population having white or cream-coloured coats like polar bears. This colour is due to a double recessive gene unique in the subspecies. They are not albinos and not any more related to polar bears or the \"blonde\" brown bears of Alaska's \"ABC Islands\" than other members of their species. Sometimes, a mother black bear can have a white cub."
+          },
+          {
+            "title": "Canada Goose (clothing)",
+            "text": "Canada Goose Inc. is a Canadian manufacturer of winter clothing. The company was founded in 1957 by Sam Tick, under the name Metro Sportswear Ltd. Canada Goose manufactures a wide range of jackets, parkas, vests, hats, gloves, shells and other apparel. Some Canada Goose jackets use coyote fur on the hoods and are often filled with down which is purchased from Hutterite farmers in rural Canada\". Duck down is used for most models. The jackets retail between $600 and $1,275; the \"Kensington\", its best-selling women's coat, retails for approximately $745."
+          },
+          {
+            "title": "Mitchell Taylor",
+            "text": "Mitchell Taylor, Ph.D., is a Canadian biologist specializing in polar bears who claims that Canada's polar bear population is higher now than it was 30 years ago and that polar bears are not currently threatened by climate change. He is currently a contract adjunct professor at Lakehead University , and he is affiliated with the Heartland Institute ."
+          },
+          {
+            "title": "Agreement on the Conservation of Polar Bears",
+            "text": "The Agreement on the Conservation of Polar Bears is a multilateral treaty signed in Oslo, November 15, 1973, by the five nations with the largest polar bear populations: Canada, Denmark (Greenland), Norway (Svalbard), the United States, and the Soviet Union. This treaty was brought about due to increased hunting of polar bears during the 1960s and 1970s which led to polar bears being under severe survival pressure from hunters."
+          },
+          {
+            "title": "The Real Bears",
+            "text": "The Real Bears is an anti-soft-drink advertising campaign by the Center for Science in the Public Interest, which debuted in October 2012. It is a parody of the Coca-Cola Company's ad campaigns depicting polar bears, in particular the \"Open Happiness\" ads, and was produced with the help of Alex Bogusky. Michael Jacobson said that the ad was \"...our attempt to reposition soft drinks from a source of happiness to a major cause of disease.\" CSPI chose Bogusky to direct the ad because, they said, they had long admired his work in creating anti-tobacco ads through his agency, Crispin Porter + Bogusky. The song playing throughout the CSPI ad is by Jason Mraz and is entitled \"Sugar.\" The ad depicts polar bears suffering from a wide variety of health problems as a result of soda consumption, such as type II diabetes and erectile dysfunction. In response to the ad, Coca-Cola spokeswoman Susan Stribling stated that the ad was \"irresponsible and the usual grandstanding from CSPI,” and Karen Hanretty, a spokeswoman for the American Beverage Association, noted that soda consumption has decreased over the last decade or so, whereas obesity rates have still risen over the same time period, saying, \"CSPI is better at producing videos than they are doing math.\" The video has over 2 million views on YouTube."
+          },
+          {
+            "title": "Polar Bears (band)",
+            "text": "Polar Bears are an indie rock band from Santa Rosa, California who currently play in and around the North Bay music scene. They have toured nationally with longtime friends The Velvet Teen and have done numerous West Coast tours since their inception in 2001. In March 2004, they released an EP, \"Shorts Are for Warm\", on Petaluma-based record label, Pandacide. More recently, in early 2007, Polar Bears self-released their full-length album, \"The Future King\". Currently this album is only available directly from the band at their live shows and from The Last Record Store in Santa Rosa, CA. Polar Bears are notable in the Sonoma County music scene for being one of the biggest drawing and intensely furious live bands in the area. Their following has steadily grown during their existence, being prominently featured in publications such as the North Bay Bohemian and Metroactive.com. Bands that Polar Bears have shared the stage with include: Victims Family, Cursive (band), Nomeansno, The Casket Lottery and Aloha (band)."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Sam Tick",
+        "supporting_titles": [
+          "Canada Goose (clothing)",
+          "Polar Bears International"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "97829374efd64a80",
+      "fork_step_idx": 2,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "NOTE: Canada Goose (clothing) founded Metro Sportswear Ltd. in 1957, which later became Canada Goose Inc.\nNEXT: SEARCH when did metro sportswear change to canada goose",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: Sam Tick -> Canada Goose (clothing)"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 2,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: Sam Tick -> Canada Goose (clothing)"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "Canada Goose",
+        "expected": "Sam Tick",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 2,
+        "source": "injected",
+        "notes": "F6: Sam Tick -> Canada Goose (clothing)"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 5,
+        "n_reused": 3,
+        "n_llm_calls": 4,
+        "tokens_in": 1023,
+        "tokens_out": 87,
+        "latency_ms": 32665.31,
+        "tokens_saved": 78,
+        "seconds_saved": 0.79,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1585
+      },
+      "created_at": "2026-10-03T20:17:38.249016+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "35c316d208bc457c",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
+      "task_input": {
+        "question": "What editor of the The Dungeons & Dragons Basic Set is best known for his work at TSR, Inc.?",
+        "paragraphs": [
+          {
+            "title": "Dungeons &amp; Dragons Game (1991 boxed set)",
+            "text": "The New Easy-to-Master Dungeons & Dragons Game is an introductory set for the \"Dungeons & Dragons\" fantasy role-playing game, published by TSR, Inc. in 1991. It was a replacement for the previous \"Dungeons & Dragons Basic Set\", serving to introduce new players to the game, using the rule set previously established."
+          },
+          {
+            "title": "The Keep on the Borderlands",
+            "text": "The Keep on the Borderlands is a \"Dungeons & Dragons\" module by Gary Gygax, first printed in December 1979. In it, player characters are based at a keep and investigate a nearby series of caves that are filled with a variety of monsters. It was designed to be used with the \"Dungeons & Dragons Basic Set\", and was included in the 1979–1982 editions of the \"Basic Set\". It was designed for people new to \"Dungeons & Dragons\"."
+          },
+          {
+            "title": "Rahasia",
+            "text": "Rahasia is an adventure module published by TSR, Inc. in 1984, for the \"Basic Set\" rules of the \"Dungeons & Dragons\" fantasy role-playing game. Its product designation is TSR 9115. The book was designed by Tracy and Laura Hickman, and features artwork by Jeff Easley and Timothy Truman."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Basic Set",
+            "text": "The Dungeons & Dragons Basic Set is a set of rulebooks for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. First published in 1977, it saw a handful of revisions and reprintings. The first edition was written by J. Eric Holmes based on Gary Gygax and Dave Arneson's original work. Later editions were edited by Tom Moldvay, Dave Cook, and Frank Mentzer."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Immortals Rules",
+            "text": "Dungeons & Dragons Immortals Rules, written by Frank Mentzer, is a boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game first published by TSR in 1986 as an expansion to the \"Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Companion Set",
+            "text": "The Dungeons & Dragons Companion Set is an expansion boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. It was first published in 1984 as an expansion to the \"Dungeons & Dragons Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Rules Cyclopedia",
+            "text": "The Dungeons & Dragons Rules Cyclopedia is a 1991 book published by TSR, Inc., as a continuation of the basic edition of the \"Dungeons & Dragons\" fantasy role-playing game, which ran concurrently with \"Advanced Dungeons & Dragons\". Its product designation was TSR 1071."
+          },
+          {
+            "title": "The Lost City (Dungeons &amp; Dragons)",
+            "text": "The Lost City (B4) is a \"Dungeons & Dragons\" adventure module by Tom Moldvay. It was first published by TSR in 1982 and was designed as a stand-alone adventure for use with the \"Dungeons & Dragons Basic Set\". The working title for the module was \"The Lost City of Cynidecia\". Moldvay designed the module to give novice Dungeon Masters experience fleshing out adventures and is only partially complete. The module is described as a low-level scenario, in which the only hope of the player characters' survival can be found in a ruined city slowly rising out of the sands. The adventure is set inside a huge step pyramid, with the lower pyramid only sketched out and the city itself described with a list of the major areas and a map. The adventure’s main villain is Zargon, a giant one-eyed monster and his minions. The entire double pyramid, not including the city, contains over 100 rooms."
+          },
+          {
+            "title": "In Search of Adventure",
+            "text": "In Search of Adventure is an abridged compilation adventure module published by TSR, Inc. in 1987, for the \"Basic Set\" of the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. Its product designation was TSR 9190. This 160-page book features cover artwork by Keith Parkinson."
+          },
+          {
+            "title": "David Cook (game designer)",
+            "text": "David \"Zeb\" Cook is an American game designer, best known for his work at TSR, Inc., where he was employed for over fifteen years."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Dave Cook",
+        "supporting_titles": [
+          "David Cook (game designer)",
+          "Dungeons &amp; Dragons Basic Set"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "158ee641b5d548c2",
+      "fork_step_idx": 7,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "ANSWER: Dungeons &amp; Dragons Immortals Rules",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 7,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "Dungeons &amp; Dragons Immortals Rules",
+        "expected": "Dave Cook",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 7,
+        "source": "injected",
+        "notes": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 1,
+        "n_reused": 7,
+        "n_llm_calls": 1,
+        "tokens_in": null,
+        "tokens_out": null,
+        "latency_ms": 0.01,
+        "tokens_saved": 1307,
+        "seconds_saved": 9.02,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1541
+      },
+      "created_at": "2026-10-03T20:17:33.601348+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "68849f3ef15d459e",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
+      "task_input": {
+        "question": "What editor of the The Dungeons & Dragons Basic Set is best known for his work at TSR, Inc.?",
+        "paragraphs": [
+          {
+            "title": "Dungeons &amp; Dragons Game (1991 boxed set)",
+            "text": "The New Easy-to-Master Dungeons & Dragons Game is an introductory set for the \"Dungeons & Dragons\" fantasy role-playing game, published by TSR, Inc. in 1991. It was a replacement for the previous \"Dungeons & Dragons Basic Set\", serving to introduce new players to the game, using the rule set previously established."
+          },
+          {
+            "title": "The Keep on the Borderlands",
+            "text": "The Keep on the Borderlands is a \"Dungeons & Dragons\" module by Gary Gygax, first printed in December 1979. In it, player characters are based at a keep and investigate a nearby series of caves that are filled with a variety of monsters. It was designed to be used with the \"Dungeons & Dragons Basic Set\", and was included in the 1979–1982 editions of the \"Basic Set\". It was designed for people new to \"Dungeons & Dragons\"."
+          },
+          {
+            "title": "Rahasia",
+            "text": "Rahasia is an adventure module published by TSR, Inc. in 1984, for the \"Basic Set\" rules of the \"Dungeons & Dragons\" fantasy role-playing game. Its product designation is TSR 9115. The book was designed by Tracy and Laura Hickman, and features artwork by Jeff Easley and Timothy Truman."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Basic Set",
+            "text": "The Dungeons & Dragons Basic Set is a set of rulebooks for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. First published in 1977, it saw a handful of revisions and reprintings. The first edition was written by J. Eric Holmes based on Gary Gygax and Dave Arneson's original work. Later editions were edited by Tom Moldvay, Dave Cook, and Frank Mentzer."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Immortals Rules",
+            "text": "Dungeons & Dragons Immortals Rules, written by Frank Mentzer, is a boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game first published by TSR in 1986 as an expansion to the \"Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Companion Set",
+            "text": "The Dungeons & Dragons Companion Set is an expansion boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. It was first published in 1984 as an expansion to the \"Dungeons & Dragons Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Rules Cyclopedia",
+            "text": "The Dungeons & Dragons Rules Cyclopedia is a 1991 book published by TSR, Inc., as a continuation of the basic edition of the \"Dungeons & Dragons\" fantasy role-playing game, which ran concurrently with \"Advanced Dungeons & Dragons\". Its product designation was TSR 1071."
+          },
+          {
+            "title": "The Lost City (Dungeons &amp; Dragons)",
+            "text": "The Lost City (B4) is a \"Dungeons & Dragons\" adventure module by Tom Moldvay. It was first published by TSR in 1982 and was designed as a stand-alone adventure for use with the \"Dungeons & Dragons Basic Set\". The working title for the module was \"The Lost City of Cynidecia\". Moldvay designed the module to give novice Dungeon Masters experience fleshing out adventures and is only partially complete. The module is described as a low-level scenario, in which the only hope of the player characters' survival can be found in a ruined city slowly rising out of the sands. The adventure is set inside a huge step pyramid, with the lower pyramid only sketched out and the city itself described with a list of the major areas and a map. The adventure’s main villain is Zargon, a giant one-eyed monster and his minions. The entire double pyramid, not including the city, contains over 100 rooms."
+          },
+          {
+            "title": "In Search of Adventure",
+            "text": "In Search of Adventure is an abridged compilation adventure module published by TSR, Inc. in 1987, for the \"Basic Set\" of the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. Its product designation was TSR 9190. This 160-page book features cover artwork by Keith Parkinson."
+          },
+          {
+            "title": "David Cook (game designer)",
+            "text": "David \"Zeb\" Cook is an American game designer, best known for his work at TSR, Inc., where he was employed for over fifteen years."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Dave Cook",
+        "supporting_titles": [
+          "David Cook (game designer)",
+          "Dungeons &amp; Dragons Basic Set"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "158ee641b5d548c2",
+      "fork_step_idx": 2,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "NOTE: The first edition of the Dungeons & Dragons Basic Set was written by J. Eric Holmes based on Gary Gygax and Dave Arneson's original work. Later editions were edited by Tom Moldvay, Dungeons &amp; Dragons Immortals Rules, and Frank Mentzer.\nNEXT: SEARCH Best known editor of The Dungeons & Dragons Basic Set at TSR, Inc.",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 2,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "Tom Moldvay",
+        "expected": "Dave Cook",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 2,
+        "source": "injected",
+        "notes": "F6: Dave Cook -> Dungeons &amp; Dragons Immortals Rules"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 4,
+        "n_reused": 4,
+        "n_llm_calls": 4,
+        "tokens_in": 911,
+        "tokens_out": 105,
+        "latency_ms": 7756.92,
+        "tokens_saved": 81,
+        "seconds_saved": 2.363,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1541
+      },
+      "created_at": "2026-10-03T20:17:25.817238+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "c9070754abd5414a",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a8e2fe95542995085b373d0",
+      "task_input": {
+        "question": "What editor of the The Dungeons & Dragons Basic Set is best known for his work at TSR, Inc.?",
+        "paragraphs": [
+          {
+            "title": "Dungeons &amp; Dragons Game (1991 boxed set)",
+            "text": "The New Easy-to-Master Dungeons & Dragons Game is an introductory set for the \"Dungeons & Dragons\" fantasy role-playing game, published by TSR, Inc. in 1991. It was a replacement for the previous \"Dungeons & Dragons Basic Set\", serving to introduce new players to the game, using the rule set previously established."
+          },
+          {
+            "title": "The Keep on the Borderlands",
+            "text": "The Keep on the Borderlands is a \"Dungeons & Dragons\" module by Gary Gygax, first printed in December 1979. In it, player characters are based at a keep and investigate a nearby series of caves that are filled with a variety of monsters. It was designed to be used with the \"Dungeons & Dragons Basic Set\", and was included in the 1979–1982 editions of the \"Basic Set\". It was designed for people new to \"Dungeons & Dragons\"."
+          },
+          {
+            "title": "Rahasia",
+            "text": "Rahasia is an adventure module published by TSR, Inc. in 1984, for the \"Basic Set\" rules of the \"Dungeons & Dragons\" fantasy role-playing game. Its product designation is TSR 9115. The book was designed by Tracy and Laura Hickman, and features artwork by Jeff Easley and Timothy Truman."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Basic Set",
+            "text": "The Dungeons & Dragons Basic Set is a set of rulebooks for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. First published in 1977, it saw a handful of revisions and reprintings. The first edition was written by J. Eric Holmes based on Gary Gygax and Dave Arneson's original work. Later editions were edited by Tom Moldvay, Dave Cook, and Frank Mentzer."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Immortals Rules",
+            "text": "Dungeons & Dragons Immortals Rules, written by Frank Mentzer, is a boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game first published by TSR in 1986 as an expansion to the \"Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Companion Set",
+            "text": "The Dungeons & Dragons Companion Set is an expansion boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. It was first published in 1984 as an expansion to the \"Dungeons & Dragons Basic Set\"."
+          },
+          {
+            "title": "Dungeons &amp; Dragons Rules Cyclopedia",
+            "text": "The Dungeons & Dragons Rules Cyclopedia is a 1991 book published by TSR, Inc., as a continuation of the basic edition of the \"Dungeons & Dragons\" fantasy role-playing game, which ran concurrently with \"Advanced Dungeons & Dragons\". Its product designation was TSR 1071."
+          },
+          {
+            "title": "The Lost City (Dungeons &amp; Dragons)",
+            "text": "The Lost City (B4) is a \"Dungeons & Dragons\" adventure module by Tom Moldvay. It was first published by TSR in 1982 and was designed as a stand-alone adventure for use with the \"Dungeons & Dragons Basic Set\". The working title for the module was \"The Lost City of Cynidecia\". Moldvay designed the module to give novice Dungeon Masters experience fleshing out adventures and is only partially complete. The module is described as a low-level scenario, in which the only hope of the player characters' survival can be found in a ruined city slowly rising out of the sands. The adventure is set inside a huge step pyramid, with the lower pyramid only sketched out and the city itself described with a list of the major areas and a map. The adventure’s main villain is Zargon, a giant one-eyed monster and his minions. The entire double pyramid, not including the city, contains over 100 rooms."
+          },
+          {
+            "title": "In Search of Adventure",
+            "text": "In Search of Adventure is an abridged compilation adventure module published by TSR, Inc. in 1987, for the \"Basic Set\" of the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game. Its product designation was TSR 9190. This 160-page book features cover artwork by Keith Parkinson."
+          },
+          {
+            "title": "David Cook (game designer)",
+            "text": "David \"Zeb\" Cook is an American game designer, best known for his work at TSR, Inc., where he was employed for over fifteen years."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "Dave Cook",
+        "supporting_titles": [
+          "David Cook (game designer)",
+          "Dungeons &amp; Dragons Basic Set"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "158ee641b5d548c2",
+      "fork_step_idx": 3,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "docs": [
+            {
+              "id": 9,
+              "title": "Dungeons &amp; Dragons Rules Cyclopedia",
+              "text": "The Dungeons & Dragons Rules Cyclopedia is a 1991 book published by TSR, Inc., as a continuation of the basic edition of the \"Dungeons & Dragons\" fantasy role-playing game, which ran concurrently with \"Advanced Dungeons & Dragons\". Its product designation was TSR 1071.",
+              "score": 5.3235
+            },
+            {
+              "id": 4,
+              "title": "Dungeons &amp; Dragons Immortals Rules",
+              "text": "Dungeons & Dragons Immortals Rules, written by Frank Mentzer, is a boxed set for the \"Dungeons & Dragons\" (\"D&D\") fantasy role-playing game first published by TSR in 1986 as an expansion to the \"Basic Set\".",
+              "score": 2.5878
+            }
+          ]
+        },
+        "note": "F4: 'David Cook (game designer)' -> 'Dungeons &amp; Dragons Rules Cyclopedia'"
+      },
+      "fault": {
+        "type": "F4",
+        "step_idx": 3,
+        "params": {
+          "change_kind": "output",
+          "note": "F4: 'David Cook (game designer)' -> 'Dungeons &amp; Dragons Rules Cyclopedia'"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "Tom Moldvay",
+        "expected": "Dave Cook",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 3,
+        "source": "injected",
+        "notes": "F4: 'David Cook (game designer)' -> 'Dungeons &amp; Dragons Rules Cyclopedia'"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 5,
+        "n_reused": 3,
+        "n_llm_calls": 3,
+        "tokens_in": 925,
+        "tokens_out": 110,
+        "latency_ms": 6544.12,
+        "tokens_saved": 518,
+        "seconds_saved": 4.824,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1541
+      },
+      "created_at": "2026-10-03T20:17:19.236835+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "e4bb12f6d257412e",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5ab926bc554299131ca42285",
+      "task_input": {
+        "question": "Alexis Argüello mentored Román González, who became first boxer to do what?",
+        "paragraphs": [
+          {
+            "title": "Ruben Castillo (boxer)",
+            "text": "Ruben Castillo (born December 19, 1957) is a Mexican-American boxer who fought in the Featherweight division. Castillo went on to fight four World Championship fights against Hall of Famers Salvador Sánchez, Alexis Argüello and Julio César Chávez, as well as with Juan Laporte."
+          },
+          {
+            "title": "Sir Alexander Milne, 1st Baronet",
+            "text": "Admiral of the Fleet Sir Alexander Milne, 1st Baronet, GCB (10 November 1806 – 29 December 1896) was a Royal Navy officer. As a captain on the North America and West Indies Station he was employed capturing slave-traders and carrying out fishery protection duties. He served as a Junior Naval Lord under both Liberal and Conservative administrations and was put in charge of organising British and French transports during the Crimean War. He became Commander-in-Chief, North America and West Indies Station and in this role he acted with diplomacy, especially in response to the Trent Affair on 8 November 1861 during the American Civil War, when the USS \"San Jacinto\", commanded by Union Captain Charles Wilkes, intercepted the British mail packet RMS \"Trent\" and removed, as contraband of war, two Confederate diplomats, James Mason and John Slidell. He became First Naval Lord in the fourth Derby ministry in July 1866 and in this role took advantage of the Government's focus on spending reduction to ask fundamental questions about naval strategy. He again became First Naval Lord in the first Gladstone ministry in November 1872, remaining in office under the second Disraeli ministry and identifying the critical need for trade protection at times of War and demanding new cruisers to protect British merchant shipping."
+          },
+          {
+            "title": "The Bloody Battle of Bayamon",
+            "text": "The Bloody Battle of Bayamón was a boxing fight held on January 28, 1978 at Juan Ramón Loubriel Stadium in Bayamón, Puerto Rico, between defending WBC world Jr. Lightweight champion Alfredo Escalera, and former WBA world Featherweight champion Alexis Argüello of Nicaragua. It would be the first of two fights the two men would have against each other."
+          },
+          {
+            "title": "Alexis Argüello",
+            "text": "Alexis Argüello (April 19, 1952 – July 1, 2009) was a Nicaraguan professional boxer who competed from 1968 to 1995, and later became a politician. He was a three-weight world champion, having held the WBA featherweight title from 1974 to 1976; the WBC super featherweight title from 1978 to 1980; and the WBC lightweight title from 1981 to 1982. Additionally, he held the \"Ring\" magazine and lineal featherweight titles from 1975 to 1977; the \"Ring\" lightweight title from 1981 to 1982; and the lineal lightweight title in 1982. In his later career he challenged twice for light welterweight world titles, both times in famous fights against Aaron Pryor."
+          },
+          {
+            "title": "Boxing career of Manny Pacquiao",
+            "text": "In 2016, Manny Pacquiao was ranked number 2 on ESPN's list of top pound-for-pound boxers of the past 25 years. He is the only eight-division world champion in the history of the sport, having won eleven major world titles, as well as being the first boxer to win the lineal championship in five different weight classes. Pacquiao is also the first boxer in history to win major world titles in four of the original eight weight classes of boxing, also known as the \"glamour divisions\": flyweight, featherweight, lightweight, and welterweight."
+          },
+          {
+            "title": "Carlos Hernández (boxer)",
+            "text": "Carlos Hernández (born January 23, 1971 in Los Angeles, California) is a retired Salvadoran American boxer. He made boxing history by becoming the IBF super featherweight champion by beating David Santos. Carlos Hernández counted in that fight with the backing up of Alexis Argüello, Roberto Durán and the Salvadoran President, all of whom were at ringside cheering for him. On October 4, 2003, he retained the title against former IBF lightweight champion Steve Forbes, with an eleventh round technical decision."
+          },
+          {
+            "title": "Román González (boxer)",
+            "text": "Román Alberto González Luna (born June 17, 1987), best known as \"Chocolatito\" González, is a Nicaraguan professional boxer. He is the first boxer from Nicaragua to win world titles in four weight classes, having surpassed his mentor, idol, and former three-weight world champion, the late Alexis Argüello. González is also the first boxer in history to win world titles in all four of the lowest weight classes: minimumweight, light flyweight, flyweight, and super flyweight."
+          },
+          {
+            "title": "The Battle of the Champions (boxing)",
+            "text": "The Battle of the Champions, was a term used by promoter Bob Arum regarding the November 12, 1982 boxing match between Aaron Pryor and Alexis Argüello."
+          },
+          {
+            "title": "Boxing in the 1970s",
+            "text": "During the 1970s, boxing was characterized by dominating champions and history-making rivalries. The decade had many superstars, who also had fierce rivals. Alexis Argüello, for example, who won the world Featherweight and Jr. Lightweight titles in the '70s, had to overcome Alfredo Escalera twice before the decade was over."
+          },
+          {
+            "title": "Daisy Torres",
+            "text": "Daisy Torres is a Nicaraguan politician who is the current mayor of Managua. She is the first female mayor of the city, occupying the post since 2009 when the former mayor Alexis Argüello died. She is a member of the Sandinista National Liberation Front."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "win world titles in four weight classes",
+        "supporting_titles": [
+          "Alexis Argüello",
+          "Román González (boxer)"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "9c9e329b97dc476c",
+      "fork_step_idx": 2,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "NOTE: Román González is the first boxer in history to Ruben Castillo (boxer): minimumweight, light flyweight, flyweight, and super flyweight.\nNEXT: ANSWER",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: win world titles in all four of the lowest weight classes -> Ruben Castillo (boxer)"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 2,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: win world titles in all four of the lowest weight classes -> Ruben Castillo (boxer)"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.5263,
+        "final_answer": "became first boxer to win world titles at four successive weight divisions",
+        "expected": "win world titles in four weight classes",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 2,
+        "source": "injected",
+        "notes": "F6: win world titles in all four of the lowest weight classes -> Ruben Castillo (boxer)"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 5,
+        "n_reused": 3,
+        "n_llm_calls": 4,
+        "tokens_in": 1073,
+        "tokens_out": 127,
+        "latency_ms": 6165.39,
+        "tokens_saved": 79,
+        "seconds_saved": 2.421,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1704
+      },
+      "created_at": "2026-10-03T20:17:04.012722+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "a229e593383a477e",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5aba768c55429901930fa7e0",
+      "task_input": {
+        "question": "Which of the songs that outperformed \"Drive\" was most successful in the United States?",
+        "paragraphs": [
+          {
+            "title": "Losing My Religion",
+            "text": "\"Losing My Religion\" is a song by the American alternative rock band R.E.M. The song was released as the first single from the group's 1991 album \"Out of Time\". Built on a mandolin riff, \"Losing My Religion\" was an unlikely hit for the group, garnering heavy airplay on radio as well as on MTV due to its critically acclaimed music video. The song became R.E.M.'s highest-charting hit in the United States, reaching No. 4 on the \"Billboard\" Hot 100 and expanding the group's popularity beyond its original fanbase. It was nominated for several Grammy Awards, and won two for Best Pop Performance by a Duo or Group with Vocal and Best Short Form Music Video."
+          },
+          {
+            "title": "Driving in the United States",
+            "text": "Driving in the United States is similar to driving in Canada, Australia, and the United Kingdom but different from Europe, Asia, and Africa. Like most countries in the world, United States traffic drives on the right. It is not uncommon for Americans to drive more than an hour each way to work, and 77% of Americans drive alone to their work, while an additional 11% carpool. Most states allow people to drive unaccompanied once they have reached the age of sixteen, and all states require that one obtain a driver's license before they may operate a motor vehicle. All states recognize each other's driver's licenses, and Canada will recognize an American driver's license for a short visit. Driving while intoxicated is illegal in the United States."
+          },
+          {
+            "title": "Boeing B-17 Flying Fortress",
+            "text": "The Boeing B-17 Flying Fortress is a four-engine heavy bomber developed in the 1930s for the United States Army Air Corps (USAAC). Competing against Douglas and Martin for a contract to build 200 bombers, the Boeing entry (prototype Model 299/XB-17) outperformed both competitors and exceeded the air corps' performance specifications. Although Boeing lost the contract (to the Douglas B-18 Bolo) because the prototype crashed, the air corps ordered 13 more B-17s for further evaluation. From its introduction in 1938, the B-17 Flying Fortress evolved through numerous design advances, becoming the third-most produced bomber of all time, behind the B-24 and the multirole Ju 88."
+          },
+          {
+            "title": "WGPL, Lexington",
+            "text": "WGPL is a neighborhood in southwestern Lexington, Kentucky, United States. Its name is an acronym for each street in the neighborhood - Wabash Drive, Lackawanna Drive, Goodrich Avenue, Pensacola Drive, and Norfolk Drive. It is located between Rosemont Garden, Southland Drive, Nicholasville Road, and the Norfolk Southern railroad tracks. WGPL is part of a larger neighborhood in Lexington called Pensacola Park, which includes Suburban Court, Rosemont Garden, and Penmoken Park, according to the Fayette County Property Value Administrator."
+          },
+          {
+            "title": "Skycrest, Lexington",
+            "text": "Skycrest is a neighborhood in southwestern Lexington, Kentucky, United States. It takes its name from its location on a ridge between Wolf Run Creek and Vaughns Branch Creek that provides a panoramic view downtown Lexington. Its boundaries are Della Drive to the north, Beacon Hill Drive to the west, Furlong Drive and Spring Meadows Drive to the south, and Harrodsburg Road to the east."
+          },
+          {
+            "title": "Great Lakes XTBG",
+            "text": "The Great Lakes XTBG-1, also known as \"Avenger\" (a name coincidentally used for the successful Grumman TBF), was an American prototype torpedo bomber, intended for service in the United States Navy as part of that service's plan to modernise its aerial striking force in the mid-1930s. The XTBG-1 was outperformed by the competing TBD Devastator, however, in addition to having instability problems and only a single prototype of the three-seat design was constructed during 1935."
+          },
+          {
+            "title": "Billboard 200",
+            "text": "The \"Billboard\" 200 is a record chart ranking the 200 most popular music albums and EPs in the United States. It is published weekly by \"Billboard\" magazine. It is frequently used to convey the popularity of an artist or groups of artists. Often, a recording act will be remembered by its \"number ones\", those of their albums that outperformed all others during at least one week."
+          },
+          {
+            "title": "George Stoneman",
+            "text": "George Stoneman Jr. (August 8, 1822 – September 5, 1894) was a United States Army cavalry officer, trained at West Point, where his roommate was Stonewall Jackson. In the Civil War he became Adjutant to George B. McClellan, who did not appreciate the use of centralized cavalry, and was therefore outperformed by the Confederates, who did."
+          },
+          {
+            "title": "Grumman F4F Wildcat",
+            "text": "The Grumman F4F Wildcat is an American carrier-based fighter aircraft that began service with both the United States Navy and the British Royal Navy (as the Martlet) in 1940. First used in combat by the British in Europe, the Wildcat was the only effective fighter available to the United States Navy and Marine Corps in the Pacific Theater during the early part of World War II in 1941 and 1942; the disappointing Brewster Buffalo was withdrawn in favor of the Wildcat and replaced as units became available. With a top speed of 318 mph , the Wildcat was outperformed by the faster 331 mph , more maneuverable, and longer-ranged Mitsubishi A6M Zero. However, the F4F's ruggedness, coupled with tactics such as the Thach Weave, resulted in a claimed air combat kill-to-loss ratio of 5.9:1 in 1942 and 6.9:1 for the entire war."
+          },
+          {
+            "title": "Drive (R.E.M. song)",
+            "text": "\"Drive\" is the lead single and first track from American alternative rock band R.E.M.'s eighth studio album \"Automatic for the People\" in 1992. Although it was not as commercially successful as previous lead singles \"Losing My Religion,\" \"Stand,\" or \"The One I Love\" in the United States, it became R.E.M.'s then second biggest hit on the UK Singles Charts, peaking at #11. It managed a peak of #28 on the \"Billboard\" Hot 100. The song did hit number one on the Modern Rock Tracks and number two on the Mainstream Rock Tracks."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "\"Losing My Religion\"",
+        "supporting_titles": [
+          "Drive (R.E.M. song)",
+          "Losing My Religion"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "ae3a3076b9c141a7",
+      "fork_step_idx": 1,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "docs": []
+        },
+        "note": "F5: dropped ['Drive (R.E.M. song)', 'Losing My Religion']"
+      },
+      "fault": {
+        "type": "F5",
+        "step_idx": 1,
+        "params": {
+          "change_kind": "output",
+          "note": "F5: dropped ['Drive (R.E.M. song)', 'Losing My Religion']"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "(the search returned nothing)",
+        "expected": "\"Losing My Religion\"",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 1,
+        "source": "injected",
+        "notes": "F5: dropped ['Drive (R.E.M. song)', 'Losing My Religion']"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 7,
+        "n_reused": 1,
+        "n_llm_calls": 4,
+        "tokens_in": 1294,
+        "tokens_out": 155,
+        "latency_ms": 8814.63,
+        "tokens_saved": 80,
+        "seconds_saved": 0.612,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1746
+      },
+      "created_at": "2026-10-03T20:16:55.474592+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "dbb8c886bb0f480b",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5aba768c55429901930fa7e0",
+      "task_input": {
+        "question": "Which of the songs that outperformed \"Drive\" was most successful in the United States?",
+        "paragraphs": [
+          {
+            "title": "Losing My Religion",
+            "text": "\"Losing My Religion\" is a song by the American alternative rock band R.E.M. The song was released as the first single from the group's 1991 album \"Out of Time\". Built on a mandolin riff, \"Losing My Religion\" was an unlikely hit for the group, garnering heavy airplay on radio as well as on MTV due to its critically acclaimed music video. The song became R.E.M.'s highest-charting hit in the United States, reaching No. 4 on the \"Billboard\" Hot 100 and expanding the group's popularity beyond its original fanbase. It was nominated for several Grammy Awards, and won two for Best Pop Performance by a Duo or Group with Vocal and Best Short Form Music Video."
+          },
+          {
+            "title": "Driving in the United States",
+            "text": "Driving in the United States is similar to driving in Canada, Australia, and the United Kingdom but different from Europe, Asia, and Africa. Like most countries in the world, United States traffic drives on the right. It is not uncommon for Americans to drive more than an hour each way to work, and 77% of Americans drive alone to their work, while an additional 11% carpool. Most states allow people to drive unaccompanied once they have reached the age of sixteen, and all states require that one obtain a driver's license before they may operate a motor vehicle. All states recognize each other's driver's licenses, and Canada will recognize an American driver's license for a short visit. Driving while intoxicated is illegal in the United States."
+          },
+          {
+            "title": "Boeing B-17 Flying Fortress",
+            "text": "The Boeing B-17 Flying Fortress is a four-engine heavy bomber developed in the 1930s for the United States Army Air Corps (USAAC). Competing against Douglas and Martin for a contract to build 200 bombers, the Boeing entry (prototype Model 299/XB-17) outperformed both competitors and exceeded the air corps' performance specifications. Although Boeing lost the contract (to the Douglas B-18 Bolo) because the prototype crashed, the air corps ordered 13 more B-17s for further evaluation. From its introduction in 1938, the B-17 Flying Fortress evolved through numerous design advances, becoming the third-most produced bomber of all time, behind the B-24 and the multirole Ju 88."
+          },
+          {
+            "title": "WGPL, Lexington",
+            "text": "WGPL is a neighborhood in southwestern Lexington, Kentucky, United States. Its name is an acronym for each street in the neighborhood - Wabash Drive, Lackawanna Drive, Goodrich Avenue, Pensacola Drive, and Norfolk Drive. It is located between Rosemont Garden, Southland Drive, Nicholasville Road, and the Norfolk Southern railroad tracks. WGPL is part of a larger neighborhood in Lexington called Pensacola Park, which includes Suburban Court, Rosemont Garden, and Penmoken Park, according to the Fayette County Property Value Administrator."
+          },
+          {
+            "title": "Skycrest, Lexington",
+            "text": "Skycrest is a neighborhood in southwestern Lexington, Kentucky, United States. It takes its name from its location on a ridge between Wolf Run Creek and Vaughns Branch Creek that provides a panoramic view downtown Lexington. Its boundaries are Della Drive to the north, Beacon Hill Drive to the west, Furlong Drive and Spring Meadows Drive to the south, and Harrodsburg Road to the east."
+          },
+          {
+            "title": "Great Lakes XTBG",
+            "text": "The Great Lakes XTBG-1, also known as \"Avenger\" (a name coincidentally used for the successful Grumman TBF), was an American prototype torpedo bomber, intended for service in the United States Navy as part of that service's plan to modernise its aerial striking force in the mid-1930s. The XTBG-1 was outperformed by the competing TBD Devastator, however, in addition to having instability problems and only a single prototype of the three-seat design was constructed during 1935."
+          },
+          {
+            "title": "Billboard 200",
+            "text": "The \"Billboard\" 200 is a record chart ranking the 200 most popular music albums and EPs in the United States. It is published weekly by \"Billboard\" magazine. It is frequently used to convey the popularity of an artist or groups of artists. Often, a recording act will be remembered by its \"number ones\", those of their albums that outperformed all others during at least one week."
+          },
+          {
+            "title": "George Stoneman",
+            "text": "George Stoneman Jr. (August 8, 1822 – September 5, 1894) was a United States Army cavalry officer, trained at West Point, where his roommate was Stonewall Jackson. In the Civil War he became Adjutant to George B. McClellan, who did not appreciate the use of centralized cavalry, and was therefore outperformed by the Confederates, who did."
+          },
+          {
+            "title": "Grumman F4F Wildcat",
+            "text": "The Grumman F4F Wildcat is an American carrier-based fighter aircraft that began service with both the United States Navy and the British Royal Navy (as the Martlet) in 1940. First used in combat by the British in Europe, the Wildcat was the only effective fighter available to the United States Navy and Marine Corps in the Pacific Theater during the early part of World War II in 1941 and 1942; the disappointing Brewster Buffalo was withdrawn in favor of the Wildcat and replaced as units became available. With a top speed of 318 mph , the Wildcat was outperformed by the faster 331 mph , more maneuverable, and longer-ranged Mitsubishi A6M Zero. However, the F4F's ruggedness, coupled with tactics such as the Thach Weave, resulted in a claimed air combat kill-to-loss ratio of 5.9:1 in 1942 and 6.9:1 for the entire war."
+          },
+          {
+            "title": "Drive (R.E.M. song)",
+            "text": "\"Drive\" is the lead single and first track from American alternative rock band R.E.M.'s eighth studio album \"Automatic for the People\" in 1992. Although it was not as commercially successful as previous lead singles \"Losing My Religion,\" \"Stand,\" or \"The One I Love\" in the United States, it became R.E.M.'s then second biggest hit on the UK Singles Charts, peaking at #11. It managed a peak of #28 on the \"Billboard\" Hot 100. The song did hit number one on the Modern Rock Tracks and number two on the Mainstream Rock Tracks."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "\"Losing My Religion\"",
+        "supporting_titles": [
+          "Drive (R.E.M. song)",
+          "Losing My Religion"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "ae3a3076b9c141a7",
+      "fork_step_idx": 7,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "text": "ANSWER: George Stoneman",
+          "tool_calls": [],
+          "finish_reason": "stop"
+        },
+        "note": "F6: Losing My Religion -> George Stoneman"
+      },
+      "fault": {
+        "type": "F6",
+        "step_idx": 7,
+        "params": {
+          "change_kind": "output",
+          "note": "F6: Losing My Religion -> George Stoneman"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "George Stoneman",
+        "expected": "\"Losing My Religion\"",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 7,
+        "source": "injected",
+        "notes": "F6: Losing My Religion -> George Stoneman"
+      },
+      "split": "train",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 1,
+        "n_reused": 7,
+        "n_llm_calls": 1,
+        "tokens_in": null,
+        "tokens_out": null,
+        "latency_ms": 0.01,
+        "tokens_saved": 1554,
+        "seconds_saved": 6.745,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1746
+      },
+      "created_at": "2026-10-03T20:16:55.458700+00:00",
+      "machine": "aryan-4060"
+    },
+    {
+      "run_id": "c1476b8f7806494d",
+      "schema_version": 1,
+      "task_family": "qa",
+      "task_id": "qa-5a85e24a5542994775f6067f",
+      "task_input": {
+        "question": "Are Hoodoo Gurus and Pierre Bouvier of the same nationality?",
+        "paragraphs": [
+          {
+            "title": "Dubrovniks",
+            "text": "The Dubrovniks were an Australian rock band which formed in August 1986 as The Adorable Ones. Early in 1987 they changed their name, which acknowledges two of their founders, Roddy Radalj and Boris Sujdovic, birthplace in Dubrovnik, a town in Croatia. Both Radalj and fellow founder James Baker had also founded Hoodoo Gurus (as Le Hoodoo Gurus) in 1981. All three had earlier associations in the Perth punk scene of the late 1970s. The group issued four albums, \"Dubrovnik Blues\" (August 1989), \"Audio Sonic Love Affair\" (September 1990), \"Chrome\" (June 1992), and \"Medicine Wheel\" (1994), before disbanding in 1995."
+          },
+          {
+            "title": "Hoodoo Gurus discography",
+            "text": "Australian rock group Hoodoo Gurus have released nine studio albums, thirty-six singles, two extended plays, six compilation albums and four video albums. Formed in January 1981, the band was originally known as Le Hoodoo Gurus for the release of their first single, \"Leilani\", in October 1982. As Hoodoo Gurus, the band signed with Big Time Records and premiered their debut album, \"Stoneage Romeos\", in March 1984. Also issued in the United States through A&M Records, the record remained atop the Alternative/College Albums Chart for four consecutive weeks, with it also becoming one of the most played albums of that year on the college network. The group's subsequent albums, \"Mars Needs Guitars! \", \"Blow Your Cool! \" and \"Magnum Cum Louder\", all reached the \"Billboard\" 200."
+          },
+          {
+            "title": "You Open My Eyes",
+            "text": "\"You Open My Eyes\" is a single by iconic Australian rock group Hoodoo Gurus which reached #43 on the ARIA Singles Charts. It was released on BMG in February, 1994; and was written by Brad Shepherd. This was the first Hoodoo Gurus single that was not written or co-written by Dave Faulkner. The B side, \"Something I Forgot to Say\", was written by Faulkner. The second B side was a cover of The Victims' \"Television Addict\" written by James Baker and Faulkner (both were members of The Victims and of Hoodoo Gurus). The music video for \"You Open My Eyes\" was directed by former Guru, Kimble Rendall and was their most expensive to date."
+          },
+          {
+            "title": "Leilani (song)",
+            "text": "\"Leilani\" was the first single by iconic Australian rock group Hoodoo Gurus when they were called Le Hoodoo Gurus and was released on Phantom Records in October 1982. It had been written by all four Gurus: James Baker, Dave Faulkner, Roddy Radalj and Kimble Rendall. Rendall left shortly before its release and, not long after, the band dropped the 'Le' to become Hoodoo Gurus. Le Hoodoo Gurus were noted for having three guitars and no bass player, creating a distinctive, layered sound. This was captured on \"Leilani\", which told the story of a maiden sacrificed to the gods and an erupting volcano while her true love looked on helplessly. The song was later released on Hoodoo Gurus' first album \"Stoneage Romeos\" (1984)."
+          },
+          {
+            "title": "Armchair Gurus",
+            "text": "Armchair Gurus is the third compilation album by Australian rock group Hoodoo Gurus. It was originally released as a 2-CD set, to coincide with the band's 1997 farewell tour of Australia (the 'Spit The Dummy' tour). It was also released separately with \"Electric Chair\", the album features seventeen Hoodoo Gurus' ballads and slower songs whilst \"Electric Chair\" contains seventeen party tracks. The double set contains two tracks not previously found on Gurus' albums and five totally new songs including the single \"The Real Deal\". The album went gold."
+          },
+          {
+            "title": "Pierre Bouvier",
+            "text": "Pierre Charles Bouvier {'1': \", '2': \", '3': \", '4': \"} (born 9 May 1979) is a Canadian singer, songwriter, musician, composer and actor who is best known as the lead singer and guitarist of the rock band Simple Plan."
+          },
+          {
+            "title": "Richard Grossman (bassist)",
+            "text": "Richard Grossman (born 28 November 1959) is an Australian rock musician who has played bass guitar for two iconic bands: Divinyls and Hoodoo Gurus. Hoodoo Gurus' status on the Australian rock scene was acknowledged when they were inducted into the 2007 ARIA Hall of Fame. For Grossman, this was his second Hall of Fame induction in a row; the 2006 award was for his stint with Divinyls. Often referred to as Rick Grossman, he has also performed with other Australian bands: Matt Finish, Ghostwriters, Persian Rugs, The Kelly Gang and Men At Work."
+          },
+          {
+            "title": "Electric Chair (album)",
+            "text": "Electric Chair is a compilation album by Australian rock group Hoodoo Gurus. It was originally released as a 2-CD set with \"Armchair Gurus\", the album features seventeen Hoodoo Gurus' rock/party tracks whilst \"Armchair Gurus\" contains seventeen ballads and slower songs. The double set contains two tracks not previously found on Gurus' albums and five totally new songs including the single \"The Real Deal\". The albums were also released as separate albums. The album was certified gold."
+          },
+          {
+            "title": "James Baker (musician)",
+            "text": "James Lawrence Baker (born 7 March 1954) is a rock musician from Perth, Western Australia. He has drummed with several bands including the Scientists (1978–81, 1995), Le Hoodoo Gurus (1981–84), Beasts of Bourbon (1983–85, 1988–90), and the Dubrovniks (1986–94). In 2006 Baker was inducted into the West Australian Music Industry Hall of Fame. Hoodoo Gurus were inducted into the 2007 ARIA Hall of Fame."
+          },
+          {
+            "title": "Hoodoo Gurus",
+            "text": "Hoodoo Gurus (referred to as the Gurus by fans) are an Australian rock band, formed in Sydney in 1981, by the mainstay Dave Faulkner (songwriter, lead singer and guitarist) and later joined by Richard Grossman (bass), Mark Kingsmill (drums), and Brad Shepherd (guitar, vocals, harmonica). Their popularity peaked in the mid to late 1980s with albums \"Mars Needs Guitars! \", \"Blow Your Cool! \" and \"Magnum Cum Louder\"."
+          }
+        ]
+      },
+      "task_expected": {
+        "answer": "no",
+        "supporting_titles": [
+          "Hoodoo Gurus",
+          "Pierre Bouvier"
+        ]
+      },
+      "agent": "qa_agent@v1",
+      "model_id": "agent-local-7b",
+      "parent_run_id": "9afdd7ba93df471a",
+      "fork_step_idx": 1,
+      "patch": {
+        "kind": "output",
+        "value": {
+          "docs": [
+            {
+              "id": 5,
+              "title": "You Open My Eyes",
+              "text": "\"You Open My Eyes\" is a single by iconic Australian rock group Hoodoo Gurus which reached #43 on the ARIA Singles Charts. It was released on BMG in February, 1994; and was written by Brad Shepherd. This was the first Hoodoo Gurus single that was not written or co-written by Dave Faulkner. The B side, \"Something I Forgot to Say\", was written by Faulkner. The second B side was a cover of The Victims' \"Television Addict\" written by James Baker and Faulkner (both were members of The Victims and of Hoodoo Gurus). The music video for \"You Open My Eyes\" was directed by former Guru, Kimble Rendall and was their most expensive to date.",
+              "score": 6.4955
+            },
+            {
+              "id": 3,
+              "title": "Leilani (song)",
+              "text": "\"Leilani\" was the first single by iconic Australian rock group Hoodoo Gurus when they were called Le Hoodoo Gurus and was released on Phantom Records in October 1982. It had been written by all four Gurus: James Baker, Dave Faulkner, Roddy Radalj and Kimble Rendall. Rendall left shortly before its release and, not long after, the band dropped the 'Le' to become Hoodoo Gurus. Le Hoodoo Gurus were noted for having three guitars and no bass player, creating a distinctive, layered sound. This was captured on \"Leilani\", which told the story of a maiden sacrificed to the gods and an erupting volcano while her true love looked on helplessly. The song was later released on Hoodoo Gurus' first album \"Stoneage Romeos\" (1984).",
+              "score": 1.3014
+            }
+          ]
+        },
+        "note": "F4: 'Pierre Bouvier' -> 'You Open My Eyes'"
+      },
+      "fault": {
+        "type": "F4",
+        "step_idx": 1,
+        "params": {
+          "change_kind": "output",
+          "note": "F4: 'Pierre Bouvier' -> 'You Open My Eyes'"
+        },
+        "generator": "catalog"
+      },
+      "outcome": {
+        "success": false,
+        "score": 0.0,
+        "final_answer": "yes",
+        "expected": "no",
+        "checker": "qa_f1"
+      },
+      "label": {
+        "root_cause_step": 1,
+        "source": "injected",
+        "notes": "F4: 'Pierre Bouvier' -> 'You Open My Eyes'"
+      },
+      "split": "calib",
+      "status": "done",
+      "error": null,
+      "stats": {
+        "n_steps": 9,
+        "n_executed": 7,
+        "n_reused": 1,
+        "n_llm_calls": 4,
+        "tokens_in": 959,
+        "tokens_out": 74,
+        "latency_ms": 5700.77,
+        "tokens_saved": 76,
+        "seconds_saved": 0.701,
+        "full_rerun_steps": 9,
+        "full_rerun_tokens": 1525
+      },
+      "created_at": "2026-10-03T20:16:47.062175+00:00",
+      "machine": "aryan-4060"
+    }
+  ],
+  "limit": 10,
+  "offset": 0
+}

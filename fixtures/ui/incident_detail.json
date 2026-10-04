@@ -1,0 +1,117 @@
+{
+  "incident_id": "7df82a2111",
+  "run_id": "37452fc329e1498f",
+  "owner": "Aryan",
+  "created_at": "2026-10-03T20:20:16+00:00",
+  "kind": "failure",
+  "severity": "high",
+  "title": "math_agent gave a wrong result",
+  "what_happened": "Your agent “math_agent” finished with a wrong result: 9, but 14 was expected.",
+  "why": "Step 4 (proven by replay): called calculator(expression=(20 * 2) * 0.80) → null.",
+  "how_to_fix": [
+    "Run this step again: it gave a wrong result this time (tested: re-running fixes the run).",
+    "Compare this run with a recent successful one on the incident page to see where they diverged."
+  ],
+  "actions_taken": [
+    "Re-ran the run with step 4 repaired: it passes. The original was left untouched."
+  ],
+  "needs_approval": false,
+  "signature": "b6410ededf71",
+  "repeats": 1,
+  "evidence": {
+    "cause_step": 4,
+    "cause_note": "proven by replay",
+    "timeline": [
+      {
+        "idx": 2,
+        "label": "called calculator(expression=20 * 0.70) → 14",
+        "flag": ""
+      },
+      {
+        "idx": 3,
+        "label": "model decided: CALC: (20 * 2) * 0.80",
+        "flag": ""
+      },
+      {
+        "idx": 4,
+        "label": "called calculator(expression=(20 * 2) * 0.80) → null",
+        "flag": "⚠ cause"
+      },
+      {
+        "idx": 5,
+        "label": "model decided: CALC: (20 * 2) * 0.80",
+        "flag": ""
+      },
+      {
+        "idx": 6,
+        "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+        "flag": ""
+      },
+      {
+        "idx": 7,
+        "label": "model decided: CALC: (20 * 2) * 0.80",
+        "flag": ""
+      },
+      {
+        "idx": 8,
+        "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+        "flag": ""
+      },
+      {
+        "idx": 9,
+        "label": "model decided: CALC: (20 * 2) * 0.80",
+        "flag": ""
+      },
+      {
+        "idx": 10,
+        "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+        "flag": ""
+      },
+      {
+        "idx": 11,
+        "label": "model decided: CALC: (20 * 2) * 0.80",
+        "flag": ""
+      },
+      {
+        "idx": 12,
+        "label": "model decided: FINAL: 9",
+        "flag": ""
+      },
+      {
+        "idx": 13,
+        "label": "final answer: 9",
+        "flag": ""
+      }
+    ],
+    "errors": []
+  },
+  "link": "http://127.0.0.1:8000/incident/7df82a2111",
+  "notifications": [
+    {
+      "channel": "outbox",
+      "status": "sent",
+      "detail": "data\\outbox\\7df82a2111"
+    },
+    {
+      "channel": "email-smtp",
+      "status": "skipped",
+      "detail": "not configured (set SMTP_HOST, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO)"
+    },
+    {
+      "channel": "email-mailgun",
+      "status": "skipped",
+      "detail": "not configured (set MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_TO)"
+    },
+    {
+      "channel": "whatsapp-twilio",
+      "status": "skipped",
+      "detail": "not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, ALERT_WHATSAPP_TO)"
+    }
+  ],
+  "status": "rejected",
+  "decision": {
+    "by": "e2e",
+    "at": "2026-10-03T20:20:16+00:00",
+    "note": "keep paused"
+  }
+}

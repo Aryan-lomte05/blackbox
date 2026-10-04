@@ -1,0 +1,682 @@
+{
+  "run": {
+    "run_id": "37452fc329e1498f",
+    "family": "math",
+    "family_label": "Math",
+    "task_id": "math-1066",
+    "agent": "math_agent@v1",
+    "model": "agent-local-7b",
+    "outcome": "fail",
+    "planted": "F3",
+    "guilty_step": 4,
+    "label_source": "injected",
+    "steps": 14,
+    "split": "test_known",
+    "created_at": "2026-10-03T13:25:11.980445+00:00",
+    "parent_run_id": "a94b964728bd42f8"
+  },
+  "nodes": [
+    {
+      "id": "0",
+      "type": "llm",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "idx": 0,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "plan",
+        "label": "#0 llm:agent-local-7b",
+        "preview": "1. Calculate how many pizzas the glee club ate: \\(20 \\times 0.70\\) 2. Calculate how many pizzas the football team ordered: \\(20 \\times 2\\) 3. Calculate how man…",
+        "error": null,
+        "reused": true,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": 3,
+        "suspect_p": 0.0141,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.5236,
+          "consistent": 0.498,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "1",
+      "type": "llm",
+      "position": {
+        "x": 300,
+        "y": 0
+      },
+      "data": {
+        "idx": 1,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#1 llm:agent-local-7b",
+        "preview": "CALC: 20 * 0.70",
+        "error": null,
+        "reused": true,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.0063,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.4661,
+          "consistent": 0.3528,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "2",
+      "type": "tool",
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "data": {
+        "idx": 2,
+        "kind": "tool",
+        "name": "calculator",
+        "node": "calculate",
+        "label": "#2 tool:calculator",
+        "preview": "14",
+        "error": null,
+        "reused": true,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.0124,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.8493,
+          "consistent": 0.7937,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "3",
+      "type": "llm",
+      "position": {
+        "x": 900,
+        "y": 0
+      },
+      "data": {
+        "idx": 3,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#3 llm:agent-local-7b",
+        "preview": "CALC: (20 * 2) * 0.80",
+        "error": null,
+        "reused": true,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.0008,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.5025,
+          "consistent": 0.3872,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "4",
+      "type": "tool",
+      "position": {
+        "x": 1200,
+        "y": 0
+      },
+      "data": {
+        "idx": 4,
+        "kind": "tool",
+        "name": "calculator",
+        "node": "calculate",
+        "label": "#4 tool:calculator",
+        "preview": "null",
+        "error": null,
+        "reused": false,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": 1,
+        "suspect_p": 0.7586,
+        "is_guilty": true,
+        "is_planted": true,
+        "checker": {
+          "on_track": 0.8543,
+          "consistent": 0.7478,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "5",
+      "type": "llm",
+      "position": {
+        "x": 1500,
+        "y": 0
+      },
+      "data": {
+        "idx": 5,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#5 llm:agent-local-7b",
+        "preview": "CALC: (20 * 2) * 0.80",
+        "error": null,
+        "reused": false,
+        "latency_ms": 820.84,
+        "tokens": 324,
+        "suspect_rank": null,
+        "suspect_p": 0.0002,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.7288,
+          "consistent": 0.6627,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "6",
+      "type": "tool",
+      "position": {
+        "x": 1800,
+        "y": 0
+      },
+      "data": {
+        "idx": 6,
+        "kind": "tool",
+        "name": "calculator",
+        "node": "calculate",
+        "label": "#6 tool:calculator",
+        "preview": "32",
+        "error": null,
+        "reused": true,
+        "latency_ms": 0.0,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.008,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.7981,
+          "consistent": 0.5801,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "7",
+      "type": "llm",
+      "position": {
+        "x": 2100,
+        "y": 0
+      },
+      "data": {
+        "idx": 7,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#7 llm:agent-local-7b",
+        "preview": "CALC: (20 * 2) * 0.80",
+        "error": null,
+        "reused": false,
+        "latency_ms": 902.51,
+        "tokens": 344,
+        "suspect_rank": null,
+        "suspect_p": 0.0001,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.6831,
+          "consistent": 0.5505,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "8",
+      "type": "tool",
+      "position": {
+        "x": 2400,
+        "y": 0
+      },
+      "data": {
+        "idx": 8,
+        "kind": "tool",
+        "name": "calculator",
+        "node": "calculate",
+        "label": "#8 tool:calculator",
+        "preview": "32",
+        "error": null,
+        "reused": false,
+        "latency_ms": 0.21,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.0005,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.7865,
+          "consistent": 0.5603,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "9",
+      "type": "llm",
+      "position": {
+        "x": 2700,
+        "y": 0
+      },
+      "data": {
+        "idx": 9,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#9 llm:agent-local-7b",
+        "preview": "CALC: (20 * 2) * 0.80",
+        "error": null,
+        "reused": false,
+        "latency_ms": 1057.63,
+        "tokens": 364,
+        "suspect_rank": null,
+        "suspect_p": 0.0001,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.6933,
+          "consistent": 0.6036,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "10",
+      "type": "tool",
+      "position": {
+        "x": 3000,
+        "y": 0
+      },
+      "data": {
+        "idx": 10,
+        "kind": "tool",
+        "name": "calculator",
+        "node": "calculate",
+        "label": "#10 tool:calculator",
+        "preview": "32",
+        "error": null,
+        "reused": false,
+        "latency_ms": 0.21,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": 0.0003,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.7788,
+          "consistent": 0.5492,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "11",
+      "type": "llm",
+      "position": {
+        "x": 3300,
+        "y": 0
+      },
+      "data": {
+        "idx": 11,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "step",
+        "label": "#11 llm:agent-local-7b",
+        "preview": "CALC: (20 * 2) * 0.80",
+        "error": null,
+        "reused": false,
+        "latency_ms": 1015.69,
+        "tokens": 384,
+        "suspect_rank": null,
+        "suspect_p": 0.0,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.6953,
+          "consistent": 0.5637,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "12",
+      "type": "llm",
+      "position": {
+        "x": 3300,
+        "y": 130
+      },
+      "data": {
+        "idx": 12,
+        "kind": "llm",
+        "name": "agent-local-7b",
+        "node": "check",
+        "label": "#12 llm:agent-local-7b",
+        "preview": "FINAL: 9",
+        "error": null,
+        "reused": false,
+        "latency_ms": 505.79,
+        "tokens": 199,
+        "suspect_rank": 2,
+        "suspect_p": 0.1988,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": {
+          "on_track": 0.2792,
+          "consistent": 0.1873,
+          "alarm": false,
+          "tier": "laya"
+        }
+      }
+    },
+    {
+      "id": "13",
+      "type": "final",
+      "position": {
+        "x": 3600,
+        "y": 0
+      },
+      "data": {
+        "idx": 13,
+        "kind": "final",
+        "name": "final",
+        "node": "answer",
+        "label": "#13 final:final",
+        "preview": "\"9\"",
+        "error": null,
+        "reused": false,
+        "latency_ms": 0.03,
+        "tokens": null,
+        "suspect_rank": null,
+        "suspect_p": null,
+        "is_guilty": false,
+        "is_planted": false,
+        "checker": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "d0-1",
+      "source": "0",
+      "target": "1",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d1-2",
+      "source": "1",
+      "target": "2",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d0-3",
+      "source": "0",
+      "target": "3",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d1-3",
+      "source": "1",
+      "target": "3",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d2-3",
+      "source": "2",
+      "target": "3",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d3-4",
+      "source": "3",
+      "target": "4",
+      "type": "dataflow",
+      "animated": true,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d0-5",
+      "source": "0",
+      "target": "5",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d3-5",
+      "source": "3",
+      "target": "5",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d4-5",
+      "source": "4",
+      "target": "5",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d5-6",
+      "source": "5",
+      "target": "6",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d0-7",
+      "source": "0",
+      "target": "7",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d5-7",
+      "source": "5",
+      "target": "7",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d6-7",
+      "source": "6",
+      "target": "7",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d7-8",
+      "source": "7",
+      "target": "8",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d0-9",
+      "source": "0",
+      "target": "9",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d7-9",
+      "source": "7",
+      "target": "9",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d8-9",
+      "source": "8",
+      "target": "9",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d9-10",
+      "source": "9",
+      "target": "10",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d0-11",
+      "source": "0",
+      "target": "11",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d9-11",
+      "source": "9",
+      "target": "11",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d10-11",
+      "source": "10",
+      "target": "11",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d10-12",
+      "source": "10",
+      "target": "12",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "d12-13",
+      "source": "12",
+      "target": "13",
+      "type": "dataflow",
+      "animated": false,
+      "data": {
+        "kind": "used the output of"
+      }
+    },
+    {
+      "id": "o11-12",
+      "source": "11",
+      "target": "12",
+      "type": "order",
+      "data": {
+        "kind": "then"
+      }
+    }
+  ],
+  "legend": {
+    "dataflow": "this step used that step's output",
+    "order": "next step in time",
+    "suspect_rank": "diagnosis rank (1 = most likely)",
+    "is_guilty": "known guilty step"
+  }
+}

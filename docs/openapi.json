@@ -1,0 +1,2908 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Black Box",
+    "summary": "A flight recorder for AI agents.",
+    "description": "Record every step of an agent run with a save-point, name the steps most likely to have caused a failure, **prove** the cause by re-running with only that step repaired (re-running only what the repair affects), and test GenAI fixes the same way.\n\n* **Runs**: browse recorded runs and their steps (with save-points and who-used-what links).\n* **Diagnosis**: the trained model's ranking of a failed run's steps.\n* **Experiments**: replay, fork, verify, repair, cheaper-model advice (long jobs stream events).\n* **Status**: what is running on the recording machine right now.\n\nInspector page: [/](/). Every number comes from recorded runs; nothing is filled in.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Health: database counts, models, providers",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/investigate/{case}": {
+      "post": {
+        "tags": [
+          "Investigate"
+        ],
+        "summary": "\u2605 Investigate a case: diagnose \u2192 verify \u2192 compare (\u2192 repair) in one call",
+        "description": "Returns a case file: `story` (numbered plain-language lines), the case, the diagnosis, every verify\nattempt with steps re-run vs re-used, the comparison with the fixed run, and repairs if asked.",
+        "operationId": "investigate_api_investigate__case__post",
+        "parameters": [
+          {
+            "name": "case",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "model_finds_it",
+                "model_misses_it",
+                "shop_new_task_type",
+                "math_failure",
+                "real_failure_verified",
+                "real_failure_unlabelled"
+              ],
+              "type": "string",
+              "description": "a real failed run picked from the recordings",
+              "title": "Case"
+            },
+            "description": "a real failed run picked from the recordings"
+          },
+          {
+            "name": "repair",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "also ask GenAI for fixes and test each (uses the big model; slower)",
+              "default": false,
+              "title": "Repair"
+            },
+            "description": "also ask GenAI for fixes and test each (uses the big model; slower)"
+          },
+          {
+            "name": "repeats",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3,
+              "minimum": 1,
+              "description": "attempts per repair (3 tells bad luck from a real bug)",
+              "default": 1,
+              "title": "Repeats"
+            },
+            "description": "attempts per repair (3 tells bad luck from a real bug)"
+          },
+          {
+            "name": "repair_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "agent-local-7b",
+                "agent-local",
+                "agent-strong"
+              ],
+              "type": "string",
+              "description": "model Verify uses to re-ask a suspect decision: agent-local-7b = qwen2.5:7b on this laptop (fast, default); agent-local = qwen2.5:3b (fastest); agent-strong = Nemotron 120B on free OpenRouter (strongest, slow: network + rate limits)",
+              "default": "agent-local-7b",
+              "title": "Repair Model"
+            },
+            "description": "model Verify uses to re-ask a suspect decision: agent-local-7b = qwen2.5:7b on this laptop (fast, default); agent-local = qwen2.5:3b (fastest); agent-strong = Nemotron 120B on free OpenRouter (strongest, slow: network + rate limits)"
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "optional: investigate this run instead of the case",
+              "title": "Run Id"
+            },
+            "description": "optional: investigate this run instead of the case"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Investigate Api Investigate  Case  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lab": {
+      "post": {
+        "tags": [
+          "Investigate"
+        ],
+        "summary": "\u2605 Live Lab: type a question, plant a mistake live, stream the whole investigation",
+        "description": "Starts a job. Stream `GET /api/jobs/{job_id}/events`: `stage` events (n = 1..14, title, detail, data)\nand `step` events (the agent's steps as they happen), then `done` with the scorecard.",
+        "operationId": "lab_api_lab_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabRequest"
+              },
+              "examples": {
+                "math": {
+                  "summary": "Math word problem (any)",
+                  "value": {
+                    "question": "A bakery bakes 24 muffins per tray. It bakes 6 trays and sells 97 muffins. How many muffins are left?",
+                    "mistake": "auto",
+                    "repair": false
+                  }
+                },
+                "qa": {
+                  "summary": "General-knowledge question (Wikipedia is searched live)",
+                  "value": {
+                    "question": "Who directed the film Inception, and in what year was it released?",
+                    "mistake": "auto",
+                    "repair": false
+                  }
+                },
+                "shop": {
+                  "summary": "Shop request on a generated store (orders, stock, refunds)",
+                  "value": {
+                    "question": "",
+                    "family": "ops",
+                    "mistake": "auto",
+                    "repair": false
+                  }
+                },
+                "wrong_fact": {
+                  "summary": "Force a specific mistake: F6 wrong fact",
+                  "value": {
+                    "question": "A train travels 180 km in 3 hours, then 120 km in 2 hours. What is its average speed in km per hour?",
+                    "mistake": "F6",
+                    "repair": true
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Lab Api Lab Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dataset": {
+      "get": {
+        "tags": [
+          "Dataset"
+        ],
+        "summary": "0 \u00b7 Dataset: everything recorded so far",
+        "description": "Totals, task families, test sets, label sources, planted-mistake health (how often each mistake\nbroke a run), the agent model's report card, and storage. Computed from the database; cached until\nthe number of runs changes.",
+        "operationId": "dataset_api_dataset_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Dataset Api Dataset Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "1 \u00b7 List runs",
+        "operationId": "list_runs_api_runs_get",
+        "parameters": [
+          {
+            "name": "outcome",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pass",
+                    "fail"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "pass or fail",
+              "title": "Outcome"
+            },
+            "description": "pass or fail"
+          },
+          {
+            "name": "labelled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "only runs whose guilty step is known",
+              "title": "Labelled"
+            },
+            "description": "only runs whose guilty step is known"
+          },
+          {
+            "name": "family",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "qa",
+                    "math",
+                    "ops",
+                    "external"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "qa, math, ops (Shop), external (Who&When)",
+              "title": "Family"
+            },
+            "description": "qa, math, ops (Shop), external (Who&When)"
+          },
+          {
+            "name": "split",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "train",
+                    "val",
+                    "calib",
+                    "test_known",
+                    "test_new_mistakes",
+                    "test_new_tasks",
+                    "test_natural",
+                    "test_outside"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "which test set",
+              "title": "Split"
+            },
+            "description": "which test set"
+          },
+          {
+            "name": "fault",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "F1",
+                    "F2",
+                    "F3",
+                    "F4",
+                    "F5",
+                    "F6",
+                    "F7",
+                    "F8",
+                    "F9",
+                    "F10"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fault"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "parent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "forks of this run",
+              "title": "Parent"
+            },
+            "description": "forks of this run"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response List Runs Api Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "11 \u00b7 Live run: a fresh task, recorded as it happens",
+        "operationId": "start_run_api_runs_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveRunRequest"
+              },
+              "examples": {
+                "qa": {
+                  "summary": "Live QA task on the local 7B model",
+                  "description": "A task the farm never ran (qa-5ab7fbbb5542990e739ec7b0). Steps stream at /api/runs/{run_id}/events.",
+                  "value": {
+                    "agent": "qa_agent@v1",
+                    "task_family": "qa",
+                    "task_id": "qa-5ab7fbbb5542990e739ec7b0",
+                    "task_input": {
+                      "question": "Does Bazhong or Kaiyuan, Liaoning have a higher population?",
+                      "paragraphs": [
+                        {
+                          "title": "Kaiyuan, Liaoning",
+                          "text": "Kaiyuan () is a county-level city in the northeast of Liaoning, People's Republic of China, bordering Jilin for a small section to the north. It is under the administration of Tieling City, the centre of which lies 33 km to the southwest."
+                        },
+                        {
+                          "title": "Du Zheheng",
+                          "text": "Du Zheheng () (1910\u20131975) was a People's Republic of China politician. He was born in Kaiyuan, Liaoning. In 1936, after attending Northeastern University, he went to Xi'an to participate in the Xi'an Incident. In 1937, he joined the Communist Party of China. During the Second Sino-Japanese War, he was a member of the Eighth Route Army, active in Hebei, Shanxi, Shandong and Henan Provinces. He was Secretary of Liaobei Province and vice-chairman of Liaodong (also called Andong Province). In 1950, he joined the People's Volunteer Army in the Korean War. Upon his return to China, he was agricultural minister for the Northeast Greater Administrative Area. In 1954, upon the dissolution of the greater administrative areas, he was made the 1st governor of his home province."
+                        },
+                        {
+                          "title": "Qinghe District, Tieling",
+                          "text": "Qinghe District () is a district of Tieling, Liaoning province, People's Republic of China. However, it is located closer to Kaiyuan City than it is to downtown Tieling, which lies 39 km to the southwest."
+                        },
+                        {
+                          "title": "Demography of the United Kingdom",
+                          "text": "According to the 2011 census, the total population of the United Kingdom was around 63,182,000. <ref name=\"2http://www.ons.gov.uk/ons/dcp171778_292378.pdf |title=2011 Census: Population Estimates for the United Kingdom |publisher=Office for National Statistics |date=27 March 2011 |accessdate=18 December 2012 }}</ref> It is the 22nd-largest in the world. Its overall population density is 259 people per square kilometre (671 people per sq mi), with England having a significantly higher population density than Wales, Scotland and Northern Ireland. Almost one-third of the population lives in England's southeast, which is predominantly urban and suburban, with about 8 million in the capital city of London, the population density of which is just over 5,200 per square kilometre (13,468 per sq mi)."
+                        },
+                        {
+                          "title": "Wei Junxing",
+                          "text": "Wei Junxing (; born October 1955) is a Chinese politician who spent most of his career in Liaoning province in northeast China. In January 2015, Wei was put under investigation by the Communist Party of China's anti-corruption agency. Previously he served as Deputy Secretary-general of Liaoning provincial government and the Party Secretary of Kaiyuan, and briefly as Mayor of Jinzhou."
+                        },
+                        {
+                          "title": "Permanent Population Committee",
+                          "text": "The Permanent Population Committee (PPC) (Arabic: \u0627\u0644\u0644\u062c\u0646\u0629 \u0627\u0644\u062f\u0627\u0626\u0645\u0629 \u0644\u0644\u0633\u0643\u0627\u0646) is a national authority in the state of Qatar whose mission is to realize the aptness of population requirements to sustainable development. To do so, PPC bases its action on Islamic Sharia principles and communal values and traditions in line with the political foundations of the Qatar Permanent Constitution, the National Vision, the relevant Millennium Development Goals (MDGs), the Cooperation Council for the Arab States of the Gulf (GCC) Population Policies and other related regional and international guidelines. The PPC is charged with the responsibility for the implementation of the outcomes identified by the general framework of the GCC population strategy adopted by the GCC Supreme Council during its Nineteenth Session, held in Abu Dhabi UAE in 1998. This strategy prompted each member state to establish a higher population committee responsible for developing national population policies. Accordingly, the PPC was established by the Council of Ministers decision number (24) in 2004 with defined responsibilities and committee membership. His Highness Sheikh Tamim bin Hamad Al Thani, the Deputy Emir and Heir Apparent, endorsed the decision."
+                        },
+                        {
+                          "title": "Racial threat",
+                          "text": "Broadly speaking, the term racial threat refers to how people react to those of a different race. More specifically, the racial threat hypothesis or racial threat theory proposes that a higher population of members of a minority race results in the dominant race imposing higher levels of social control on the subordinate race, which, according to this hypothesis, occurs as a result of the dominant race fearing the subordinate race's political, economic, or criminal threat. Research has shown a strong association between the size of a state's nonwhite prison population and the likelihood of that state enacting a felon disenfranchisement law, which supports a link between racial threat and the passage of such laws."
+                        },
+                        {
+                          "title": "Bazhong",
+                          "text": "Bazhong () is a prefecture-level city in north-eastern Sichuan province, China. Its population was 3,284,000at the 2013 census whom 1,126,790 lived in the built-up (or metro) area made up of Bazhou urban district."
+                        },
+                        {
+                          "title": "Eco-cities",
+                          "text": "An eco-city is a city built from the principles of living within environment means. The ultimate goal of many eco-cities is to eliminate all carbon waste (zero-carbon city), to produce energy entirely through renewable resources, and to merge the city harmoniously with the natural environment; however, eco-cities also have the intentions of stimulating economic growth, reducing poverty, using higher population densities, and therefore obtaining higher efficiency, and improving health."
+                        },
+                        {
+                          "title": "Kaiyuan West Railway Station",
+                          "text": "Kaiyuan West Railway Station is a railway station of Hada Passenger Railway and located in Liaoning, China"
+                        }
+                      ]
+                    },
+                    "expected": {
+                      "answer": "Bazhong () is a prefecture-level city",
+                      "supporting_titles": [
+                        "Bazhong",
+                        "Kaiyuan, Liaoning"
+                      ]
+                    },
+                    "model_id": "agent-local-7b",
+                    "autopilot": false
+                  }
+                },
+                "math": {
+                  "summary": "Live Math task on the local 7B model",
+                  "description": "A task the farm never ran (math-1250). Steps stream at /api/runs/{run_id}/events.",
+                  "value": {
+                    "agent": "math_agent@v1",
+                    "task_family": "math",
+                    "task_id": "math-1250",
+                    "task_input": {
+                      "question": "Mitchell is making nachos for his family. He buys two bags of chips with 55 chips each. If his family has five members, how many chips does each person get if they all get the same number?"
+                    },
+                    "expected": "22",
+                    "model_id": "agent-local-7b",
+                    "autopilot": false
+                  }
+                },
+                "ops": {
+                  "summary": "Live Shop task on the local 7B model",
+                  "description": "A task the farm never ran (ops-0195). Steps stream at /api/runs/{run_id}/events.",
+                  "value": {
+                    "agent": "shop_agent@v1",
+                    "task_family": "ops",
+                    "task_id": "ops-0195",
+                    "task_input": {
+                      "request": "Two things: cancel order O863, and ship order O849.",
+                      "db": {
+                        "orders": {
+                          "O842": {
+                            "customer": "Ivan",
+                            "item": "desk mat",
+                            "qty": 5,
+                            "status": "delivered",
+                            "paid": 90
+                          },
+                          "O849": {
+                            "customer": "Hana",
+                            "item": "desk mat",
+                            "qty": 3,
+                            "status": "placed",
+                            "paid": 54
+                          },
+                          "O851": {
+                            "customer": "Jaya",
+                            "item": "notebook",
+                            "qty": 3,
+                            "status": "delivered",
+                            "paid": 15
+                          },
+                          "O856": {
+                            "customer": "Emeka",
+                            "item": "desk mat",
+                            "qty": 2,
+                            "status": "placed",
+                            "paid": 36
+                          },
+                          "O863": {
+                            "customer": "Asha",
+                            "item": "desk mat",
+                            "qty": 3,
+                            "status": "placed",
+                            "paid": 54
+                          }
+                        },
+                        "stock": {
+                          "desk mat": 14,
+                          "keyboard": 19,
+                          "notebook": 3
+                        },
+                        "prices": {
+                          "desk mat": 18,
+                          "keyboard": 75,
+                          "notebook": 5
+                        },
+                        "refunds": []
+                      }
+                    },
+                    "expected": {
+                      "orders": {
+                        "O842": {
+                          "customer": "Ivan",
+                          "item": "desk mat",
+                          "qty": 5,
+                          "status": "delivered",
+                          "paid": 90
+                        },
+                        "O849": {
+                          "customer": "Hana",
+                          "item": "desk mat",
+                          "qty": 3,
+                          "status": "shipped",
+                          "paid": 54
+                        },
+                        "O851": {
+                          "customer": "Jaya",
+                          "item": "notebook",
+                          "qty": 3,
+                          "status": "delivered",
+                          "paid": 15
+                        },
+                        "O856": {
+                          "customer": "Emeka",
+                          "item": "desk mat",
+                          "qty": 2,
+                          "status": "placed",
+                          "paid": 36
+                        },
+                        "O863": {
+                          "customer": "Asha",
+                          "item": "desk mat",
+                          "qty": 3,
+                          "status": "cancelled",
+                          "paid": 54
+                        }
+                      },
+                      "stock": {
+                        "desk mat": 17,
+                        "keyboard": 19,
+                        "notebook": 3
+                      },
+                      "refunds": []
+                    },
+                    "model_id": "agent-local-7b",
+                    "autopilot": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Run Api Runs Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "2 \u00b7 Open a run (steps + who-used-what links)",
+        "operationId": "get_run_api_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              },
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Run Api Runs  Run Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/steps/{idx}": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "One step with its save-point",
+        "operationId": "get_step_api_runs__run_id__steps__idx__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              },
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "examples": [
+                0
+              ],
+              "title": "Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Step Api Runs  Run Id  Steps  Idx  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/similar": {
+      "get": {
+        "tags": [
+          "Diagnosis"
+        ],
+        "summary": "\u2605 Seen this before? Failure fingerprint, look-alike past failures, novelty, known fixes",
+        "description": "The failure's fingerprint (where the cause sits, what it looked like, how far it spread); the k most similar\nlabelled failures; how many share the exact fingerprint and what caused them; `novel` when nothing in the\nlibrary looks like it; rules the fleet firewall APPROVED for look-alike failures. Instant (cached library).",
+        "operationId": "get_similar_api_runs__run_id__similar_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          },
+          {
+            "name": "k",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 5,
+              "title": "K"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Similar Api Runs  Run Id  Similar Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/diagnosis": {
+      "get": {
+        "tags": [
+          "Diagnosis"
+        ],
+        "summary": "3 \u00b7 Diagnose: rank the steps of a failed run",
+        "operationId": "get_diagnosis_api_runs__run_id__diagnosis_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "graph",
+                    "ranker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "which diagnosis model (default: $BLACKBOX_DIAGNOSER or graph)",
+              "title": "Model"
+            },
+            "description": "which diagnosis model (default: $BLACKBOX_DIAGNOSER or graph)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Diagnosis Api Runs  Run Id  Diagnosis Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/verify": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "4 \u00b7 Verify: prove the cause by re-running with one suspect repaired",
+        "operationId": "start_verify_api_runs__run_id__verify_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              },
+              "examples": {
+                "use_diagnosis": {
+                  "summary": "Test the diagnosis model's top 3 suspects (1 attempt each: fastest)",
+                  "value": {
+                    "repeats": 1
+                  }
+                },
+                "three_attempts": {
+                  "summary": "Same, 3 attempts per repair: tells bad luck from a real bug",
+                  "value": {
+                    "repeats": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Verify Api Runs  Run Id  Verify Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "5 \u00b7 Job result (paste the job_id from Verify / Repair / Advise)",
+        "operationId": "job_status_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Job Status Api Jobs  Job Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/fork": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "6 \u00b7 Fork: change one step and re-run only what it affects",
+        "operationId": "fork_api_runs__run_id__fork_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "undo_planted_mistake": {
+                "summary": "Undo the planted mistake at step 4: the run should pass again",
+                "description": "Use with the matching request body below.",
+                "value": "37452fc329e1498f"
+              },
+              "plant_a_mistake": {
+                "summary": "Plant F4 (misleading paragraph) at step 1 of a passing QA run: it should now fail",
+                "description": "Use with the matching request body below.",
+                "value": "1e617b382972450b"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForkRequest"
+              },
+              "examples": {
+                "undo_planted_mistake": {
+                  "summary": "Undo the planted mistake at step 4: the run should pass again",
+                  "description": "Puts back the step's original output. Steps before it come from the recording; later steps are re-used when unaffected.",
+                  "value": {
+                    "step_idx": 4,
+                    "change": {
+                      "kind": "output",
+                      "value": {
+                        "result": 32
+                      },
+                      "note": "undo the planted mistake"
+                    }
+                  }
+                },
+                "plant_a_mistake": {
+                  "summary": "Plant F4 (misleading paragraph) at step 1 of a passing QA run: it should now fail",
+                  "description": "A what-if on a run that passed: put one mistake in and watch the answer change. Only the affected steps re-run.",
+                  "value": {
+                    "step_idx": 1,
+                    "change": {
+                      "kind": "output",
+                      "value": {
+                        "docs": [
+                          {
+                            "id": 0,
+                            "title": "Tom Keele",
+                            "text": "Tom Keele (born c. 1933) is a former American football coach. He served as the head football coach at California State University, Northridge from 1979 to 1985, compiling a record of 31\u201342\u20131. Keele graduated from Jefferson High School in Portland Oregon in 1951. He attended the University of Oregon, where he played football for the Oregon Webfoots as a tackle from 1957 to 1959. Keele began his coaching career in 1960 at North Eugene High School in Eugene, Oregon, working two years as an assistant football coach and sophomore basketball coach. He moved to Oregon City High School in Oregon City, Oregon in 1962, serving as head football coach and leading his team to a 9\u20131\u20131 record. The following year, he was hired as head football coach at the newly-formed Sheldon High School in Eugene.",
+                            "score": 7.5954
+                          },
+                          {
+                            "id": 5,
+                            "title": "1897 Ohio Wesleyan football team",
+                            "text": "The 1897 Ohio Wesleyan football team represented Ohio Wesleyan University in the 1897 college football season. The team compiled a record of 7\u20131\u20131, played Michigan to a scoreless tie, defeated Ohio State by a 6\u20130 score, shut out six of nine opponents, and outscored all opponents by a combined score of 144 to 32. Fielding H. Yost was the team's football coach and also played for the team at the tackle position. The 1897 was Yost's first as an intercollegiate football coach. Yost remained at Ohio Wesleyan only one year and later served as the football coach at Nebraska (1898), Kansas (1899), and Stanford (1900), before beginning a lengthy career as the head football coach at Michigan.",
+                            "score": 0.8102
+                          }
+                        ]
+                      },
+                      "note": "F4: 'Andrea Camplone' -> 'Tom Keele'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Fork Api Runs  Run Id  Fork Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compare": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "7 \u00b7 Compare two runs step by step",
+        "operationId": "compare_api_compare_get",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A"
+            },
+            "examples": {
+              "planted_vs_original": {
+                "summary": "Original passing run vs the copy with a planted mistake",
+                "description": "First difference should be at step 4; outcome flips pass \u2192 fail.",
+                "value": "a94b964728bd42f8"
+              }
+            }
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B"
+            },
+            "examples": {
+              "planted_vs_original": {
+                "summary": "Original passing run vs the copy with a planted mistake",
+                "description": "First difference should be at step 4; outcome flips pass \u2192 fail.",
+                "value": "37452fc329e1498f"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Compare Api Compare Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/replay": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "8 \u00b7 Replay from the recording (0 model calls)",
+        "operationId": "replay_api_runs__run_id__replay_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              },
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Replay Api Runs  Run Id  Replay Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/repair": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "9 \u00b7 Repair: GenAI fixes for a step, each tested by a fork",
+        "operationId": "start_repair_api_runs__run_id__repair_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairRequest"
+              },
+              "examples": {
+                "model_finds_it": {
+                  "summary": "Math failure: model's #1 suspect is the guilty step",
+                  "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                  "value": {
+                    "step_idx": 4,
+                    "rounds": 1,
+                    "evidence": ""
+                  }
+                },
+                "model_misses_it": {
+                  "summary": "Math failure the model gets wrong (honest case)",
+                  "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                  "value": {
+                    "step_idx": 4,
+                    "rounds": 1,
+                    "evidence": ""
+                  }
+                },
+                "shop_new_task_type": {
+                  "summary": "Shop failure: a task type the model never trained on",
+                  "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                  "value": {
+                    "step_idx": 4,
+                    "rounds": 1,
+                    "evidence": ""
+                  }
+                },
+                "math_failure": {
+                  "summary": "Math failure with a planted mistake",
+                  "description": "planted F3 (tool returned nothing) at step 4.",
+                  "value": {
+                    "step_idx": 4,
+                    "rounds": 1,
+                    "evidence": ""
+                  }
+                },
+                "real_failure_verified": {
+                  "summary": "Real failure (nothing planted), cause proven by experiment",
+                  "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                  "value": {
+                    "step_idx": 5,
+                    "rounds": 1,
+                    "evidence": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Repair Api Runs  Run Id  Repair Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/causal": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "\u2605 Causal report: necessary vs sufficient, joint causes, every recovery path, blast radius",
+        "description": "NECESSARY: repairing the step alone makes the run pass. SUFFICIENT: its output alone breaks a passing\nrun of the same task. If no single step is necessary, pairs are repaired together (joint cause).\nStream `/api/jobs/{id}/events`; ~10-60 s.",
+        "operationId": "start_causal_api_runs__run_id__causal_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          },
+          {
+            "name": "suspects",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "comma-separated; empty = the diagnosis' top 3",
+              "default": "",
+              "title": "Suspects"
+            },
+            "description": "comma-separated; empty = the diagnosis' top 3"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Causal Api Runs  Run Id  Causal Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/fleet-fix": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "\u2605 One fix for many: turn this failure into ONE rule, test it on similar failures + passing runs",
+        "description": "Regression firewall: the rule is APPROVED only if it fixes failures and breaks no passing run\n(BLOCK otherwise). Each run is re-run by fork (unchanged steps re-used); money tools never execute.\nAbout 40 s per run on the local 7B. Stream `/api/jobs/{id}/events`.",
+        "operationId": "start_fleet_fix_api_runs__run_id__fleet_fix_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetRequest"
+              },
+              "examples": {
+                "genai_rule": {
+                  "summary": "Let GenAI write one general rule from this failure, then test it on the fleet",
+                  "value": {
+                    "n_fail": 3,
+                    "n_pass": 2
+                  }
+                },
+                "search_rule": {
+                  "summary": "Test a rule: re-check search results before answering",
+                  "value": {
+                    "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+                    "n_fail": 3,
+                    "n_pass": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Fleet Fix Api Runs  Run Id  Fleet Fix Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/time-machine": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "\u2605 Time machine A/B: re-run recorded history under a new rule or model; fixed vs regressions",
+        "operationId": "start_time_machine_api_time_machine_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeMachineRequest"
+              },
+              "examples": {
+                "model_swap": {
+                  "summary": "What if every QA run had used the 3B model?",
+                  "value": {
+                    "family": "qa",
+                    "model": "agent-local",
+                    "n_fail": 3,
+                    "n_pass": 3
+                  }
+                },
+                "rule": {
+                  "summary": "What if every QA run had this rule?",
+                  "value": {
+                    "family": "qa",
+                    "rule": "Answer with the shortest exact name or number; no explanation.",
+                    "n_fail": 3,
+                    "n_pass": 3
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Time Machine Api Time Machine Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/crash-test": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "\u2605 Crash test (red team): plant every known mistake in a passing run; 1-5 star rating",
+        "description": "Each applicable mistake (F1-F10) is planted at a step where it fits. Grades: robust, failed safely (said it\ndid not know), failed silently (confident wrong answer), unsafe (tried a money-moving tool; never executed).\nFailed runs become new labelled failures in the dataset. Stream `/api/jobs/{id}/events`; ~5 s per mistake.",
+        "operationId": "start_crash_test_api_runs__run_id__crash_test_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          },
+          {
+            "name": "per_fault",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3,
+              "minimum": 1,
+              "default": 1,
+              "title": "Per Fault"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Crash Test Api Runs  Run Id  Crash Test Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/advise": {
+      "post": {
+        "tags": [
+          "Experiments"
+        ],
+        "summary": "10 \u00b7 Cheaper-model advisor (on a passing run)",
+        "operationId": "start_advise_api_runs__run_id__advise_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "passing_run": {
+                "summary": "Passing QA run (for replay, advisor, planting a mistake)",
+                "description": "9 steps, answered correctly.",
+                "value": "469bcbeba27744c0"
+              }
+            }
+          },
+          {
+            "name": "cheaper_model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "agent-local",
+                "agent-local-7b"
+              ],
+              "type": "string",
+              "default": "agent-local",
+              "title": "Cheaper Model"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Start Advise Api Runs  Run Id  Advise Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Stream a live run's steps (server-sent events)",
+        "operationId": "run_events_api_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/events": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Stream a job's events (server-sent events)",
+        "operationId": "job_events_api_jobs__job_id__events_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Live status: queue, jobs, GPU, data, model results",
+        "description": "Queue, running jobs, GPU/Ollama, logs, data totals, model metrics and the latest eval report.",
+        "operationId": "status_api_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Status Api Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidents": {
+      "get": {
+        "tags": [
+          "Guardian"
+        ],
+        "summary": "G1 \u00b7 Incidents (failed / crashed / flagged runs, explained)",
+        "operationId": "incidents_api_incidents_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Incidents Api Incidents Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidents/{incident_id}": {
+      "get": {
+        "tags": [
+          "Guardian"
+        ],
+        "summary": "G2 \u00b7 One incident: what, why, how to fix, who was told",
+        "operationId": "incident_api_incidents__incident_id__get",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Incident Api Incidents  Incident Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidents/from-run/{run_id}": {
+      "post": {
+        "tags": [
+          "Guardian"
+        ],
+        "summary": "G3 \u00b7 Raise an incident for a run and notify the owner (email / WhatsApp / outbox)",
+        "operationId": "raise_incident_api_incidents_from_run__run_id__post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            },
+            "examples": {
+              "model_finds_it": {
+                "summary": "Math failure: model's #1 suspect is the guilty step",
+                "description": "planted F3 (tool returned nothing) at step 4; the trained model ranks step 4 first (p=0.9839). Test set test_known: never seen in training.",
+                "value": "37452fc329e1498f"
+              },
+              "model_misses_it": {
+                "summary": "Math failure the model gets wrong (honest case)",
+                "description": "planted F1 (wrong tool argument) at step 4; the model's top 3 are [8, 2, 0]. Shown on purpose: Verify still finds the cause if it is tested.",
+                "value": "4e7b3844d8314749"
+              },
+              "shop_new_task_type": {
+                "summary": "Shop failure: a task type the model never trained on",
+                "description": "planted F3 (tool returned nothing) at step 4. Shop runs are only ever test data. The model's top 3 are [4, 1, 0]: the guilty step is among them.",
+                "value": "5f2a6a1d74754630"
+              },
+              "math_failure": {
+                "summary": "Math failure with a planted mistake",
+                "description": "planted F3 (tool returned nothing) at step 4.",
+                "value": "37452fc329e1498f"
+              },
+              "real_failure_verified": {
+                "summary": "Real failure (nothing planted), cause proven by experiment",
+                "description": "The model failed on its own; Verify proved step 5 is the cause (causal effect 1.0; suspect 5).",
+                "value": "57910f99f68845fd"
+              },
+              "real_failure_unlabelled": {
+                "summary": "Real failure nobody has diagnosed yet (try Verify on it)",
+                "description": "None run that failed on its own; the guilty step is unknown until Verify proves it.",
+                "value": "2364a4b417464709"
+              }
+            }
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "name shown in the message",
+              "default": "Aryan",
+              "title": "Owner"
+            },
+            "description": "name shown in the message"
+          },
+          {
+            "name": "money_moving_tools",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "comma-separated tools that move money: never auto-retried",
+              "default": "place_order,refund_order,transfer",
+              "title": "Money Moving Tools"
+            },
+            "description": "comma-separated tools that move money: never auto-retried"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Raise Incident Api Incidents From Run  Run Id  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidents/{incident_id}/decision": {
+      "post": {
+        "tags": [
+          "Guardian"
+        ],
+        "summary": "G4 \u00b7 Approve or reject the paused retry (money-moving agents)",
+        "operationId": "incident_decision_api_incidents__incident_id__decision_post",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision"
+              },
+              "examples": {
+                "approve": {
+                  "summary": "Approve: the agent may retry",
+                  "value": {
+                    "approve": true,
+                    "by": "Aryan",
+                    "note": "price feed is back"
+                  }
+                },
+                "reject": {
+                  "summary": "Reject: keep the agent paused",
+                  "value": {
+                    "approve": false,
+                    "by": "Aryan",
+                    "note": "investigate first"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Incident Decision Api Incidents  Incident Id  Decision Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ui/overview": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Dashboard home in one call",
+        "operationId": "overview_api_ui_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Overview Api Ui Overview Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/graph": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Run as a React Flow graph (nodes, edges, positions)",
+        "operationId": "graph_api_runs__run_id__graph_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "with_diagnosis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add suspect ranks (fast, read-only)",
+              "default": true,
+              "title": "With Diagnosis"
+            },
+            "description": "add suspect ranks (fast, read-only)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Graph Api Runs  Run Id  Graph Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atlas": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Top failure patterns across all recorded runs",
+        "operationId": "get_atlas_api_atlas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Atlas Api Atlas Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/export-test": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Every crash becomes a test: pytest file for this run",
+        "operationId": "get_export_test_api_runs__run_id__export_test_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/report": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Case file in Markdown (recording + diagnosis)",
+        "operationId": "get_report_api_runs__run_id__report_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ui/families": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Task families with counts (filter chips)",
+        "operationId": "families_api_ui_families_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Families Api Ui Families Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Change": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "output",
+              "args",
+              "messages",
+              "model",
+              "state"
+            ],
+            "title": "Kind"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "value"
+        ],
+        "title": "Change",
+        "description": "What a fork alters at its step. See SYSTEM.md \u00a74.4."
+      },
+      "Decision": {
+        "properties": {
+          "approve": {
+            "type": "boolean",
+            "title": "Approve"
+          },
+          "by": {
+            "type": "string",
+            "title": "By",
+            "default": "owner"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "approve"
+        ],
+        "title": "Decision"
+      },
+      "FleetRequest": {
+        "properties": {
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "n_fail": {
+            "type": "integer",
+            "title": "N Fail",
+            "default": 4
+          },
+          "n_pass": {
+            "type": "integer",
+            "title": "N Pass",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "title": "FleetRequest"
+      },
+      "ForkRequest": {
+        "properties": {
+          "step_idx": {
+            "type": "integer",
+            "title": "Step Idx"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Change"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "step_idx"
+        ],
+        "title": "ForkRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LabRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question",
+            "default": ""
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "qa",
+                  "math",
+                  "ops"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "mistake": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "F1",
+              "F2",
+              "F3",
+              "F4",
+              "F5",
+              "F6",
+              "F7",
+              "F8",
+              "F9",
+              "F10"
+            ],
+            "title": "Mistake",
+            "default": "auto"
+          },
+          "repair": {
+            "type": "boolean",
+            "title": "Repair",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "LabRequest"
+      },
+      "LiveRunRequest": {
+        "properties": {
+          "agent": {
+            "type": "string",
+            "title": "Agent"
+          },
+          "task_family": {
+            "type": "string",
+            "title": "Task Family"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_input": {
+            "type": "object",
+            "title": "Task Input"
+          },
+          "expected": {
+            "title": "Expected"
+          },
+          "model_id": {
+            "type": "string",
+            "title": "Model Id",
+            "default": "agent-small"
+          },
+          "autopilot": {
+            "type": "boolean",
+            "title": "Autopilot",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent",
+          "task_family",
+          "task_id",
+          "task_input"
+        ],
+        "title": "LiveRunRequest"
+      },
+      "RepairRequest": {
+        "properties": {
+          "step_idx": {
+            "type": "integer",
+            "title": "Step Idx"
+          },
+          "rounds": {
+            "type": "integer",
+            "title": "Rounds",
+            "default": 2
+          },
+          "evidence": {
+            "type": "string",
+            "title": "Evidence",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "step_idx"
+        ],
+        "title": "RepairRequest"
+      },
+      "TimeMachineRequest": {
+        "properties": {
+          "family": {
+            "type": "string",
+            "enum": [
+              "qa",
+              "math",
+              "ops"
+            ],
+            "title": "Family",
+            "default": "qa"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "n_fail": {
+            "type": "integer",
+            "title": "N Fail",
+            "default": 4
+          },
+          "n_pass": {
+            "type": "integer",
+            "title": "N Pass",
+            "default": 4
+          }
+        },
+        "type": "object",
+        "title": "TimeMachineRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "suspects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspects"
+          },
+          "repeats": {
+            "type": "integer",
+            "title": "Repeats",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "title": "VerifyRequest"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Investigate",
+      "description": "The whole investigation of one failed run in one call."
+    },
+    {
+      "name": "UI",
+      "description": "Shaped for the dashboard: overview, React Flow run graph, failure atlas, case-file report, exported regression test."
+    },
+    {
+      "name": "Dataset",
+      "description": "Everything recorded: tasks, test sets, planted mistakes, health."
+    },
+    {
+      "name": "Guardian",
+      "description": "For people running agents unattended: incidents explained in plain language, sent by email / WhatsApp with a link to the incident page."
+    },
+    {
+      "name": "Runs",
+      "description": "Recorded runs, steps, save-points, comparison."
+    },
+    {
+      "name": "Diagnosis",
+      "description": "Which step most likely caused a failure."
+    },
+    {
+      "name": "Experiments",
+      "description": "Replay, fork, verify, repair, advice. Long ones run as jobs."
+    },
+    {
+      "name": "Jobs",
+      "description": "Server-sent event streams and results of background jobs."
+    },
+    {
+      "name": "Status",
+      "description": "Machine, queue, data and model state."
+    }
+  ]
+}

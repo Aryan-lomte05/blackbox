@@ -1,0 +1,785 @@
+{
+  "incidents": [
+    {
+      "incident_id": "7df82a2111",
+      "run_id": "37452fc329e1498f",
+      "owner": "Aryan",
+      "created_at": "2026-10-03T20:20:16+00:00",
+      "kind": "failure",
+      "severity": "high",
+      "title": "math_agent gave a wrong result",
+      "what_happened": "Your agent “math_agent” finished with a wrong result: 9, but 14 was expected.",
+      "why": "Step 4 (proven by replay): called calculator(expression=(20 * 2) * 0.80) → null.",
+      "how_to_fix": [
+        "Run this step again: it gave a wrong result this time (tested: re-running fixes the run).",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Re-ran the run with step 4 repaired: it passes. The original was left untouched."
+      ],
+      "needs_approval": false,
+      "signature": "b6410ededf71",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 4,
+        "cause_note": "proven by replay",
+        "timeline": [
+          {
+            "idx": 2,
+            "label": "called calculator(expression=20 * 0.70) → 14",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "model decided: CALC: (20 * 2) * 0.80",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "called calculator(expression=(20 * 2) * 0.80) → null",
+            "flag": "⚠ cause"
+          },
+          {
+            "idx": 5,
+            "label": "model decided: CALC: (20 * 2) * 0.80",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "model decided: CALC: (20 * 2) * 0.80",
+            "flag": ""
+          },
+          {
+            "idx": 8,
+            "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+            "flag": ""
+          },
+          {
+            "idx": 9,
+            "label": "model decided: CALC: (20 * 2) * 0.80",
+            "flag": ""
+          },
+          {
+            "idx": 10,
+            "label": "called calculator(expression=(20 * 2) * 0.80) → 32",
+            "flag": ""
+          },
+          {
+            "idx": 11,
+            "label": "model decided: CALC: (20 * 2) * 0.80",
+            "flag": ""
+          },
+          {
+            "idx": 12,
+            "label": "model decided: FINAL: 9",
+            "flag": ""
+          },
+          {
+            "idx": 13,
+            "label": "final answer: 9",
+            "flag": ""
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/7df82a2111",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\7df82a2111"
+        },
+        {
+          "channel": "email-smtp",
+          "status": "skipped",
+          "detail": "not configured (set SMTP_HOST, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "email-mailgun",
+          "status": "skipped",
+          "detail": "not configured (set MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "whatsapp-twilio",
+          "status": "skipped",
+          "detail": "not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, ALERT_WHATSAPP_TO)"
+        }
+      ],
+      "status": "rejected",
+      "decision": {
+        "by": "e2e",
+        "at": "2026-10-03T20:20:16+00:00",
+        "note": "keep paused"
+      }
+    },
+    {
+      "incident_id": "471e147062",
+      "run_id": "57c4fbcfcc3040ff",
+      "owner": "Lab",
+      "created_at": "2026-10-03T18:46:20+00:00",
+      "kind": "failure",
+      "severity": "high",
+      "title": "qa_agent gave a wrong result",
+      "what_happened": "Your agent “qa_agent” finished with a wrong result: 2010, but Christopher Nolan, 2010 was expected.",
+      "why": "Step 6 (the last step before the run stopped): final answer: 2010.",
+      "how_to_fix": [
+        "Open the incident, replay the run from this step and try a change: only the affected steps re-run.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [],
+      "needs_approval": false,
+      "signature": "4ecb2a474662",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 6,
+        "cause_note": "the last step before the run stopped",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: SEARCH: Inception director release year",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "searched: Inception director release year",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "model decided: NOTE: Inception is a 2010 science fiction heist film written and directed by Christopher …",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "searched: Who directed the film Inception, and in what year was it re…",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "model decided: NOTE: Inception is a 2011 science fiction heist film written and directed by Christopher …",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "model decided: ANSWER: 2010",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "final answer: 2010",
+            "flag": "⚠ cause"
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/471e147062",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\471e147062"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "6fedaec8ee",
+      "run_id": "8c0b789a0a524cdf",
+      "owner": "Lab",
+      "created_at": "2026-10-03T18:19:27+00:00",
+      "kind": "failure",
+      "severity": "high",
+      "title": "qa_agent gave a wrong result",
+      "what_happened": "Your agent “qa_agent” finished with a wrong result: Paprika (2006 film), but Christopher Nolan, 2010 was expected.",
+      "why": "Step 6 (the last step before the run stopped): final answer: Paprika (2006 film).",
+      "how_to_fix": [
+        "Open the incident, replay the run from this step and try a change: only the affected steps re-run.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [],
+      "needs_approval": false,
+      "signature": "4ecb2a474662",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 6,
+        "cause_note": "the last step before the run stopped",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: SEARCH: Inception director release year",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "searched: Inception director release year",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "model decided: NOTE: Inception is a 2010 science fiction heist film written and directed by Christopher …",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "searched: Who directed the film Inception, and in what year was it re…",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "model decided: NOTE: Inception is a 2010 science fiction heist film written and directed by Christopher …",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "model decided: ANSWER: Paprika (2006 film)",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "final answer: Paprika (2006 film)",
+            "flag": "⚠ cause"
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/6fedaec8ee",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\6fedaec8ee"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "1ba44f85e6",
+      "run_id": "8a87daa0c76b44c4",
+      "owner": "Lab",
+      "created_at": "2026-10-03T18:13:16+00:00",
+      "kind": "failure",
+      "severity": "high",
+      "title": "math_agent gave a wrong result",
+      "what_happened": "Your agent “math_agent” finished with a wrong result: 46, but 47 was expected.",
+      "why": "Step 7 (the last step before the run stopped): final answer: 46.",
+      "how_to_fix": [
+        "Open the incident, replay the run from this step and try a change: only the affected steps re-run.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [],
+      "needs_approval": false,
+      "signature": "84d81f337d0b",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 7,
+        "cause_note": "the last step before the run stopped",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: 1. Calculate total muffins baked: \\(24 \\text{ muffins/tray} \\times 6 \\text{ trays}\\) 2. S…",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "model decided: CALC: 24 * 6",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "called calculator(expression=24 * 6) → 144",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "model decided: CALC: 144 - 97",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "called calculator(expression=144 - 97) → 47",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "model decided: DONE",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: FINAL: 46",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: 46",
+            "flag": "⚠ cause"
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/1ba44f85e6",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\1ba44f85e6"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "e06d42e78e",
+      "run_id": "5f2a6a1d74754630",
+      "owner": "Aryan",
+      "created_at": "2026-10-03T16:53:02+00:00",
+      "kind": "failure",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "what_happened": "Your agent “shop_agent” finished with a wrong result: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"orders\": {\"O174\": {\"cu…, but {\"orders\": {\"O174\": {\"customer\": \"Bilal\", \"item\": \"desk mat\", \"qty\": 3, \"status… was expected.",
+      "why": "Step 4 (most likely (diagnosis model); not re-run: this run moves money, so Black Box never re-runs it to prove the cause): called refund_order(order_id=O186, amount=20.0) → null.",
+      "how_to_fix": [
+        "Black Box never re-runs a run that moves money. Check the step below, fix its input, then approve a retry on the incident page.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Paused the agent. 1 money-moving call(s) in this run (refund_order); nothing is retried without your approval."
+      ],
+      "needs_approval": true,
+      "signature": "94cb982acab9",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 4,
+        "cause_note": "most likely (diagnosis model); not re-run: this run moves money, so Black Box never re-runs it to prove the cause",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: get_order(O186) refund_order(O186, 50.00)",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "model decided: ACTION: get_order ARGS: {\"order_id\": \"O186\"}",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "called get_order(order_id=O186) → {\"ok\": true, \"order\": {\"order_id\": \"O186\", \"customer\": \"Iva…",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.00}",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "called refund_order(order_id=O186, amount=20.0) → null",
+            "flag": "⚠ cause"
+          },
+          {
+            "idx": 5,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.0}",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: DONE: A full refund of $20 has been processed for order O186.",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"or…",
+            "flag": ""
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/e06d42e78e",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\e06d42e78e"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "7d6afb05f6",
+      "run_id": "5f2a6a1d74754630",
+      "owner": "Aryan",
+      "created_at": "2026-10-03T16:52:54+00:00",
+      "kind": "failure",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "what_happened": "Your agent “shop_agent” finished with a wrong result: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"orders\": {\"O174\": {\"cu…, but {\"orders\": {\"O174\": {\"customer\": \"Bilal\", \"item\": \"desk mat\", \"qty\": 3, \"status… was expected.",
+      "why": "Step 4 (most likely (diagnosis model); not re-run: this run moves money, so Black Box never re-runs it to prove the cause): called refund_order(order_id=O186, amount=20.0) → null.",
+      "how_to_fix": [
+        "Black Box never re-runs a run that moves money. Check the step below, fix its input, then approve a retry on the incident page.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Paused the agent. 1 money-moving call(s) in this run (refund_order); nothing is retried without your approval."
+      ],
+      "needs_approval": true,
+      "signature": "94cb982acab9",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 4,
+        "cause_note": "most likely (diagnosis model); not re-run: this run moves money, so Black Box never re-runs it to prove the cause",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: get_order(O186) refund_order(O186, 50.00)",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "model decided: ACTION: get_order ARGS: {\"order_id\": \"O186\"}",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "called get_order(order_id=O186) → {\"ok\": true, \"order\": {\"order_id\": \"O186\", \"customer\": \"Iva…",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.00}",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "called refund_order(order_id=O186, amount=20.0) → null",
+            "flag": "⚠ cause"
+          },
+          {
+            "idx": 5,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.0}",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: DONE: A full refund of $20 has been processed for order O186.",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"or…",
+            "flag": ""
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/7d6afb05f6",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\7d6afb05f6"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "c11dd95f22",
+      "run_id": "5f2a6a1d74754630",
+      "owner": "Aryan",
+      "created_at": "2026-10-03T16:52:34+00:00",
+      "kind": "failure",
+      "severity": "critical",
+      "title": "shop_agent gave a wrong result",
+      "what_happened": "Your agent “shop_agent” finished with a wrong result: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"orders\": {\"O174\": {\"cu…, but {\"orders\": {\"O174\": {\"customer\": \"Bilal\", \"item\": \"desk mat\", \"qty\": 3, \"status… was expected.",
+      "why": "Step 7 (the last step before the run stopped): final answer: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"or….",
+      "how_to_fix": [
+        "Black Box never re-runs a run that moves money. Check the step below, fix its input, then approve a retry on the incident page.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Paused the agent. 1 money-moving call(s) in this run (refund_order); nothing is retried without your approval."
+      ],
+      "needs_approval": true,
+      "signature": "17e2929f1ec7",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 7,
+        "cause_note": "the last step before the run stopped",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: get_order(O186) refund_order(O186, 50.00)",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "model decided: ACTION: get_order ARGS: {\"order_id\": \"O186\"}",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "called get_order(order_id=O186) → {\"ok\": true, \"order\": {\"order_id\": \"O186\", \"customer\": \"Iva…",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.00}",
+            "flag": ""
+          },
+          {
+            "idx": 4,
+            "label": "called refund_order(order_id=O186, amount=20.0) → null",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "model decided: ACTION: refund_order ARGS: {\"order_id\": \"O186\", \"amount\": 20.0}",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: DONE: A full refund of $20 has been processed for order O186.",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: {\"reply\": \"A full refund of $20 has been processed for order O186.\", \"db\": {\"or…",
+            "flag": "⚠ cause"
+          }
+        ],
+        "errors": []
+      },
+      "link": "http://127.0.0.1:8000/incident/c11dd95f22",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\c11dd95f22"
+        },
+        {
+          "channel": "email-smtp",
+          "status": "skipped",
+          "detail": "not configured (set SMTP_HOST, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "email-mailgun",
+          "status": "skipped",
+          "detail": "not configured (set MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "whatsapp-twilio",
+          "status": "skipped",
+          "detail": "not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, ALERT_WHATSAPP_TO)"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "dc37906744",
+      "run_id": "2364a4b417464709",
+      "owner": "Aryan (trader)",
+      "created_at": "2026-10-03T16:49:45+00:00",
+      "kind": "failure",
+      "severity": "critical",
+      "title": "trading_bot gave a wrong result",
+      "what_happened": "Your agent “trading_bot” finished with a wrong result: [{\"symbol\": \"INFY\", \"side\": \"BUY\", \"quantity\": 50}], but BUY 6 INFY was expected.",
+      "why": "Step 3 (not re-run: this run moves money, so Black Box never re-runs it to prove the cause; the first step that raised an error): called place_order(symbol=INFY, side=BUY, quantity=20000) → error: ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds ….",
+      "how_to_fix": [
+        "The tool “place_order” failed with: ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds the per-order limit of 50. Check its connection, credentials and limits, then retry from the incident page.",
+        "Black Box never re-runs a run that moves money. Check the step below, fix its input, then approve a retry on the incident page.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Paused the agent. 2 money-moving call(s) in this run (place_order); nothing is retried without your approval."
+      ],
+      "needs_approval": true,
+      "signature": "6bcb3677289b",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 3,
+        "cause_note": "not re-run: this run moves money, so Black Box never re-runs it to prove the cause; the first step that raised an error",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: call get_price",
+            "flag": ""
+          },
+          {
+            "idx": 1,
+            "label": "called get_price(symbol=INFY) → 0.5",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "model decided: call place_order",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "called place_order(symbol=INFY, side=BUY, quantity=20000) → error: ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds …",
+            "flag": "⚠ cause"
+          },
+          {
+            "idx": 4,
+            "label": "model decided: The current price of INFY is 0.5 rupees per share. With a budget of 10000 rupees, we can …",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "called place_order(symbol=INFY, side=BUY, quantity=50) → order filled: BUY 50 INFY",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: Action: { \"name\": \"final_answer\", \"arguments\": {\"answer\": \"A buy order for 50 shares of I…",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: A buy order for 50 shares of INFY has been placed.",
+            "flag": ""
+          }
+        ],
+        "errors": [
+          {
+            "idx": 3,
+            "error": "ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds the per-order limit of 50"
+          }
+        ]
+      },
+      "link": "http://127.0.0.1:8000/incident/dc37906744",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\dc37906744"
+        },
+        {
+          "channel": "email-smtp",
+          "status": "skipped",
+          "detail": "not configured (set SMTP_HOST, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "email-mailgun",
+          "status": "skipped",
+          "detail": "not configured (set MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "whatsapp-twilio",
+          "status": "skipped",
+          "detail": "not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, ALERT_WHATSAPP_TO)"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "incident_id": "9c7ae74aa2",
+      "run_id": "a010225302714e62",
+      "owner": "Aryan (trader)",
+      "created_at": "2026-10-03T16:47:40+00:00",
+      "kind": "failure",
+      "severity": "critical",
+      "title": "trading_bot gave a wrong result",
+      "what_happened": "Your agent “trading_bot” finished with a wrong result: [{\"symbol\": \"INFY\", \"side\": \"BUY\", \"quantity\": 1}, {\"symbol\": \"INFY\", \"side\": \"BUY\", \"quantity\": 50…, but BUY 6 INFY was expected.",
+      "why": "Step 0 (most likely, not yet proven): model decided: call get_price.",
+      "how_to_fix": [
+        "Open the incident, replay the run from this step and try a change: only the affected steps re-run.",
+        "Compare this run with a recent successful one on the incident page to see where they diverged."
+      ],
+      "actions_taken": [
+        "Paused the agent. 2 money-moving call(s) in this run (place_order); nothing is retried without your approval."
+      ],
+      "needs_approval": true,
+      "signature": "254ffe8b96b7",
+      "repeats": 1,
+      "evidence": {
+        "cause_step": 0,
+        "cause_note": "most likely, not yet proven",
+        "timeline": [
+          {
+            "idx": 0,
+            "label": "model decided: call get_price",
+            "flag": "⚠ cause"
+          },
+          {
+            "idx": 1,
+            "label": "called get_price(symbol=INFY) → 0.5",
+            "flag": ""
+          },
+          {
+            "idx": 2,
+            "label": "model decided: call place_order",
+            "flag": ""
+          },
+          {
+            "idx": 3,
+            "label": "called place_order(symbol=INFY, side=BUY, quantity=20000) → error: ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds …",
+            "flag": "error"
+          },
+          {
+            "idx": 4,
+            "label": "model decided: The current price of INFY is 0.5 rupees per share. With a budget of 10000 rupees, the num…",
+            "flag": ""
+          },
+          {
+            "idx": 5,
+            "label": "called place_order(symbol=INFY, side=BUY, quantity=1) → order filled: BUY 1 INFY",
+            "flag": ""
+          },
+          {
+            "idx": 6,
+            "label": "model decided: Action: { \"name\": \"final_answer\", \"arguments\": {\"answer\": \"A BUY order for 1 share of INF…",
+            "flag": ""
+          },
+          {
+            "idx": 7,
+            "label": "final answer: A BUY order for 1 share of INFY has been placed successfully.",
+            "flag": ""
+          }
+        ],
+        "errors": [
+          {
+            "idx": 3,
+            "error": "ValueError: broker risk check rejected the order: 20000 shares of INFY exceeds the per-order limit of 50"
+          }
+        ]
+      },
+      "link": "http://127.0.0.1:8000/incident/9c7ae74aa2",
+      "notifications": [
+        {
+          "channel": "outbox",
+          "status": "sent",
+          "detail": "data\\outbox\\9c7ae74aa2"
+        },
+        {
+          "channel": "email-smtp",
+          "status": "skipped",
+          "detail": "not configured (set SMTP_HOST, SMTP_USER, SMTP_PASSWORD, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "email-mailgun",
+          "status": "skipped",
+          "detail": "not configured (set MAILGUN_API_KEY, MAILGUN_DOMAIN, ALERT_EMAIL_TO)"
+        },
+        {
+          "channel": "whatsapp-twilio",
+          "status": "skipped",
+          "detail": "not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, ALERT_WHATSAPP_TO)"
+        }
+      ],
+      "status": "open",
+      "decision": null
+    }
+  ]
+}

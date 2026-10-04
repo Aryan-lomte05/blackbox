@@ -1,0 +1,81 @@
+{
+  "run_id": "37452fc329e1498f",
+  "fingerprint": {
+    "id": "FP-34b120",
+    "tokens": [
+      "cause:tool",
+      "cause_name:calculator",
+      "family:math",
+      "path:llm→tool",
+      "position:early",
+      "signal:empty_result",
+      "spread:reaches_answer",
+      "spread:wide"
+    ],
+    "cause": 4
+  },
+  "same_fingerprint": 14,
+  "same_fingerprint_causes": {
+    "F3": 14
+  },
+  "library_size": 859,
+  "closest": [
+    {
+      "run_id": "570714cc73a247de",
+      "similarity": 1.0,
+      "fingerprint": "FP-34b120",
+      "cause": 2,
+      "fault": "F3",
+      "family": "math",
+      "source": "injected"
+    },
+    {
+      "run_id": "9609d794c0a84761",
+      "similarity": 1.0,
+      "fingerprint": "FP-34b120",
+      "cause": 4,
+      "fault": "F3",
+      "family": "math",
+      "source": "injected"
+    },
+    {
+      "run_id": "d6c1e5184f434da6",
+      "similarity": 1.0,
+      "fingerprint": "FP-34b120",
+      "cause": 2,
+      "fault": "F3",
+      "family": "math",
+      "source": "injected"
+    },
+    {
+      "run_id": "9535147a91d54f75",
+      "similarity": 1.0,
+      "fingerprint": "FP-34b120",
+      "cause": 2,
+      "fault": "F3",
+      "family": "math",
+      "source": "injected"
+    },
+    {
+      "run_id": "6e604ca853674096",
+      "similarity": 1.0,
+      "fingerprint": "FP-34b120",
+      "cause": 2,
+      "fault": "F3",
+      "family": "math",
+      "source": "injected"
+    }
+  ],
+  "best_similarity": 1.0,
+  "novel": false,
+  "known_fixes": [
+    {
+      "rule": "Never trust a single search result: if a paragraph does not clearly answer the question about the exact entity asked, search again with a more specific query before answering.",
+      "model": null,
+      "fixed": 1,
+      "of": 3,
+      "similarity": 1.0,
+      "report": "37452fc329e1498f-7c60f4.json"
+    }
+  ]
+}

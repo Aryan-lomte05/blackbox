@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Black Box Inspector</title>
+<style>
+/* Layout: top bar + three views (Overview, Runs, Run). Tokens first; dark mode by OS or data-theme. */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --ink: #17202b; --muted: #5b6676; --line: #dce1e8;
+  --orange: #d9480f; --orange-soft: #fde8dc; --good: #1f7a4d; --good-soft: #e2f3e9;
+  --bad: #b42318; --bad-soft: #fde3df; --warn: #9a6100; --warn-soft: #fbefd5; --blue: #1d5fa8; --blue-soft: #e3eefb;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace; --body: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151c; --surface: #17202a; --ink: #e5eaf0; --muted: #98a5b4; --line: #2a3644;
+  --orange: #ff8a4c; --orange-soft: #3a2116; --good: #5fd39a; --good-soft: #13301f; --bad: #ff8a80; --bad-soft: #3a1714;
+  --warn: #f0b84f; --warn-soft: #33270f; --blue: #7ab3f5; --blue-soft: #14263b; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0f151c; --surface: #17202a; --ink: #e5eaf0; --muted: #98a5b4; --line: #2a3644;
+  --orange: #ff8a4c; --orange-soft: #3a2116; --good: #5fd39a; --good-soft: #13301f; --bad: #ff8a80; --bad-soft: #3a1714;
+  --warn: #f0b84f; --warn-soft: #33270f; --blue: #7ab3f5; --blue-soft: #14263b; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--body); }
+header { position: sticky; top: 0; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-inline: 16px; padding-block: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+header h1 { margin: 0; font-size: 17px; letter-spacing: .02em; }
+header h1 span { color: var(--orange); }
+nav { display: flex; gap: 4px; }
+nav button { background: none; border: 1px solid transparent; color: var(--muted); padding: 5px 10px; border-radius: 6px; font: inherit; cursor: pointer; }
+nav button[aria-current="page"] { color: var(--ink); border-color: var(--line); background: var(--bg); }
+.meta { color: var(--muted); font-size: 12.5px; margin-left: auto; display: flex; gap: 14px; flex-wrap: wrap; }
+.meta a { color: var(--orange); }
+main { padding-inline: 16px; padding-block: 18px 60px; max-width: 1200px; margin: 0 auto; display: grid; gap: 18px; }
+h2 { font-size: 15px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; }
+ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.lines { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-word; color: var(--ink); margin: 0; }
+.pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.pass, .done { background: var(--good-soft); color: var(--good); }
+.fail, .failed { background: var(--bad-soft); color: var(--bad); }
+.running { background: var(--warn-soft); color: var(--warn); }
+.queued, .crashed, .rewound { background: var(--orange-soft); color: var(--orange); }
+.k-llm { background: var(--blue-soft); color: var(--blue); }
+.k-tool { background: var(--warn-soft); color: var(--warn); }
+.k-retrieval { background: var(--good-soft); color: var(--good); }
+.k-final, .k-state { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--bg); }
+.best { color: var(--good); font-weight: 700; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-bottom: 10px; }
+label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+select, input, textarea, button.act { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; }
+button.act { cursor: pointer; font-weight: 600; }
+button.act.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+button.act:disabled { opacity: .5; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--orange); outline-offset: 1px; }
+.steps { display: grid; gap: 6px; }
+.step { display: grid; grid-template-columns: 3.2rem 1fr; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); }
+.step.suspect { border-color: var(--orange); box-shadow: inset 4px 0 0 var(--orange); }
+.step.guilty { box-shadow: inset 4px 0 0 var(--bad); border-color: var(--bad); }
+.step .idx { font-family: var(--mono); color: var(--muted); }
+.step .head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.step .out { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-top: 4px; color: var(--ink); max-height: 9em; overflow: auto; }
+.step .tags { color: var(--muted); font-size: 12px; }
+.step .tools { display: flex; gap: 6px; margin-top: 6px; }
+.badge { font-size: 11px; font-weight: 700; color: var(--orange); }
+.badge.g { color: var(--bad); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; word-break: break-word; }
+.log { font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; max-height: 18em; overflow: auto; white-space: pre-wrap; }
+.empty { color: var(--muted); padding: 12px 0; }
+.err { color: var(--bad); }
+.note { color: var(--muted); font-size: 12.5px; }
+@media (max-width: 640px) { .step { grid-template-columns: 1fr; } .meta { margin-left: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>■</span> Black Box Inspector</h1>
+  <nav aria-label="Views">
+    <button data-view="overview" aria-current="page">Overview</button>
+    <button data-view="dataset">Dataset</button>
+    <button data-view="runs">Runs</button>
+    <button data-view="run">Run</button>
+  </nav>
+  <div class="meta"><span id="clock">connecting…</span><a href="/docs" target="_blank" rel="noopener">API docs</a></div>
+</header>
+
+<main>
+  <!-- OVERVIEW -->
+  <section id="view-overview" class="view" style="display:grid; gap:18px">
+    <div class="card"><h2>Data</h2><div class="stats" id="stats"><div class="empty">Loading…</div></div></div>
+    <div class="card"><h2>Diagnosis results</h2><div id="results" class="tablewrap"><div class="empty">Loading…</div></div>
+      <p class="note">Test sets were never used to choose the model. Intervals are 95% bootstrap. Baselines: random (expected value), last model call, fallback order.</p></div>
+    <div class="grid2">
+      <div class="card"><h2>Queue</h2><ul class="plain" id="queue"></ul></div>
+      <div class="card"><h2>Running now</h2><pre class="lines" id="running"></pre><h2 style="margin-top:12px">Machine</h2><pre class="lines" id="machine"></pre></div>
+    </div>
+    <div class="card"><h2>Model choice (grouped cross-validation on train + val)</h2><div id="cv" class="tablewrap"></div></div>
+    <div class="card"><h2>Latest logs</h2><pre class="lines" id="logs"></pre></div>
+  </section>
+
+  <!-- DATASET -->
+  <section id="view-dataset" class="view" hidden>
+    <div id="ds" style="display:grid; gap:14px"><div class="card empty">Loading the dataset (about 10 s the first time)…</div></div>
+  </section>
+
+  <!-- RUNS -->
+  <section id="view-runs" class="view" hidden>
+    <div class="card">
+      <div class="filters">
+        <label>Outcome<select id="f-outcome"><option value="">any</option><option value="fail" selected>failed</option><option value="pass">passed</option></select></label>
+        <label>Family<select id="f-family"><option value="">any</option><option>qa</option><option>math</option><option>ops</option><option>external</option></select></label>
+        <label>Guilty step known<select id="f-labelled"><option value="">any</option><option value="true" selected>yes</option><option value="false">no</option></select></label>
+        <label>Test set<select id="f-split"><option value="">any</option><option>train</option><option>val</option><option>calib</option><option>test_known</option><option>test_new_mistakes</option><option>test_new_tasks</option><option>test_natural</option><option>test_outside</option></select></label>
+        <button class="act" id="f-go">Show</button>
+      </div>
+      <div class="tablewrap" id="runs"><div class="empty">Choose filters and press Show.</div></div>
+    </div>
+  </section>
+
+  <!-- RUN -->
+  <section id="view-run" class="view" hidden>
+    <div class="empty" id="run-empty">Open a run from the Runs list.</div>
+    <div id="run-body" hidden style="display:grid; gap:14px">
+      <div class="grid2">
+        <div class="card"><h2>Run</h2><dl class="facts" id="run-facts"></dl></div>
+        <div class="card"><h2>Diagnosis</h2><div id="diag" class="empty">…</div>
+          <div class="tools" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+            <button class="act primary" id="btn-verify">Verify top suspects</button>
+            <button class="act" id="btn-replay">Replay (0 model calls)</button>
+            <button class="act" id="btn-compare" hidden>Compare with original</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="jobcard" hidden><h2 id="jobtitle">Experiment</h2><div class="log" id="joblog"></div></div>
+      <div class="card"><h2>Steps</h2><p class="note">Orange edge: suspect named by the diagnosis model. Red edge: the known guilty step. "used" = earlier steps whose output this step read.</p><div class="steps" id="steps"></div></div>
+      <div class="card" id="forkcard" hidden><h2>Fork at step <span id="fork-idx"></span></h2>
+        <p class="note">Replace this step's output and re-run. Steps before it come from the recording; later steps are re-used when unaffected.</p>
+        <label for="fork-json">New output (JSON)</label>
+        <textarea id="fork-json" rows="6" style="width:100%" class="mono"></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px"><button class="act primary" id="btn-fork">Run fork</button><button class="act" id="btn-fork-cancel">Cancel</button></div>
+        <div id="fork-result" class="note" style="margin-top:8px"></div>
+      </div>
+      <div class="card" id="comparecard" hidden><h2>Compare</h2><div id="compare" class="tablewrap"></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (x, d = 3) => (x === null || x === undefined || Number.isNaN(x)) ? "—" : Number(x).toFixed(d);
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 300)}`);
+  return r.json();
+}
+function short(v, n = 600) { const t = typeof v === "string" ? v : JSON.stringify(v); return t.length > n ? t.slice(0, n) + " …" : t; }
+
+/* ---------- views ---------- */
+function show(view) {
+  document.querySelectorAll(".view").forEach((el) => { el.hidden = el.id !== `view-${view}`; });
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false"));
+}
+document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
+  show(b.dataset.view);
+  if (b.dataset.view === "runs") loadRuns();
+  if (b.dataset.view === "dataset") loadDataset();
+}));
+
+/* ---------- dataset ---------- */
+const FAMILY = { qa: "QA", math: "Math", ops: "Shop", external: "Who&When" };
+function kvTable(obj, head = ["", "runs"]) {
+  const rows = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${esc(FAMILY[k] || k)}</td><td class="num">${esc(v)}</td></tr>`).join("");
+  return `<table><thead><tr><th>${esc(head[0])}</th><th>${esc(head[1])}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+async function loadDataset() {
+  const box = $("#ds");
+  try {
+    const d = await api("/api/dataset");
+    const s = d.summary, st = d.storage;
+    const splitRows = Object.keys(s.by_split).map((k) => `<tr><td>${esc(k)}</td><td class="num">${s.by_split[k]}</td><td class="num">${s.labelled_by_split[k] ?? 0}</td></tr>`).join("");
+    const health = Object.entries(d.health_by_family).map(([fam, h]) => {
+      const faults = Object.entries(h.faults || {}).map(([f, v]) => {
+        const ok = v.flip_pct >= 30 && v.flip_pct <= 90;
+        return `<tr><td>${esc(f)} <span class="note">${esc(d.mistakes[f] || "")}</span></td><td class="num">${v.runs}</td><td class="num">${v.failed}</td><td class="num">${v.recovered}</td><td class="num">${v.crashed}</td><td class="num ${ok ? "best" : ""}">${fmt(v.flip_pct, 1)}%</td></tr>`;
+      }).join("");
+      return `<div class="card"><h2>${esc(FAMILY[fam] || fam)} · ${h.runs} runs</h2>
+        <p class="note">Clean runs: ${h.clean} (passed ${h.clean_passed}, failed ${h.clean_failed}) · crashed ${h.crashed} · failures with a known guilty step ${h.labelled} · ${fmt(h.steps_mean, 1)} steps per run on average</p>
+        <div class="tablewrap"><table><thead><tr><th>Planted mistake</th><th>Runs</th><th>Broke the run</th><th>Agent recovered</th><th>Crashed</th><th>Break rate (target 30–90%)</th></tr></thead><tbody>${faults || `<tr><td colspan="6" class="empty">No planted mistakes in this family yet.</td></tr>`}</tbody></table></div></div>`;
+    }).join("");
+    const cards = Object.entries(d.model_report_card).map(([m, c]) => `<div class="card"><h2>Agent model report card · ${esc(m)}</h2>
+      <div class="stats">
+        <div class="stat"><b>${fmt(c.clean_pass_rate * 100, 0)}%</b><span>clean tasks passed (${c.clean_runs} runs)</span></div>
+        <div class="stat"><b>${fmt(c.planted_fail_rate * 100, 0)}%</b><span>planted mistakes that broke the run</span></div>
+        <div class="stat"><b>${fmt(c.mean_steps, 1)}</b><span>steps per run</span></div>
+        <div class="stat"><b>${esc(c.mean_tokens_per_clean_run)}</b><span>tokens per clean run</span></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="tablewrap">${kvTable(c.failures_by_mistake, ["Failures by planted mistake", "runs"])}</div>
+        <div class="tablewrap">${kvTable(c.guilty_step_position, ["Where the guilty step sits", "runs"])}</div>
+      </div></div>`).join("");
+    box.innerHTML = `
+      <div class="card"><h2>Totals</h2><div class="stats">
+        <div class="stat"><b>${s.runs}</b><span>recorded runs</span></div>
+        <div class="stat"><b>${s.labelled_failures}</b><span>failures with a known guilty step</span></div>
+        <div class="stat"><b>${s.natural_failures_unlabelled}</b><span>real failures not yet diagnosed</span></div>
+        <div class="stat"><b>${s.crashed}</b><span>crashed runs (our bug, never used as labels)</span></div>
+        <div class="stat"><b>${st.steps}</b><span>steps</span></div>
+        <div class="stat"><b>${fmt(st.save_point_dedup * 100, 0)}%</b><span>save-points de-duplicated (${st.save_points} → ${st.unique_save_points} files, ${st.blob_mb} MB)</span></div>
+      </div></div>
+      <div class="grid2">
+        <div class="card"><h2>Task families</h2><div class="tablewrap">${kvTable(s.by_family, ["Family", "runs"])}</div>
+          <ul class="plain note" style="margin-top:8px">${Object.entries(d.sources).map(([k, v]) => `<li><b>${esc(FAMILY[k] || k)}</b>: ${esc(v)}</li>`).join("")}</ul></div>
+        <div class="card"><h2>Test sets (split by question, never mixed)</h2><div class="tablewrap"><table><thead><tr><th>Set</th><th>Runs</th><th>Known guilty step</th></tr></thead><tbody>${splitRows}</tbody></table></div>
+          <p class="note">Kept out of training: ${esc(d.kept_out_of_training.join(", "))}.</p></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>How we know the guilty step</h2><div class="tablewrap">${kvTable(s.labelled_by_source, ["Source", "runs"])}</div>
+          <p class="note">injected = we planted the mistake and the run failed · verified = a real failure, cause proven by re-running with that step repaired.</p></div>
+        <div class="card"><h2>Recorded on</h2><div class="tablewrap">${kvTable(s.machines, ["Machine", "runs"])}</div></div>
+      </div>
+      ${health}
+      ${cards}`;
+  } catch (e) { box.innerHTML = `<div class="card err">${esc(e.message)}</div>`; }
+}
+
+/* ---------- overview ---------- */
+async function loadStatus() {
+  try {
+    const s = await api("/api/status");
+    $("#clock").textContent = `live · ${s.time.slice(11)}`;
+    const c = s.counts;
+    const dedup = c.save_points ? Math.round(100 * (1 - c.unique_save_points / c.save_points)) : 0;
+    $("#stats").innerHTML = [
+      [c.runs, "recorded runs"], [c.labelled_failures, "failures with a known guilty step"], [c.steps, "steps"],
+      [`${dedup}%`, `save-points de-duplicated (${c.save_points} → ${c.unique_save_points} files)`],
+    ].map(([b, t]) => `<div class="stat"><b>${esc(b)}</b><span>${esc(t)}</span></div>`).join("");
+    $("#queue").innerHTML = s.queue.length ? s.queue.map((j) => `<li><span class="pill ${esc(j.state)}">${esc(j.state)}</span> ${esc(j.name)}${j.note ? `<div class="note">${esc(j.note)}</div>` : ""}</li>`).join("") : `<li class="empty">No queue file.</li>`;
+    $("#running").textContent = s.running.join("\n");
+    $("#machine").textContent = s.machine.join("\n");
+    $("#logs").textContent = s.logs.join("\n");
+    renderResults(s.metrics.gnn_metrics, s.report);
+    renderCV(s.metrics.gnn_cv);
+  } catch (e) {
+    $("#clock").innerHTML = `<span class="err">API unreachable: ${esc(e.message)}</span>`;
+  }
+}
+function renderResults(m, report) {
+  if (!m || !m.splits) { $("#results").innerHTML = `<div class="empty">No trained diagnosis model on this machine yet.</div>`; return; }
+  const rows = Object.entries(m.splits).filter(([k]) => k !== "val").map(([split, r]) => {
+    const b = m.baselines[split] || {};
+    const best = Math.max(b.random?.top1 ?? 0, b.last_model_call?.top1 ?? 0, b.fallback_order?.top1 ?? 0);
+    return `<tr><td>${esc(split)}</td><td class="num">${r.n}</td>
+      <td class="num ${r.top1 > best ? "best" : ""}">${fmt(r.top1)} <span class="note">[${fmt(r.top1_ci95?.[0], 2)}, ${fmt(r.top1_ci95?.[1], 2)}]</span></td>
+      <td class="num">${fmt(r.top3)}</td>
+      <td class="num">${fmt(b.random?.top1)}</td><td class="num">${fmt(b.last_model_call?.top1)}</td></tr>`;
+  }).join("");
+  $("#results").innerHTML = `<p class="note">Model: <span class="mono">${esc(m.model)}</span> (variant <b>${esc(m.variant || "full")}</b>)</p>
+    <table><thead><tr><th>Test set</th><th>n</th><th>Top-1 [95% CI]</th><th>Top-3</th><th>Random top-1</th><th>Last model call top-1</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderCV(cv) {
+  if (!cv) { $("#cv").innerHTML = `<div class="empty">No cross-validation run yet.</div>`; return; }
+  const rows = Object.entries(cv.results).sort((a, b) => (b[1].top1 + b[1].top3) - (a[1].top1 + a[1].top3))
+    .map(([k, v]) => `<tr><td>${k === cv.chosen ? "<b>" + esc(k) + "</b> (chosen)" : esc(k)}</td><td class="num">${v.n}</td><td class="num">${fmt(v.top1)}</td><td class="num">${fmt(v.top3)}</td></tr>`).join("");
+  $("#cv").innerHTML = `<table><thead><tr><th>Variant</th><th>n</th><th>Top-1</th><th>Top-3</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- runs ---------- */
+async function loadRuns() {
+  const q = new URLSearchParams({ limit: "100" });
+  for (const [id, key] of [["#f-outcome", "outcome"], ["#f-family", "family"], ["#f-labelled", "labelled"], ["#f-split", "split"]]) {
+    const v = $(id).value; if (v) q.set(key, v);
+  }
+  $("#runs").innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const { runs } = await api(`/api/runs?${q}`);
+    if (!runs.length) { $("#runs").innerHTML = `<div class="empty">No runs match these filters.</div>`; return; }
+    $("#runs").innerHTML = `<table><thead><tr><th>Run</th><th>Family</th><th>Task</th><th>Outcome</th><th>Planted</th><th>Guilty step</th><th>Steps</th><th>Test set</th></tr></thead><tbody>${
+      runs.map((r) => {
+        const out = r.status !== "done" ? r.status : r.outcome ? (r.outcome.success ? "pass" : "fail") : "—";
+        return `<tr class="click" data-id="${esc(r.run_id)}"><td class="mono">${esc(r.run_id)}</td><td>${esc(r.task_family)}</td><td class="mono">${esc(r.task_id)}</td>
+          <td><span class="pill ${esc(out)}">${esc(out)}</span></td><td>${r.fault ? esc(r.fault.type + " @ " + r.fault.step_idx) : "—"}</td>
+          <td class="num">${r.label?.root_cause_step ?? "—"}</td><td class="num">${r.stats?.n_steps ?? "—"}</td><td>${esc(r.split || "—")}</td></tr>`;
+      }).join("")}</tbody></table>`;
+    document.querySelectorAll("#runs tr.click").forEach((tr) => tr.addEventListener("click", () => openRun(tr.dataset.id)));
+  } catch (e) { $("#runs").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+$("#f-go").addEventListener("click", loadRuns);
+
+/* ---------- one run ---------- */
+let current = null;
+async function openRun(id) {
+  show("run");
+  location.hash = `run-${id}`;
+  $("#run-empty").hidden = true; $("#run-body").hidden = false;
+  ["#jobcard", "#forkcard", "#comparecard"].forEach((s) => ($(s).hidden = true));
+  $("#steps").innerHTML = `<div class="empty">Loading…</div>`; $("#diag").textContent = "Ranking steps…";
+  try {
+    const data = await api(`/api/runs/${id}`);
+    current = data;
+    const r = data.run;
+    const out = r.status !== "done" ? r.status : r.outcome ? (r.outcome.success ? "pass" : "fail") : "no verdict";
+    const facts = [
+      ["Run", `<span class="mono">${esc(r.run_id)}</span>`], ["Agent", esc(r.agent) + " · " + esc(r.model_id)],
+      ["Task", esc(short(r.task_input.question || r.task_input.problem || r.task_input.request || r.task_input, 300))],
+      ["Outcome", `<span class="pill ${esc(out)}">${esc(out)}</span>`],
+      ["Answer", `<span class="mono">${esc(short(r.outcome?.final_answer, 200))}</span>`],
+      ["Expected", `<span class="mono">${esc(short(r.outcome?.expected, 200))}</span>`],
+      ["Planted mistake", r.fault ? `${esc(r.fault.type)} at step ${r.fault.step_idx} <span class="note">${esc(r.fault.params?.note || "")}</span>` : "none"],
+      ["Guilty step", r.label?.root_cause_step ?? "unknown"],
+      ["Forked from", r.parent_run_id ? `<a href="#" data-open="${esc(r.parent_run_id)}">${esc(r.parent_run_id)}</a> at step ${r.fork_step_idx}` : "—"],
+      ["Re-used / executed", `${r.stats?.n_reused ?? 0} / ${r.stats?.n_executed ?? "—"} steps`],
+    ];
+    $("#run-facts").innerHTML = facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    document.querySelectorAll("[data-open]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openRun(a.dataset.open); }));
+    $("#btn-compare").hidden = !r.parent_run_id;
+    $("#btn-verify").disabled = !(r.outcome && !r.outcome.success);
+    renderSteps(data.steps, [], r.label?.root_cause_step);
+    loadDiagnosis(id, data.steps, r.label?.root_cause_step);
+  } catch (e) { $("#steps").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+function stepOutput(s) {
+  if (s.error) return "ERROR " + s.error;
+  const o = s.output || {};
+  if (o.text !== undefined) return o.text;
+  if (o.docs) return o.docs.map((d) => `${d.title || d.id}: ${d.text || ""}`).join("\n");
+  if (o.answer !== undefined) return JSON.stringify(o.answer);
+  return JSON.stringify(o);
+}
+function renderSteps(steps, suspects, guilty) {
+  $("#steps").innerHTML = steps.map((s) => {
+    const rank = suspects.indexOf(s.idx);
+    const cls = [rank >= 0 ? "suspect" : "", s.idx === guilty ? "guilty" : ""].join(" ");
+    return `<div class="step ${cls}"><div class="idx">#${s.idx}</div><div style="min-width:0">
+      <div class="head"><span class="pill k-${esc(s.kind)}">${esc(s.kind)}</span><b>${esc(s.name)}</b><span class="tags">${esc(s.node)}</span>
+        ${s.parents.length ? `<span class="tags">used #${s.parents.join(", #")}</span>` : ""}
+        ${s.cached ? `<span class="tags">re-used from recording</span>` : ""}
+        ${rank >= 0 ? `<span class="badge">suspect ${rank + 1}</span>` : ""}${s.idx === guilty ? `<span class="badge g">guilty step</span>` : ""}</div>
+      <div class="out">${esc(short(stepOutput(s), 900))}</div>
+      ${s.kind !== "final" ? `<div class="tools"><button class="act" data-fork="${s.idx}">Fork here</button></div>` : ""}
+    </div></div>`;
+  }).join("");
+  document.querySelectorAll("[data-fork]").forEach((b) => b.addEventListener("click", () => openFork(Number(b.dataset.fork))));
+}
+async function loadDiagnosis(id, steps, guilty) {
+  try {
+    const d = await api(`/api/runs/${id}/diagnosis`);
+    const scores = (d.scores || []).slice(0, 5).map((s) => `#${s.idx} <span class="mono">p=${fmt(s.p, 2)}</span>`).join(" · ");
+    const hit = guilty !== undefined && guilty !== null ? (d.suspects.slice(0, 3).includes(guilty) ? "the guilty step is in the top 3" : "the guilty step is not in the top 3") : "";
+    $("#diag").innerHTML = `<div>Top suspects: <b>${d.suspects.map((i) => "#" + i).join(", ")}</b> ${hit ? `<span class="note">(${hit})</span>` : ""}</div>
+      ${scores ? `<div class="note">${scores}</div>` : ""}<div class="note">source: ${esc(d.source)}${d.model ? " · " + esc(d.model) : ""}</div>`;
+    renderSteps(steps, d.suspects, guilty);
+  } catch (e) { $("#diag").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+
+/* ---------- experiments ---------- */
+function streamJob(title, jobId) {
+  $("#jobcard").hidden = false; $("#jobtitle").textContent = title;
+  const log = $("#joblog"); log.textContent = "";
+  const add = (t) => { log.textContent += t + "\n"; log.scrollTop = log.scrollHeight; };
+  const es = new EventSource(`/api/jobs/${jobId}/events`);
+  const on = (type, fn) => es.addEventListener(type, (ev) => fn(JSON.parse(ev.data)));
+  on("attempt", (e) => add(`→ step ${e.step}: trying ${e.strategy} (attempt ${e.attempt})`));
+  on("result", (e) => add(`   ${e.passed ? "PASS" : "fail"}  re-ran ${e.savings.steps_executed}/${e.savings.steps_total} steps, saved ${e.savings.tokens_saved} tokens  [run ${e.run_id}]`));
+  on("verdict", (e) => add(`⇒ step ${e.step}: ${e.verdict}${e.cause_step !== null && e.cause_step !== undefined ? " (cause: step " + e.cause_step + ")" : ""}, causal effect ${e.causal_effect}`));
+  on("candidate", (e) => add(`${e.passed ? "✅" : "❌"} ${e.change.kind}: ${e.change.note || ""}`));
+  on("done", (e) => { const r = e.result || {}; add(r.verified_step !== undefined ? `\nVERIFIED ROOT CAUSE: ${r.verified_step === null ? "none of the suspects" : "step " + r.verified_step}` : "\ndone"); es.close(); });
+  on("error", (e) => { add("ERROR " + (e.message || "")); es.close(); });
+  es.onerror = () => { if (es.readyState === 2) return; };
+}
+$("#btn-verify").addEventListener("click", async () => {
+  if (!current) return;
+  $("#btn-verify").disabled = true;
+  try {
+    const j = await api(`/api/runs/${current.run.run_id}/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repeats: 1 }) });
+    streamJob(`Verify: suspects ${j.suspects.map((i) => "#" + i).join(", ")}`, j.job_id);
+  } catch (e) { $("#jobcard").hidden = false; $("#joblog").textContent = "ERROR " + e.message; }
+  finally { $("#btn-verify").disabled = false; }
+});
+$("#btn-replay").addEventListener("click", async () => {
+  if (!current) return;
+  $("#jobcard").hidden = false; $("#jobtitle").textContent = "Replay"; $("#joblog").textContent = "replaying…";
+  try {
+    const r = await api(`/api/runs/${current.run.run_id}/replay`, { method: "POST" });
+    $("#joblog").textContent = `Replayed from the recording: ${r.savings.steps_reused} steps re-used, ${r.savings.steps_executed} executed (model calls made: ${r.run.stats.n_llm_calls}). Outcome: ${r.run.outcome ? (r.run.outcome.success ? "pass" : "fail") : r.run.status} (same as recorded).`;
+  } catch (e) { $("#joblog").textContent = "ERROR " + e.message; }
+});
+function openFork(idx) {
+  const s = current.steps[idx];
+  $("#forkcard").hidden = false; $("#fork-idx").textContent = `#${idx} (${s.kind}:${s.name})`;
+  $("#fork-json").value = JSON.stringify(s.output, null, 2);
+  $("#fork-result").textContent = ""; $("#btn-fork").dataset.idx = idx;
+  $("#forkcard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("#btn-fork-cancel").addEventListener("click", () => ($("#forkcard").hidden = true));
+$("#btn-fork").addEventListener("click", async () => {
+  let value;
+  try { value = JSON.parse($("#fork-json").value); } catch (e) { $("#fork-result").innerHTML = `<span class="err">Not valid JSON: ${esc(e.message)}</span>`; return; }
+  $("#fork-result").textContent = "running fork…"; $("#btn-fork").disabled = true;
+  try {
+    const r = await api(`/api/runs/${current.run.run_id}/fork`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ step_idx: Number($("#btn-fork").dataset.idx), change: { kind: "output", value, note: "inspector fork" } }) });
+    const o = r.outcome ? (r.outcome.success ? "PASS" : "FAIL") : r.status;
+    $("#fork-result").innerHTML = `New run <a href="#" data-open="${esc(r.run_id)}">${esc(r.run_id)}</a>: <b>${o}</b>. Re-ran ${r.savings.steps_executed} of ${r.savings.steps_total} steps, re-used ${r.savings.steps_reused}, saved ${r.savings.tokens_saved} tokens.`;
+    document.querySelectorAll("#fork-result [data-open]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openRun(a.dataset.open); }));
+  } catch (e) { $("#fork-result").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  finally { $("#btn-fork").disabled = false; }
+});
+$("#btn-compare").addEventListener("click", async () => {
+  const r = current.run;
+  try {
+    const c = await api(`/api/compare?a=${r.parent_run_id}&b=${r.run_id}`);
+    $("#comparecard").hidden = false;
+    $("#compare").innerHTML = `<p class="note">First difference at aligned position ${c.first_divergence ?? "—"} · ${c.n_changed} pairs changed · outcome flipped: <b>${c.outcome.flipped}</b></p>
+      <table><thead><tr><th>Original step</th><th>This run's step</th><th>Status</th></tr></thead><tbody>${
+      c.pairs.map((p) => `<tr><td class="num">${p.a ?? "—"}</td><td class="num">${p.b ?? "—"}</td><td><span class="pill ${p.status === "same" ? "done" : "fail"}">${esc(p.status)}</span></td></tr>`).join("")}</tbody></table>`;
+  } catch (e) { $("#comparecard").hidden = false; $("#compare").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+});
+
+/* ---------- boot ---------- */
+loadStatus();
+setInterval(loadStatus, 10000);
+const m = location.hash.match(/^#run-([A-Za-z0-9]+)$/);
+if (m) openRun(m[1]);
+</script>
+</body>
+</html>

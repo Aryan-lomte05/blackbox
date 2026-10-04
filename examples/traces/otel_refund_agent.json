@@ -1,0 +1,37 @@
+{
+  "resourceSpans": [{
+    "resource": {"attributes": [{"key": "service.name", "value": {"stringValue": "refund-agent"}}]},
+    "scopeSpans": [{
+      "scope": {"name": "opentelemetry.instrumentation.openai"},
+      "spans": [
+        {"traceId": "7f3a9c", "spanId": "s0", "name": "invoke_agent refund_agent", "startTimeUnixNano": "1000",
+         "status": {"code": 2, "message": "refund amount did not match the order"},
+         "attributes": [{"key": "gen_ai.operation.name", "value": {"stringValue": "invoke_agent"}}]},
+        {"traceId": "7f3a9c", "spanId": "s1", "parentSpanId": "s0", "name": "chat gpt-4o-mini", "startTimeUnixNano": "1100",
+         "attributes": [
+           {"key": "gen_ai.operation.name", "value": {"stringValue": "chat"}},
+           {"key": "gen_ai.request.model", "value": {"stringValue": "gpt-4o-mini"}},
+           {"key": "gen_ai.input.messages", "value": {"stringValue": "[{\"role\": \"user\", \"content\": \"Customer C-1042 wants a refund for order O-77812. Refund the order total.\"}]"}},
+           {"key": "gen_ai.output.messages", "value": {"stringValue": "CALL get_order(order_id=O-77812)"}}]},
+        {"traceId": "7f3a9c", "spanId": "s2", "parentSpanId": "s0", "name": "execute_tool get_order", "startTimeUnixNano": "1200",
+         "attributes": [
+           {"key": "gen_ai.operation.name", "value": {"stringValue": "execute_tool"}},
+           {"key": "gen_ai.tool.name", "value": {"stringValue": "get_order"}},
+           {"key": "gen_ai.tool.call.arguments", "value": {"stringValue": "{\"order_id\": \"O-77812\"}"}},
+           {"key": "gen_ai.tool.call.result", "value": {"stringValue": "{\"order_id\": \"O-77812\", \"customer\": \"C-1042\", \"total\": 1520.0, \"currency\": \"INR\"}"}}]},
+        {"traceId": "7f3a9c", "spanId": "s3", "parentSpanId": "s0", "name": "chat gpt-4o-mini", "startTimeUnixNano": "1300",
+         "attributes": [
+           {"key": "gen_ai.operation.name", "value": {"stringValue": "chat"}},
+           {"key": "gen_ai.request.model", "value": {"stringValue": "gpt-4o-mini"}},
+           {"key": "gen_ai.input.messages", "value": {"stringValue": "[{\"role\": \"tool\", \"content\": \"{\\\"order_id\\\": \\\"O-77812\\\", \\\"customer\\\": \\\"C-1042\\\", \\\"total\\\": 1520.0, \\\"currency\\\": \\\"INR\\\"}\"}]"}},
+           {"key": "gen_ai.output.messages", "value": {"stringValue": "The order total is 15200. CALL refund_order(order_id=O-77812, amount=15200)"}}]},
+        {"traceId": "7f3a9c", "spanId": "s4", "parentSpanId": "s0", "name": "execute_tool refund_order", "startTimeUnixNano": "1400",
+         "status": {"code": 2, "message": "refund 15200 exceeds order total 1520.0"},
+         "attributes": [
+           {"key": "gen_ai.operation.name", "value": {"stringValue": "execute_tool"}},
+           {"key": "gen_ai.tool.name", "value": {"stringValue": "refund_order"}},
+           {"key": "gen_ai.tool.call.arguments", "value": {"stringValue": "{\"order_id\": \"O-77812\", \"amount\": 15200}"}}]}
+      ]
+    }]
+  }]
+}

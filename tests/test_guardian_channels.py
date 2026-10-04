@@ -1,0 +1,146 @@
+"""Guardian channels: Slack, Telegram and voice call send the right request; a call is made only for critical
+incidents; nothing goes out unless the channel is configured. The network is stubbed."""
+
+from __future__ import annotations
+
+import io
+import json
+import urllib.parse
+
+import pytest
+
+from blackbox.guardian import channels, render
+from blackbox.guardian.channels import Outbox, SlackWebhook, TelegramBot, TwilioVoiceCall
+from blackbox.guardian.incident import Incident
+
+
+def _incident(severity="critical", paused=True) -> Incident:
+    return Incident(incident_id="inc1", run_id="r1", kind="failure", severity=severity, title="trader_bot placed a wrong order",
+                    what_happened="It bought 100 shares instead of 10.", why="Step 4 read the quantity from the wrong field.",
+                    how_to_fix=["Validate the quantity before place_order."], needs_approval=paused, signature="s1",
+                    link="http://dash/incidents/inc1")
+
+
+@pytest.fixture
+def sent(monkeypatch):
+    calls = []
+
+    class Reply(io.BytesIO):
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=None):
+        calls.append({"url": req.full_url, "data": req.data, "headers": dict(req.header_items())})
+        return Reply(json.dumps({"sid": "CA1", "result": {"message_id": 7}}).encode())
+
+    monkeypatch.setattr(channels.urllib.request, "urlopen", fake_urlopen)
+    return calls
+
+
+def test_unconfigured_channels_say_what_to_set(monkeypatch):
+    for var in ("SLACK_WEBHOOK_URL", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+        monkeypatch.delenv(var, raising=False)
+    ok, why = SlackWebhook().available()
+    assert not ok and "SLACK_WEBHOOK_URL" in why
+    assert "TELEGRAM_CHAT_ID" in TelegramBot().available()[1]
+
+
+def test_slack_posts_block_kit_with_a_link(monkeypatch, sent):
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.test/abc")
+    assert SlackWebhook().send(_incident()) == "posted (200)"
+    body = json.loads(sent[0]["data"])
+    assert sent[0]["url"] == "https://hooks.slack.test/abc" and body["text"].startswith("[Black Box · CRITICAL]")
+    assert body["blocks"][-1]["elements"][0]["url"] == "http://dash/incidents/inc1"
+    assert any("paused" in json.dumps(b) for b in body["blocks"])
+
+
+def test_telegram_sends_escaped_html(monkeypatch, sent):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "T0K")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    inc = _incident()
+    inc.why = "quantity <10> & price"
+    assert TelegramBot().send(inc) == "sent, message id 7"
+    body = json.loads(sent[0]["data"])
+    assert sent[0]["url"] == "https://api.telegram.org/botT0K/sendMessage"
+    assert body["chat_id"] == "42" and body["parse_mode"] == "HTML" and "&lt;10&gt; &amp;" in body["text"]
+
+
+def test_voice_call_only_for_critical_and_reads_the_incident(monkeypatch, sent):
+    for k, v in {"TWILIO_ACCOUNT_SID": "AC1", "TWILIO_AUTH_TOKEN": "t", "TWILIO_VOICE_FROM": "+1555",
+                 "ALERT_PHONE_TO": "+9199"}.items():
+        monkeypatch.setenv(k, v)
+    call = TwilioVoiceCall()
+    assert not call.wants(_incident(severity="high")) and call.wants(_incident())
+    assert call.send(_incident()) == "calling, call sid CA1"
+    form = urllib.parse.parse_qs(sent[0]["data"].decode())
+    assert sent[0]["url"].endswith("/Accounts/AC1/Calls.json") and form["To"] == ["+9199"]
+    assert "<Say" in form["Twiml"][0] and "paused" in form["Twiml"][0] and "http" not in render.voice(_incident())
+
+
+def test_a_configured_call_channel_declines_a_non_critical_incident_and_says_why(monkeypatch, sent):
+    for k, v in {"TWILIO_ACCOUNT_SID": "AC1", "TWILIO_AUTH_TOKEN": "t", "TWILIO_VOICE_FROM": "+1555",
+                 "ALERT_PHONE_TO": "+9199"}.items():
+        monkeypatch.setenv(k, v)
+    assert TwilioVoiceCall().ready_for(_incident(severity="high")) == (False, "phone calls are only for critical incidents")
+    assert TwilioVoiceCall().ready_for(_incident(severity="critical")) == (True, "ready")
+    assert sent == []
+
+
+def test_emailjs_sends_the_rendered_email_with_the_private_key(monkeypatch, sent):
+    from blackbox.guardian.channels import EmailJSEmail
+
+    for k, v in {"EMAILJS_SERVICE_ID": "service_x", "EMAILJS_TEMPLATE_ID": "template_y", "EMAILJS_PUBLIC_KEY": "pub",
+                 "EMAILJS_PRIVATE_KEY": "priv", "ALERT_EMAIL_TO": "owner@example.com"}.items():
+        monkeypatch.setenv(k, v)
+    assert EmailJSEmail().send(_incident()).startswith("sent to owner@example.com (200")
+    body = json.loads(sent[0]["data"])
+    assert sent[0]["url"] == "https://api.emailjs.com/api/v1.0/email/send"
+    assert (body["service_id"], body["template_id"], body["user_id"], body["accessToken"]) == \
+        ("service_x", "template_y", "pub", "priv")
+    params = body["template_params"]
+    assert params["to_email"] == "owner@example.com" and params["subject"].startswith("[Black Box · CRITICAL]")
+    assert "<table" in params["html_message"] and "Validate the quantity" in params["text_message"]
+
+
+def test_every_request_identifies_itself(monkeypatch, sent):
+    """Cloudflare-fronted APIs (EmailJS) reject Python's default User-Agent with "error code: 1010"."""
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.test/abc")
+    SlackWebhook().send(_incident())
+    agent = {k.lower(): v for k, v in sent[0]["headers"].items()}["user-agent"]
+    assert agent.startswith("BlackBox-Guardian/")
+
+
+def test_a_refusal_carries_the_services_reason(monkeypatch):
+    import urllib.error
+
+    from blackbox.guardian.channels import ChannelError, EmailJSEmail
+
+    def refuse(req, timeout=None):
+        raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {},
+                                     io.BytesIO(b"API access from non-browser environments is currently disabled."))
+
+    monkeypatch.setattr(channels.urllib.request, "urlopen", refuse)
+    for k in ("EMAILJS_SERVICE_ID", "EMAILJS_TEMPLATE_ID", "EMAILJS_PUBLIC_KEY", "EMAILJS_PRIVATE_KEY", "ALERT_EMAIL_TO"):
+        monkeypatch.setenv(k, "x")
+    with pytest.raises(ChannelError, match="403: API access from non-browser environments"):
+        EmailJSEmail().send(_incident())
+
+
+def test_phone_calls_are_opt_in(monkeypatch):
+    from blackbox.guardian.channels import default_channels
+
+    monkeypatch.delenv("BLACKBOX_VOICE_CALLS", raising=False)
+    assert "voice-call" not in [c.name for c in default_channels()]
+    monkeypatch.setenv("BLACKBOX_VOICE_CALLS", "1")
+    assert "voice-call" in [c.name for c in default_channels()]
+
+
+def test_outbox_keeps_every_channel_message_for_inspection(tmp_path):
+    Outbox(tmp_path).send(_incident())
+    files = {p.name for p in (tmp_path / "inc1").iterdir()}
+    assert {"email.html", "whatsapp.txt", "slack.json", "telegram.html", "voice.txt"} <= files

@@ -1,5 +1,32 @@
 # Advay: Full-stack · Every Screen, Live Streaming, Demo Driver
 
+## ▶▶ DESIGN + PROMPTS (4 Oct, 05:00): read these first
+- **`docs/UI_BRIEF.md`**: the design system (tokens, Geist + JetBrains Mono, Lenis + motion rules, components,
+  every screen). Premium instrument software, **no AI slop** (no gradients, glows, emoji, fake data).
+- **`docs/UI_PROMPTS.md`**: paste-ready prompts for Claude Code, in order (setup → components → Investigate +
+  Run page → Live Lab → Prove screens → Incidents/Overview → polish). Each has a check before moving on.
+- New since the release: `GET /api/cases` (Investigate picker); `notify` on `POST /api/lab` and `POST /api/runs`
+  ("Notify my phone" toggle: real email / WhatsApp / Slack). Verify uses the local 7B by default.
+
+## ▶ START HERE (4 Oct, 02:40): Pitch 1 is at 11:00, freeze the UI at 09:30
+1. `git checkout dev && git pull`. The backend is done and stable; you only build `web/`.
+2. **Contract:** `docs/API_FOR_UI.md` (screen → endpoint → fixture, stream event shapes). **Real responses:**
+   `fixtures/ui/*.json`, so you can build every screen with no backend and no GPU. All endpoints with dropdown
+   examples: `docs/openapi.json`, or `/docs` when the backend runs.
+3. Backend on your machine (optional): `pip install -e ".[ui,agents]"`, then put the dataset from the GitHub
+   release `data-2026-10-03` into `data/`, then `blackbox ui` → http://localhost:8000. Or point the UI at Aryan's
+   machine on the LAN.
+4. **Build in this order (the demo script):**
+   1. **Investigate** (one click): story lines + numbers (`investigate_model_finds_it.json`)
+   2. **Run graph**: guilty step red, contamination trail orange, suspects badges (`run_graph.json`)
+   3. **Live Lab**: type a question, the 14 stages stream in (SSE, shapes in the doc)
+   4. **One fix for many / firewall**: a row per re-run run, big APPROVE / BLOCK (`fleet_fix_job.json`)
+   5. **Causal report**: necessary / sufficient table, recovery paths, blast radius (`causal_job.json`)
+   6. **Seen this before?**: fingerprint chips, look-alikes, NOVEL badge (`similar.json`)
+   7. **Guardian incidents**: list, detail, approve / reject (`incidents.json`, `incident_detail.json`)
+   8. **Overview** home + **Atlas** + **Dataset**
+5. The MCP server (X5) is **done** (`docs/MCP.md`); it is not on your list.
+
 **Joins:** about H7. **Machine:** RTX 4050 6 GB.
 **First 10 minutes:** start a run generator in the background (Radhesh gives you the one-line command), then build screens.
 **Folders you own:** `web/`, plus any API routes the screens need beyond Aryan's skeleton (`/api/tasks`, `/api/eval/latest`, filters/paging)

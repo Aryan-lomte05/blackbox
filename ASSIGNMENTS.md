@@ -13,6 +13,7 @@ An **installable Python package** (`pip install agent-blackbox`) that adds Black
 |---|---|---|---|
 | **Aryan** (lead) | RTX 4060 8 GB | `core/` `recorder/` `replay/` `api/` (skeleton) | Recording, save-points, replay/fork, compare, verify, GenAI repair, integration, demo |
 | **Radhesh** | RTX 3050 | `agents/` `faults/` `data/` `eval/` | The 3 test agents, planted mistakes, generating ~3,000 runs, then the evaluation tables |
+| **Aryan (added)** | RTX 4060 | `diagnosis/gnn.py`, `diagnosis/graph_data.py` | Diagnosis GNN (docs/DIAGNOSIS_GNN.md): a second learned model; its scores feed Aditya's ranker and the eval |
 | **Aditya** | M1 Air | `monitor/` `diagnosis/` `report/` | Step-checker questions, the trained ranker, suspect list, evidence, GenAI incident report |
 | **Advay** (joins ~H7) | RTX 4050 6 GB | `web/` + extra API routes | Every screen, live streaming in the browser, demo driving |
 
@@ -25,11 +26,11 @@ exception is `core/schema.py`, which follows the change rule in `CLAUDE.md`.
 |---|---|---|---|---|
 | 1 | `core/schema.py` | Aryan → all | **H2** | SYSTEM.md §4.1 |
 | 2 | `RunContext` + `Agent` base (records to a JSON file is enough) | Aryan → Radhesh | **H3** | write the agent against the §4.2 signatures |
-| 3 | Step-checker questions + `check_step(step, run) -> dict` | Aditya → Aryan | **H5** | a stub returning `None` |
+| 3 | `blackbox/monitor/check.py: check_step(step, run, prior_steps) -> dict` returning Laya/Jev's shape: `{"answers": {"on_track": {"type": "noul", "noul": p, "confidence": c}, "mistake_type": {"type": "choice", "choice": ..., "probabilities": {...}, "confidence": c}, ...}, "tier": "laya"}` (autopilot reads `on_track.noul` + `confidence`) | Aditya → Aryan | **H5** | autopilot/monitor off |
 | 4 | `fork(run_id, k, change)` | Aryan → Radhesh, Aditya | **H6** | — (planted-mistake runs start at H6) |
 | 5 | First 200 real runs (shard file) | Radhesh → Aditya | **H6** | 3–4 hand-written fake runs |
 | 6 | `fixtures/` (10 real runs incl. a run + its fork) + API skeleton | Aryan → Advay | **H7** | — |
-| 7 | `diagnose(run) -> {scores, suspects, evidence}` | Aditya → Aryan | **H11** | a stub ranking by "first error" |
+| 7 | `blackbox/diagnosis/predict.py: diagnose(trace) -> {"suspects": [idx, ...], "scores": [{"idx", "p", "rank"}], "coverage": 0.9, "evidence": [{"idx", "sentences": [...], "trail": [idx, ...]}]}` (the API picks it up automatically when the module exists) | Aditya → Aryan | **H11** | API returns a labelled fallback order |
 | 8 | `data/reports/latest.json` | Radhesh → Advay | **H13** | "No evaluation yet" empty state |
 
 **Rule:** never wait. If your input is late, build against the stub shape.
@@ -65,6 +66,8 @@ H11.
 | U24 any model/provider · U26 plug-in checks · compare screen · eval page with real numbers | Who&When (if the download/format fights us) |
 
 **Beyond-PS (SYSTEM.md §1B):** must = X1 autopilot · X3 checker cascade (Laya → Jev → LLM) · X4 3-line wrapper · X7 model report card · X8 BlackBox-3K dataset · X10 minutes-to-milliseconds study. Stretch-must = X2 fine-tuned Laya · X5 MCP server. Stretch = X6 agent CI · X9 privacy guard.
+
+**Guardian (mentor feedback, SYSTEM.md §0B):** built by Aryan: incidents, email/WhatsApp/outbox, approval pause, dry-run rule for money-moving tools, trader-bot demo. Next: approve/reject on the incident page (Advay's UI), live Twilio/SMTP credentials (whoever owns the accounts), digest + trends (stretch).
 
 **Pitch rule:** a USP goes on a slide only if it works in the demo and its
 number comes from `data/`. Advay keeps a USP checklist on the team board and
