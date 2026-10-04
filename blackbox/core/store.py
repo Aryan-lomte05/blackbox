@@ -42,6 +42,8 @@ class Store:
         self.blob_dir = self.root / "blobs"
         self.blob_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
+        self._writes = 0  # in-process writes, part of revision()
+        self._counts_cache: tuple | None = None
         self._db = sqlite3.connect(self.root / "blackbox.db", check_same_thread=False)
         self._db.executescript(_SCHEMA)
         self._db.commit()
@@ -89,6 +91,7 @@ class Store:
                 [(run.run_id, s.idx, s.model_dump_json()) for s in trace.steps],
             )
             self._db.commit()
+            self._writes += 1
 
     @staticmethod
     def _redacted(trace: Trace) -> Trace:
@@ -193,7 +196,22 @@ class Store:
         with self._lock:
             return self._db.execute(sql, tuple(args)).fetchone()[0]
 
+    def revision(self) -> tuple:
+        """Changes whenever runs are added or re-labelled (cheap: the runs table only). Keys expensive caches."""
+        with self._lock:
+            row = self._db.execute("SELECT COUNT(*), MAX(created_at), COALESCE(SUM(has_label), 0) FROM runs").fetchone()
+        return (*row, self._writes)
+
     def counts(self) -> dict:
+        """Totals, memoized per revision(): the save-point count scans every step and the blob folder."""
+        rev = self.revision()
+        if self._counts_cache is not None and self._counts_cache[0] == rev:
+            return dict(self._counts_cache[1])
+        out = self._compute_counts()
+        self._counts_cache = (rev, out)
+        return dict(out)
+
+    def _compute_counts(self) -> dict:
         with self._lock:
             runs = self._db.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
             steps = self._db.execute("SELECT COUNT(*) FROM steps").fetchone()[0]
