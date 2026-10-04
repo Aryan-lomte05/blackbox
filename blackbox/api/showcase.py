@@ -5,7 +5,7 @@ built from its recorded facts (and, when a trained model exists, what the
 model says about it). Nothing is invented: if a kind of case does not exist
 in the store, it is simply left out of the dropdown.
 
-Cached in data/status/showcase.json; `rebuild` refreshes it.
+Cached in <store>/status/showcase.json (data/status/showcase.json for the default store); `rebuild` refreshes it.
 
     py -3 -m blackbox.api.showcase rebuild
 """
@@ -15,12 +15,18 @@ from __future__ import annotations
 import json
 import random
 import sys
+from pathlib import Path
 from typing import Any
 
 from blackbox.core.schema import Change, Trace
-from blackbox.core.store import DEFAULT_DIR, Store
+from blackbox.core.store import Store
 
-CACHE = DEFAULT_DIR / "status" / "showcase.json"
+CACHE_NAME = Path("status") / "showcase.json"
+
+
+def cache_path(store: Store) -> Path:
+    """The cache lives inside the store it describes, so a test's temporary store never touches real data."""
+    return Path(store.root) / CACHE_NAME
 FAULT_NAMES = {
     "F1": "wrong tool argument", "F2": "wrong tool result", "F3": "tool returned nothing",
     "F4": "misleading paragraph", "F5": "missing paragraph", "F6": "wrong fact",
@@ -193,16 +199,17 @@ def build(store: Store, scan: int = 40) -> dict[str, Any]:
 
 
 def load_or_build(store: Store) -> dict[str, Any]:
-    if CACHE.exists():
+    cache = cache_path(store)
+    if cache.exists():
         try:
-            cases = json.loads(CACHE.read_text(encoding="utf-8"))
+            cases = json.loads(cache.read_text(encoding="utf-8"))
             if all(_exists(store, c["run_id"]) for c in cases.get("runs", {}).values()):
                 return cases
         except (ValueError, KeyError):
             pass
     cases = build(store)
-    CACHE.parent.mkdir(parents=True, exist_ok=True)
-    CACHE.write_text(json.dumps(cases, indent=2, default=str), encoding="utf-8")
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(cases, indent=2, default=str), encoding="utf-8")
     return cases
 
 
@@ -228,8 +235,9 @@ def body_examples(items: dict) -> dict:
 
 if __name__ == "__main__":
     if sys.argv[1:] == ["rebuild"]:
-        CACHE.unlink(missing_ok=True)
-        c = load_or_build(Store())
+        store = Store()
+        cache_path(store).unlink(missing_ok=True)
+        c = load_or_build(store)
         for section, items in c.items():
             for k, v in items.items():
                 print(f"{section:12} {k:28} {v.get('summary', '')}")

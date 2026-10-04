@@ -46,7 +46,10 @@ def main() -> int:
         stream.reconfigure(encoding="utf-8", errors="replace")
     app = create_app(examples=True)
     http = TestClient(app)
-    cases = json.loads(Path("data/status/showcase.json").read_text(encoding="utf-8"))
+    from blackbox.api.showcase import load_or_build
+    from blackbox.core.store import Store
+
+    cases = load_or_build(Store())  # the same cases the API serves (built if missing)
     runs = cases["runs"]
     failed = runs["model_finds_it"]["run_id"]
     OUT.mkdir(parents=True, exist_ok=True)
