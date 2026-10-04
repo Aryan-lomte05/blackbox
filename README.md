@@ -6,9 +6,9 @@ its recording with only that step repaired. If the run now passes, that step was
 from the recording, so a replay costs zero model calls and a fix re-runs only what changed.
 
 ```bash
-pip install agent-blackbox                 # recorder, replay, proof, CLI, CI, MCP server, trace import
-pip install "agent-blackbox[ui]"           # + the API / dashboard backend
-pip install "agent-blackbox[all]"          # + step checker, ranking model, test agents, dataset loaders
+pip install halfabyte-blackbox                 # recorder, replay, proof, CLI, CI, MCP server, trace import
+pip install "halfabyte-blackbox[ui]"           # + the API / dashboard backend
+pip install "halfabyte-blackbox[all]"          # + step checker, ranking model, test agents, dataset loaders
 ```
 
 ## Add it to an existing agent (3 lines)

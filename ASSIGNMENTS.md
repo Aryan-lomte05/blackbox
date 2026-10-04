@@ -5,7 +5,7 @@ Design lives in `SYSTEM.md`; working rules live in `CLAUDE.md`. Each person's
 step-by-step list is in `assignments/<Name>.md`.
 
 ## 0. The deliverable
-An **installable Python package** (`pip install agent-blackbox`) that adds Black Box to an *existing* agent project in 3 lines (SYSTEM.md §0A), shown on an agent we did not write. Packaging: Aryan (library, CLI, `wrap()`); Advay (web UI bundled into the package, `blackbox ui`); Radhesh (the "existing project" integration demo + `blackbox test`); Aditya (shipping the trained ranker/checker weights).
+An **installable Python package** (`pip install halfabyte-blackbox`) that adds Black Box to an *existing* agent project in 3 lines (SYSTEM.md §0A), shown on an agent we did not write. Packaging: Aryan (library, CLI, `wrap()`); Advay (web UI bundled into the package, `blackbox ui`); Radhesh (the "existing project" integration demo + `blackbox test`); Aditya (shipping the trained ranker/checker weights).
 
 ## 1. Who owns what (one owner per folder)
 
