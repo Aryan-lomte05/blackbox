@@ -1,4 +1,4 @@
-# Black Box — a flight recorder for AI agents
+# Black Box: a flight recorder for AI agents
 
 **Find the step that broke an agent run, then prove it was the cause by replaying the run with only that step repaired.**
 
@@ -11,7 +11,7 @@
 When an AI agent gives you a wrong answer, the mistake usually happened several steps earlier. A bad search
 result at step 3 quietly poisons steps 4 through 12, and the only thing you see is the wrong answer at the end.
 
-Tracing tools — LangSmith, Langfuse, OpenTelemetry — **show** you those steps. You still have to read hundreds
+Tracing tools, LangSmith, Langfuse and OpenTelemetry, **show** you those steps. You still have to read hundreds
 of them to work out which one actually caused the failure, and you can never be sure you were right.
 
 Black Box closes that loop. It records every step with a save-point, ranks the steps most likely to be at fault,
@@ -47,7 +47,7 @@ pip install "halfabyte-blackbox[ui]"        # + REST API and dashboard backend
 pip install "halfabyte-blackbox[all]"       # + step checker, ranking model, test agents, dataset loaders
 ```
 
-## Add it to an agent you already have — three lines
+## Add it to an agent you already have, in three lines
 
 ```python
 import blackbox
@@ -81,7 +81,7 @@ blackbox.savings(child)           # steps re-run vs re-used, tokens and calls sa
 Undoing one planted mistake in a 9-step run re-runs **1 step**, re-uses **8**, and spends **0 model calls**.
 That is what turns "step 2 looks suspicious" into "step 2 caused this, and here is the run passing without it".
 
-It also works on agents you did not write — demonstrated on Hugging Face `smolagents` — and on traces you have
+It also works on agents you did not write, demonstrated on Hugging Face `smolagents`, and on traces you have
 already exported from somewhere else:
 
 ```bash
@@ -99,7 +99,7 @@ data with bootstrap confidence intervals, against baselines.
 **The dataset we built:** 5,653 agent runs · 56,122 steps · **859 failures with a known guilty step**
 (815 planted mistakes across 10 kinds, plus 44 real failures whose cause was established by replay experiment).
 Questions come from HotpotQA and GSM8K, plus a shop task type held out entirely for testing. Save-points are
-content-addressed and 80% de-duplicated — 56k save-points fit in 10.4 MB.
+content-addressed and 80% de-duplicated, so 56k save-points fit in 10.4 MB.
 
 **Diagnosis model** (graph features over who-used-whose-output), evaluated on data it never trained on:
 
@@ -107,14 +107,14 @@ content-addressed and 80% de-duplicated — 56k save-points fit in 10.4 MB.
 |---|---:|---:|---:|
 | Unseen questions, known mistake kinds | 67 | **0.60** | **0.82** |
 | A task type never trained on (Shop) | 112 | **0.63** | **0.79** |
-| Gradient-boosted baseline on the same split | 112 | 0.025 | — |
-| Simple heuristics (first / last / random step) | | ≤ 0.25 | — |
+| Gradient-boosted baseline on the same split | 112 | 0.025 | n/a |
+| Simple heuristics (first / last / random step) | | ≤ 0.25 | n/a |
 
 Graph-derived features are worth **+16 points of Top-1** over text embeddings alone. The calibrated suspect list
 names 5 steps and contains the guilty one **93%** of the time on held-out calibration runs, against a 90% target.
 
 **An honest gap, because it matters more than the headline number.** On real, unplanted failures (n=17) the
-model's first pick is rarely correct — real causes tend to sit at the *planning* step rather than the step that
+model's first pick is rarely correct, because real causes tend to sit at the *planning* step rather than the step that
 visibly misbehaved. Black Box handles this two ways: a policy that always includes the model's top 2 *plus* the
 first decision step, and, above all, proof by replay, **which does not depend on the model being right**. The
 ranker narrows the search; the replay experiment is what settles it.
@@ -123,7 +123,7 @@ ranker narrows the search; the replay experiment is what settles it.
 
 - The regression firewall **BLOCKED** a proposed search rule: it fixed 1 of 4 similar failures but broke 1 of 2 passing runs.
 - It **APPROVED** a different rule (fixed 1 of 3, broke 0); that rule is now offered automatically for look-alike failures.
-- Crash-testing a question-answering agent scored it 4 of 5 stars — robust to 5 of 6 mistake kinds, weak against misleading search results.
+- Crash-testing a question-answering agent scored it 4 of 5 stars: robust to 5 of 6 mistake kinds, weak against misleading search results.
 - A causal report on a maths run found the calculator step **necessary but not sufficient** (the agent sometimes recovers), identified 2 verified recovery paths, and showed the mistake reached all 9 later steps.
 - 859 labelled failures collapse into roughly **30 distinct failure patterns** by fingerprint.
 
@@ -138,7 +138,7 @@ ranker narrows the search; the replay experiment is what settles it.
 | **Prove** | Re-run with one suspect repaired at a time until the outcome flips | Verify (API, MCP `verify`) |
 | **Causal report** | Necessary vs sufficient, joint causes, every recovery path, blast radius | `/causal`, MCP `causal_report` |
 | **One fix for many** | Test one rule against similar past failures *and* past passing runs; APPROVE only if nothing breaks | `blackbox fleet <run>` |
-| **Crash test** | Plant every known kind of mistake into a working agent and grade it 1–5 stars | `blackbox crash-test <run>` |
+| **Crash test** | Plant every known kind of mistake into a working agent and grade it 1 to 5 stars | `blackbox crash-test <run>` |
 | **Seen this before?** | Failure fingerprints, look-alike failures, NOVEL flags, known fixes | MCP `similar_failures` |
 | **Guardian** | Incidents in plain words over email, WhatsApp, Slack, Telegram; money-moving agents paused until a human approves | `blackbox.Guardian(...)` |
 | **Black Box CI** | Replay pinned recorded runs on every pull request; fail the build on regressions | `blackbox ci pin` / `ci run` + GitHub Action |
@@ -191,9 +191,9 @@ Every model is named in one file, `models.yaml`; keys live in `.env` and are nev
 ### The step checker cascade
 
 Typed checks ("is this step consistent with its inputs?", "which mistake kind is this?") run first on
-**Laya** (open-source, Apache-2.0, ~420M params, ~2–3 GB VRAM, ~30 ms per question on GPU — local and free).
+**Laya** (open-source, Apache-2.0, ~420M params, ~2 to 3 GB VRAM, ~30 ms per question on GPU, local and free).
 Only when Laya's confidence is low do they escalate to **Jev**, and then to a full LLM. Black Box works with
-Laya alone; each tier is measured rather than trusted. Labels for training never come from a model — only from
+Laya alone; each tier is measured rather than trusted. Labels for training never come from a model, only from
 code checkers and replay experiments.
 
 ---
