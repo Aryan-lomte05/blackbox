@@ -42,7 +42,7 @@ export const AuthModal: React.FC = () => {
 
   const handleDevLogin = async () => {
     setIsSubmitting(true);
-    const success = await devLogin('Advay Chavan', 'advay@halfabyte.ai');
+    const success = await devLogin('Demo Operator', 'operator@localhost');
     setIsSubmitting(false);
     if (success) {
       closeAuthModal();
@@ -175,7 +175,7 @@ export const AuthModal: React.FC = () => {
             className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 hover:border-amber-400 text-amber-300 text-xs font-mono font-medium flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg active:scale-95"
           >
             <Terminal className="w-4 h-4 text-amber-400" />
-            <span>Launch Flight Console (Advay Chavan)</span>
+            <span>Launch Flight Console (Demo Operator)</span>
           </button>
         </div>
 

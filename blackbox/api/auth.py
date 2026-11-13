@@ -42,9 +42,16 @@ def _get_frontend_base() -> str:
     return "http://localhost:5173"
 
 
+def dev_login_enabled() -> bool:
+    """Dev login signs in as any caller-chosen identity, so it is opt-in and never on in production."""
+    if os.environ.get("ENVIRONMENT", "dev").strip().lower() in ("prod", "production"):
+        return False
+    return os.environ.get("BLACKBOX_DEV_LOGIN", "").strip() == "1"
+
+
 class DevLoginRequest(BaseModel):
-    name: str = "Advay Chavan"
-    email: str = "advay@halfabyte.ai"
+    name: str = "Demo Operator"
+    email: str = "operator@localhost"
     avatar: str = ""
 
 
@@ -53,6 +60,7 @@ def auth_status() -> dict[str, Any]:
     """Provides configuration status for Google OAuth and MongoDB persistence."""
     return {
         "google_configured": is_google_configured(),
+        "dev_login_enabled": dev_login_enabled(),
         "mongodb": get_mongo_status(),
     }
 
@@ -76,7 +84,7 @@ def google_login(
         return RedirectResponse(url=auth_url, status_code=307)
     except Exception as exc:
         logger.error(f"Failed to create Google OAuth authorization URL: {exc}")
-        raise HTTPException(status_code=500, detail=f"Could not build OAuth URL: {exc}")
+        raise HTTPException(status_code=500, detail="Could not build the Google sign-in URL.")
 
 
 @router.get("/google/callback", summary="Google OAuth callback handler")
@@ -111,7 +119,7 @@ async def google_callback(
         user_info = await exchange_code_for_user(code)
     except Exception as exc:
         logger.error(f"Failed to exchange Google OAuth code: {exc}")
-        err_msg = urllib.parse.quote(f"Authentication failed: {exc}")
+        err_msg = urllib.parse.quote("Authentication with Google failed. Please try again.")
         return RedirectResponse(f"{frontend_base}/?auth_error={err_msg}")
 
     # Persist or update user in MongoDB
@@ -185,7 +193,12 @@ def logout(response: Response) -> dict[str, bool]:
 
 @router.post("/dev-login", summary="Development/Demo operator login")
 def dev_login(response: Response, body: DevLoginRequest = DevLoginRequest()) -> dict[str, Any]:
-    """Creates a local developer/operator session for testing protected UI and workflows."""
+    """Creates a local developer/operator session for testing protected UI and workflows.
+
+    Only available when BLACKBOX_DEV_LOGIN=1 and ENVIRONMENT is not production.
+    """
+    if not dev_login_enabled():
+        raise HTTPException(status_code=404, detail="Not Found")
     user_record = upsert_user(
         provider="developer",
         provider_user_id="dev_operator_001",

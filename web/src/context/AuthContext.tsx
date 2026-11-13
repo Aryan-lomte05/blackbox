@@ -37,8 +37,8 @@ export interface AuthContextType {
 
 export const DEFAULT_OPERATOR: User = {
   id: 'usr_developer:dev_operator_001',
-  name: 'Advay Chavan',
-  email: 'advay@halfabyte.ai',
+  name: 'Demo Operator',
+  email: 'operator@localhost',
   avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=BlackBoxOperator',
   provider: 'developer',
 };
@@ -132,8 +132,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const devLogin = useCallback(async (name?: string, email?: string): Promise<boolean> => {
     const operatorUser: User = {
       id: 'usr_developer:dev_operator_001',
-      name: name || 'Advay Chavan',
-      email: email || 'advay@halfabyte.ai',
+      name: name || 'Demo Operator',
+      email: email || 'operator@localhost',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=BlackBoxOperator',
       provider: 'developer',
     };
@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // If Google OAuth is not configured on the backend, activate operator mode seamlessly
     if (authStatus && !authStatus.google_configured) {
-      devLogin('Advay Chavan', 'advay@halfabyte.ai').then(() => {
+      devLogin('Demo Operator', 'operator@localhost').then(() => {
         if (typeof window !== 'undefined') {
           window.location.href = target;
         }

@@ -11,15 +11,29 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
+import secrets
 import time
 from typing import Any
 
-DEFAULT_DEV_SECRET = hashlib.sha256(b"blackbox-agent-flight-recorder-session-salt-2026").hexdigest()
+logger = logging.getLogger("blackbox.auth.session")
+
+# Used only when SESSION_SECRET is unset: random per process, so it can never be
+# guessed from the source. Sessions then end when the API restarts.
+_EPHEMERAL_SECRET = secrets.token_hex(32)
+_warned_ephemeral = False
 
 
 def _get_secret() -> str:
-    return os.environ.get("SESSION_SECRET", "").strip() or DEFAULT_DEV_SECRET
+    global _warned_ephemeral
+    configured = os.environ.get("SESSION_SECRET", "").strip()
+    if configured:
+        return configured
+    if not _warned_ephemeral:
+        logger.warning("SESSION_SECRET is not set; using a random per-process secret (sessions reset on restart).")
+        _warned_ephemeral = True
+    return _EPHEMERAL_SECRET
 
 
 def _b64url_encode(data: bytes) -> str:
