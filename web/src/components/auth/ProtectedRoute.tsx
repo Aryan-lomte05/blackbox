@@ -53,12 +53,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <div className="pt-2 space-y-2.5">
             <button
               onClick={async () => {
-                await devLogin('Advay Chavan', 'advay@halfabyte.ai');
+                await devLogin('Demo Operator', 'operator@localhost');
               }}
               className="w-full py-2.5 px-4 rounded bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
             >
               <Terminal className="w-3.5 h-3.5" />
-              <span>Resume Flight Console (Advay Chavan)</span>
+              <span>Resume Flight Console (Demo Operator)</span>
             </button>
 
             <button

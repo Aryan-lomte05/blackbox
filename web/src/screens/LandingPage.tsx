@@ -30,7 +30,7 @@ export const LandingPage: React.FC = () => {
     }
     // If Google OAuth is not configured on the backend, activate operator mode and navigate directly
     if (!authStatus?.google_configured) {
-      await devLogin('Advay Chavan', 'advay@halfabyte.ai');
+      await devLogin('Demo Operator', 'operator@localhost');
       navigate('/overview');
       return;
     }
