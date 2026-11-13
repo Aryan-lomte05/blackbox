@@ -43,7 +43,7 @@ export const Sidebar: React.FC = () => {
   const openIncidents = overview?.kpis?.open_incidents ?? 0;
 
   const investigateNav: NavItem[] = [
-    { name: 'Overview', path: '/', icon: Home },
+    { name: 'Overview', path: '/overview', icon: Home },
     { name: 'Runs', path: '/runs', icon: ListFilter },
     { name: 'Investigate', path: '/investigate', icon: Compass },
     { name: 'Live Lab', path: '/lab', icon: FlaskConical },
@@ -69,6 +69,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   const systemNav: NavItem[] = [
+    { name: 'Public Landing', path: '/', icon: Compass },
     { name: 'Machine', path: '/machine', icon: Cpu },
     { name: 'API', path: '/api-status', icon: Server },
     { name: 'Checker', path: '/checker', icon: CheckCircle2 },

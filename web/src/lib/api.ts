@@ -46,6 +46,7 @@ export const api = {
     try {
       const res = await fetch(url, {
         headers: { 'Accept': 'application/json' },
+        credentials: 'include',
       });
       return await handleResponse<T>(res);
     } catch (err: any) {
@@ -66,6 +67,7 @@ export const api = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        credentials: 'include',
         body: body ? JSON.stringify(body) : undefined,
       });
       return await handleResponse<T>(res);
